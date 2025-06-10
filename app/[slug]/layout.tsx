@@ -1,4 +1,3 @@
-"use client"
 
 import type React from "react"
 import { Navbar } from "@/components/navbar"
@@ -16,13 +15,45 @@ async function getTenantData(slug: string) {
   return null
 }
 
+/**
+ * Layout do aplicativo específico para um tenant (inquilino).
+ * 
+ * @description
+ * Este componente serve como layout base para todas as páginas dentro do contexto de um tenant específico.
+ * Ele realiza verificações de autenticação e validação do tenant antes de renderizar o conteúdo.
+ * 
+ * @param props - Propriedades do componente
+ * @param props.children - Conteúdo filho a ser renderizado dentro do layout
+ * @param props.params - Promise contendo os parâmetros da rota, incluindo o slug do tenant
+ * @param props.params.slug - Identificador único do tenant na URL
+ * 
+ * @throws {Redirect} Redireciona para "/login" se:
+ * - O tenant não for encontrado (com query param error=invalid_tenant)
+ * - O usuário não estiver autenticado (com query params tenant_slug e next)
+ * 
+ * @requires getTenantData - Função para buscar dados do tenant
+ * @requires authService.getCurrentUser - Serviço de autenticação para obter usuário atual
+ * @requires TenantProvider - Contexto para prover dados do tenant
+ * @requires Navbar - Componente de navegação
+ * 
+ * @example
+ * Uso em páginas:
+ * ```
+ * // /[slug]/dashboard/page.tsx
+ * export default function DashboardPage() {
+ *   return <div>Dashboard Content</div>
+ * }
+ * ```
+ */
 export default async function TenantAppLayout({
   children,
-  params,
+  params: paramsPromise, // Rename to avoid confusion
 }: {
   children: React.ReactNode
-  params: { slug: string }
+  params: Promise<{ slug: string }> // Type as Promise
 }) {
+  // Resolve the params Promise
+  const params = await paramsPromise
   const tenant = await getTenantData(params.slug)
   const currentUser = await authService.getCurrentUser() // Mock current user
 

@@ -46,6 +46,42 @@ const mockPublicJobs: Job[] = [
   },
 ]
 
+/**
+ * Página pública de exibição de vagas de emprego.
+ * 
+ * @remarks
+ * Esta página renderiza uma lista de vagas disponíveis para um determinado tenant (empresa/organização).
+ * Permite busca por título e descrição das vagas, e exibe um estado de carregamento enquanto os dados são obtidos.
+ * 
+ * @dependencies
+ * - Requer o parâmetro 'slug' na URL para identificar o tenant
+ * - Utiliza o hook useParams() do Next.js para obter o slug da URL
+ * - Consome dados mockados (mockPublicJobs) temporariamente, deve ser substituído por chamada API real
+ * 
+ * @state
+ * - jobs: Array<Job> - Lista de vagas carregadas
+ * - searchTerm: string - Termo de busca para filtrar vagas
+ * - loading: boolean - Estado de carregamento da página
+ * 
+ * @features
+ * - Busca em tempo real por título e descrição das vagas
+ * - Exibição de skeleton loading durante carregamento
+ * - Badge para vagas exclusivas PCD
+ * - Informações sobre número de candidatos e status da vaga
+ * - Links para candidatura e detalhes da vaga
+ * 
+ * @links
+ * - Candidatura: '/apply/[jobSlug]'
+ * - Detalhes da vaga: '/[tenantSlug]/jobs/[jobSlug]/public'
+ * 
+ * @todo
+ * - Implementar integração com API real substituindo mockPublicJobs
+ * - Adicionar paginação para lista de vagas
+ * - Implementar filtros adicionais (ex: por data, tipo de vaga)
+ * 
+ * @example
+ * URL de acesso: /empresa-abc/jobs/public
+ */
 export default function PublicJobsPage() {
   const params = useParams()
   const tenantSlug = params.slug as string

@@ -24,6 +24,63 @@ const userActivityData = [
   { name: "Sex", logins: 11, acoes: 55 },
 ]
 
+/**
+ * @page DashboardPage - Página principal do dashboard de recrutamento
+ * @description Componente de página que exibe métricas e gráficos relacionados ao processo de recrutamento
+ * 
+ * @remarks
+ * Este componente utiliza:
+ * - Parâmetros de rota para identificar o tenant atual
+ * - Estado local para controle do período de visualização
+ * - Componentes de UI da biblioteca Shadcn
+ * - Gráficos da biblioteca Recharts
+ * 
+ * @fluxo
+ * 1. Captura o slug do tenant via useParams
+ * 2. Mantém estado do período selecionado (7d, 30d, 90d)
+ * 3. Calcula métricas totais a partir do metricsData
+ * 4. Renderiza cards de métricas, gráficos e controles
+ * 
+ * @métricas
+ * - Vagas Criadas
+ * - Candidatos Cadastrados 
+ * - Contatos Realizados
+ * - Matches Gerados
+ * - Ações Pendentes
+ * 
+ * @gráficos
+ * - Progresso Mensal: LineChart comparativo de vagas/candidatos/contatos
+ * - Atividade do Usuário: BarChart de logins e ações semanais
+ * 
+ * @funcionalidades
+ * - Seleção de período de visualização
+ * - Compartilhamento via ShareDialog
+ * - Exportação de relatórios em PDF e Excel
+ * 
+ * @dadosNecessários
+ * - metricsData: Array contendo métricas históricas
+ * - userActivityData: Array com dados de atividade dos usuários
+ * 
+ * @componentesRelacionados
+ * - ShareDialog: Componente para compartilhamento de recursos
+ * - Componentes UI: Card, Select, Button
+ * - Gráficos: LineChart, BarChart do Recharts
+ * 
+ * @integrações
+ * - Sistema de exportação de relatórios (mock)
+ * - Sistema de compartilhamento via ShareDialog
+ * 
+ * @pontosDeMelhoria
+ * - Implementar exportação real de relatórios
+ * - Adicionar mais filtros de visualização
+ * - Implementar comparação de períodos
+ * - Adicionar mais insights e recomendações
+ * 
+ * @customização
+ * - Cores e estilos através de classes Tailwind
+ * - Layout responsivo com grid system
+ * - Ícones da biblioteca Lucide
+ */
 export default function DashboardPage() {
   const params = useParams() // Get params
   const tenantSlug = params.slug as string // Extract tenantSlug

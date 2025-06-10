@@ -57,6 +57,45 @@ const jobStatusOptions: { value: JobStatus; label: string }[] = [
   { value: "draft", label: "Rascunho" },
 ]
 
+/**
+ * @description Página de gerenciamento de vagas que permite visualizar, filtrar e atualizar o status das vagas
+ * 
+ * @component JobsPage
+ * 
+ * @state {Job[]} jobs - Array de vagas carregadas do mockJobs
+ * @state {string} searchTerm - Termo de busca para filtrar vagas
+ * @state {JobStatus | "all"} statusFilter - Filtro de status atual das vagas
+ * @state {("card" | "list")} viewMode - Modo de visualização das vagas (cartão ou lista)
+ * 
+ * @uses {useParams} - Hook para obter o slug do tenant da URL
+ * 
+ * @method handleStatusChange
+ * @param {string} jobId - ID da vaga a ser atualizada
+ * @param {JobStatus} newStatus - Novo status a ser aplicado
+ * @description Atualiza o status de uma vaga específica, registra a mudança no histórico e exibe notificação
+ * 
+ * @method filteredJobs
+ * @description Filtra as vagas com base no termo de busca e status selecionado
+ * 
+ * @renders
+ * - Cabeçalho com título e botão de criar nova vaga
+ * - Barra de busca e filtros
+ * - Alternador de visualização (card/lista)
+ * - Lista de vagas em modo card ou lista
+ * - Mensagem quando nenhuma vaga é encontrada
+ * 
+ * @dependencies
+ * - Componente JobCard (para visualização em cards)
+ * - Interface Job (para tipagem dos dados)
+ * - jobStatusOptions (para opções de status)
+ * - Diversos componentes UI (Button, Select, Card, etc)
+ * 
+ * @modificationGuide
+ * - Para adicionar novos filtros: Adicione novo estado e lógica no método filteredJobs
+ * - Para modificar aparência dos cards: Atualize o componente JobCard
+ * - Para adicionar novos status: Atualize o tipo JobStatus e jobStatusOptions
+ * - Para integrar com API: Substitua mockJobs e implemente chamadas reais no handleStatusChange
+ */
 export default function JobsPage() {
   const [jobs, setJobsState] = useState<Job[]>(mockJobs)
   const [searchTerm, setSearchTerm] = useState("")

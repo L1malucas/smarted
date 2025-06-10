@@ -13,6 +13,38 @@ export const metadata: Metadata = {
   description: "Visualização pública de recursos do sistema de recrutamento",
 }
 
+/**
+ * Layout base para páginas públicas da aplicação
+ * 
+ * @component PublicLayout
+ * @description
+ * Este componente define a estrutura básica das páginas públicas, incluindo:
+ * - Header com logo e botão de login
+ * - Container principal para conteúdo dinâmico
+ * - Footer com copyright
+ * 
+ * O layout utiliza o sistema de design tokens do projeto para cores e espaçamentos,
+ * através das classes tailwind (bg-background, max-w-7xl, etc)
+ * 
+ * @example
+ * ```tsx
+ * <PublicLayout>
+ *   <MinhaComponentePublico />
+ * </PublicLayout>
+ * ```
+ * 
+ * @param props - Propriedades do componente
+ * @param props.children - Elementos filhos que serão renderizados no container principal
+ * 
+ * @requires next/image - Para renderização otimizada da logo
+ * @requires next/link - Para navegação client-side do botão de login
+ * @requires components/ui/button - Componente Button do design system
+ * 
+ * @customization
+ * - Modificar src="/logo.png" para alterar a logo
+ * - Ajustar max-w-7xl para alterar largura máxima do conteúdo
+ * - Personalizar classes bg-background para mudar cores de fundo
+ */
 export default function PublicLayout({
   children,
 }: {

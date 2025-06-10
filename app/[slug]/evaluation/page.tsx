@@ -100,6 +100,71 @@ const mockJobsEvaluation: Job[] = [
   },
 ]
 
+/**
+ * @page EvaluationPage
+ * @description Página de avaliação de candidatos que permite visualizar, filtrar e gerenciar candidatos em processo seletivo.
+ * 
+ * @component
+ * 
+ * @state
+ * - selectedJobId: ID da vaga selecionada para filtrar candidatos
+ * - candidates: Lista de candidatos carregada
+ * - searchTerm: Termo de busca para filtrar candidatos
+ * - sortBy: Campo usado para ordenação dos candidatos
+ * - sortOrder: Ordem de classificação (asc/desc)
+ * - matchFilter: Filtro de nível de match dos candidatos
+ * - itemsPerPage: Número de itens por página
+ * - currentPage: Página atual da paginação
+ * - selectedCandidate: Candidato selecionado para visualização detalhada
+ * - isDetailModalOpen: Controle de exibição do modal de detalhes
+ * - newAnnotation: Nova anotação a ser adicionada ao candidato
+ * 
+ * @effects
+ * - Carrega candidatos quando selectedJobId muda
+ * - Filtra candidatos baseado em searchTerm e matchFilter
+ * - Ordena candidatos baseado em sortBy e sortOrder
+ * - Pagina resultados baseado em currentPage e itemsPerPage
+ * 
+ * @functions
+ * - handleSort: Gerencia a ordenação da tabela
+ * - getMatchBadge: Retorna o componente Badge com estilo apropriado para o nível de match
+ * - openDetailModal: Abre modal com detalhes do candidato
+ * - addAnnotationToCandidate: Adiciona nova anotação ao candidato selecionado
+ * 
+ * @interface Candidate
+ * - _id: string
+ * - name: string
+ * - email: string
+ * - jobId: string
+ * - currentStage: string
+ * - matchLevel: "baixo" | "médio" | "alto"
+ * - analysis: { finalScore: number }
+ * - pcdStatus: "declared" | undefined
+ * - annotations: Array<{ text: string, createdAt: Date, createdBy: string }>
+ * 
+ * @relacionamentos
+ * - Usa mockCandidatesEvaluation para dados de candidatos
+ * - Usa mockJobsEvaluation para dados de vagas
+ * - Integra com componente ShareDialog para compartilhamento
+ * 
+ * @fluxo
+ * 1. Usuário seleciona vaga (opcional)
+ * 2. Sistema carrega candidatos correspondentes
+ * 3. Usuário pode:
+ *    - Filtrar por nome/email
+ *    - Filtrar por nível de match
+ *    - Ordenar por diferentes campos
+ *    - Ver detalhes do candidato
+ *    - Adicionar anotações
+ *    - Aprovar/reprovar candidatos
+ * 
+ * @modificacoes
+ * Para adicionar novas funcionalidades:
+ * - Novos filtros: Adicionar estado e lógica em filteredAndSortedCandidates
+ * - Novos campos: Atualizar interface Candidate e adicionar coluna na Table
+ * - Novas ações: Adicionar botões na coluna de ações e handlers correspondentes
+ * - Novos detalhes: Expandir modal de detalhes com novos componentes Card
+ */
 export default function EvaluationPage() {
   const searchParams = useSearchParams()
   const [selectedJobId, setSelectedJobId] = useState<string | null>(searchParams.get("jobId"))

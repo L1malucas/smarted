@@ -18,6 +18,52 @@ interface JobDetailsProps {
   radarData: Array<{ subject: string; A: number; fullMark: number }>
 }
 
+/**
+ * Componente que exibe os detalhes de uma vaga de emprego.
+ * 
+ * @component JobDetails
+ * @param {Object} props - Propriedades do componente
+ * @param {Object} props.job - Objeto contendo os dados da vaga
+ * @param {string} props.job.title - Título da vaga
+ * @param {string} props.job.status - Status atual da vaga (aberta, recrutamento, triagem, etc)
+ * @param {string} props.job.description - Descrição detalhada da vaga
+ * @param {string} props.job.slug - Identificador único da vaga
+ * @param {Date} props.job.createdAt - Data de criação da vaga
+ * @param {number} props.job.candidatesCount - Número total de candidatos
+ * @param {Object} props.job.criteriaWeights - Pesos dos critérios de avaliação
+ * @param {Array} props.job.competencies - Lista de competências requeridas
+ * @param {Array} props.job.questions - Lista de perguntas para candidatos
+ * @param {Array} props.candidates - Lista de candidatos para a vaga
+ * @param {string} props.tenantSlug - Identificador do tenant/organização
+ * @param {Object} props.radarData - Dados para o gráfico radar de avaliação
+ * 
+ * @remarks
+ * O componente é dividido em três abas principais:
+ * - Detalhes: Mostra informações gerais, critérios de avaliação, competências e perguntas
+ * - Triagem: Link para o sistema de triagem de candidatos
+ * - Avaliação: Exibe o ranking de candidatos com gráfico radar
+ * 
+ * @example
+ * ```tsx
+ * <JobDetails 
+ *   job={jobData}
+ *   candidates={candidatesList}
+ *   tenantSlug="empresa-xyz"
+ *   radarData={radarChartData}
+ * />
+ * ```
+ * 
+ * @navigation
+ * - Navegação para edição: /${tenantSlug}/jobs/${job.slug}/edit
+ * - Navegação para triagem: /${tenantSlug}/screening?jobId=${job._id}
+ * - Voltar para lista: /${tenantSlug}/jobs
+ * 
+ * @integration
+ * - Utiliza o componente ShareDialog para compartilhamento da vaga
+ * - Integra-se com CandidateRanking para exibição da avaliação
+ * - Usa componentes UI do sistema de design (Button, Badge, Card, Tabs, etc)
+ */
+
 export function JobDetails({ job, candidates, tenantSlug, radarData }: JobDetailsProps) {
   const [activeTab, setActiveTab] = useState("detalhes")
 

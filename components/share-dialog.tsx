@@ -26,6 +26,55 @@ interface ShareDialogProps {
   jobSlug?: string // Para links específicos de vaga
 }
 
+/**
+ * Componente de diálogo para compartilhamento de recursos.
+ * 
+ * @component
+ * @description
+ * Renderiza um diálogo que permite compartilhar diferentes tipos de recursos (vagas, etc)
+ * com opções de configuração como proteção por senha, tempo de expiração e visibilidade.
+ * 
+ * @param {object} props - Propriedades do componente
+ * @param {string} props.title - Título do diálogo
+ * @param {string} props.resourceType - Tipo do recurso ('job' ou outros tipos)
+ * @param {string} props.resourceId - ID único do recurso
+ * @param {string} props.resourceName - Nome do recurso para exibição
+ * @param {string} props.tenantSlug - Slug do tenant (necessário para compartilhamento de vagas)
+ * @param {string} props.jobSlug - Slug da vaga (opcional)
+ * 
+ * @states
+ * - copied: Controla o estado de feedback da cópia do link
+ * - isPublic: Define se o acesso ao recurso será público
+ * - expiryDays: Número de dias até a expiração do link
+ * - shareUrl: URL gerada para compartilhamento
+ * - password: Senha para proteção do recurso (opcional)
+ * - isPasswordProtected: Define se o recurso terá proteção por senha
+ * 
+ * @behavior
+ * - Gera URLs diferentes baseadas no tipo de recurso:
+ *   - Para vagas (job): /public/{tenantSlug}/jobs
+ *   - Para outros recursos: /public/{resourceType}/{hash}
+ * - O hash é gerado usando btoa() com resourceType, resourceId, timestamp e indicador de senha
+ * - Armazena senhas no localStorage quando habilitado
+ * - Permite copiar o link para clipboard com feedback visual
+ * 
+ * @integration
+ * - Utiliza componentes UI do design system (Button, Dialog, Switch, etc)
+ * - Depende do sistema de toast para notificações
+ * - Integra com clipboard API do navegador
+ * - Utiliza localStorage para persistência de senhas
+ * 
+ * @example
+ * ```tsx
+ * <ShareDialog 
+ *   title="Compartilhar Vaga"
+ *   resourceType="job"
+ *   resourceId="123"
+ *   resourceName="Desenvolvedor Frontend"
+ *   tenantSlug="empresa-xyz"
+ * />
+ * ```
+ */
 export function ShareDialog({ title, resourceType, resourceId, resourceName, tenantSlug, jobSlug }: ShareDialogProps) {
   const [copied, setCopied] = useState(false)
   const [isPublic, setIsPublic] = useState(true)

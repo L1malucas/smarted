@@ -16,6 +16,48 @@ interface NavbarProps {
   user: User | null // Pass user prop
 }
 
+/**
+ * Componente de navegação principal da aplicação.
+ * 
+ * @component
+ * @param {Object} props - Propriedades do componente
+ * @param {string} props.tenantSlug - Identificador único do tenant/organização atual
+ * @param {Object} props.user - Objeto contendo dados do usuário logado
+ * @param {string} props.user.name - Nome do usuário
+ * @param {string} props.user.slug - Identificador único do usuário
+ * @param {boolean} props.user.isAdmin - Flag que indica se o usuário é administrador
+ * 
+ * @remarks
+ * Este componente renderiza a barra de navegação principal com:
+ * - Logo da empresa linkando para o dashboard
+ * - Links de navegação principal (Dashboard, Recrutamento)
+ * - Link de administração (visível apenas para admins)
+ * - Indicador de status online/offline
+ * - Sistema de notificações
+ * - Menu de usuário com opção de logout
+ * - Versão responsiva para mobile com menu hamburguer
+ * 
+ * @dependencies
+ * - usePathname() do Next.js para controle de rotas ativas
+ * - useState para gerenciamento de estados locais
+ * - Diversos componentes do sistema de design (Button, DropdownMenu, etc)
+ * - Ícones do pacote Lucide
+ * 
+ * @communication
+ * - Recebe dados do usuário e tenant via props
+ * - Integra com sistema de roteamento do Next.js
+ * - Simula integração com sistema de notificações (mock)
+ * - Prepara integração com sistema de autenticação (handleLogout)
+ * 
+ * @customization
+ * Para modificar:
+ * - Adicionar novos items: expandir array 'navigation'
+ * - Alterar estilos: modificar classes Tailwind
+ * - Adicionar features: expandir objetos de notificação
+ * - Modificar comportamento mobile: ajustar lógica de isMobileMenuOpen
+ * 
+ * @returns Retorna null em rotas públicas/login ou componente Nav com toda navegação
+ */
 export function Navbar({ tenantSlug, user }: NavbarProps) {
   const pathname = usePathname()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)

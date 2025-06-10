@@ -70,6 +70,7 @@ const mockJobs: Job[] = [
     _id: "1",
     slug: "dev-frontend",
     title: "Desenvolvedor Frontend Sênior",
+    description: "Vaga para desenvolvedor frontend sênior",
     status: "triagem",
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -80,24 +81,66 @@ const mockJobs: Job[] = [
     isPCDExclusive: false,
     isReferralJob: false,
     criteriaWeights: { experience: 0, skills: 0, certifications: 0, behavioral: 0, leadership: 0 },
-  },
-  {
-    _id: "2",
-    slug: "analista-dados",
-    title: "Analista de Dados Júnior",
-    status: "triagem",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    createdBy: "",
-    candidatesCount: 0,
-    competencies: [],
-    questions: [],
-    isPCDExclusive: false,
-    isReferralJob: false,
-    criteriaWeights: { experience: 0, skills: 0, certifications: 0, behavioral: 0, leadership: 0 },
+    // {
+    //   _id: "2",
+    //   slug: "analista-dados",
+    //   title: "Analista de Dados Júnior",
+    //   description: "Vaga para analista de dados júnior",
+    //   status: "triagem",
+    //   createdAt: new Date(),
+    //   updatedAt: new Date(),
+    //   createdBy: "",
+    //   candidatesCount: 0,
+    //   competencies: [],
+    //   questions: [],
+    //   isPCDExclusive: false,
+    //   isReferralJob: false,
+    //   criteriaWeights: { experience: 0, skills: 0, certifications: 0, behavioral: 0, leadership: 0 },
+    // },
   },
 ]
 
+/**
+ * @description Página de triagem de candidatos que permite visualizar, filtrar e gerenciar candidatos em processo seletivo
+ * 
+ * @component ScreeningPage
+ * 
+ * @dependencies
+ * - Requer acesso aos dados mockados: mockCandidates, mockJobs
+ * - Utiliza componentes UI do design system: Card, Table, Select, Badge, etc
+ * - Integra com o sistema de roteamento através de useParams e useSearchParams
+ * 
+ * @state
+ * - selectedJobId: ID da vaga selecionada para filtrar candidatos
+ * - candidates: Lista de candidatos filtrada pela vaga selecionada
+ * - searchTerm: Termo de busca para filtrar candidatos por nome/email
+ * - sortBy: Campo usado para ordenação dos candidatos
+ * - sortOrder: Direção da ordenação (asc/desc)
+ * 
+ * @features
+ * - Filtragem de candidatos por vaga específica
+ * - Busca por nome/email de candidatos
+ * - Ordenação por diferentes campos (nome, match, data)
+ * - Visualização de status de match via IA
+ * - Ações de aprovar/reprovar candidatos
+ * - Download de currículos
+ * - Compartilhamento de relatório de triagem
+ * 
+ * @customization
+ * Para modificar/estender:
+ * - Adicione novos campos de ordenação em handleSort()
+ * - Expanda os filtros através do botão "Filtros Avançados"
+ * - Modifique a lógica de match no getMatchBadge()
+ * - Adicione novas ações na coluna de ações da tabela
+ * 
+ * @communication
+ * - Recebe parâmetros de URL para jobId
+ * - Integra com sistema de compartilhamento via ShareDialog
+ * - Links para perfil detalhado do candidato
+ * 
+ * @example
+ * URL de acesso: /tenant-slug/screening?jobId=123
+ */
 export default function ScreeningPage() {
   const searchParams = useSearchParams()
   const [selectedJobId, setSelectedJobId] = useState<string | null>(searchParams.get("jobId"))
@@ -249,7 +292,7 @@ export default function ScreeningPage() {
                   </TableCell>
                   <TableCell>
                     {candidate.isReferral ? (
-                      <Badge variant="info" className="bg-teal-500">
+                      <Badge variant="default" className="bg-teal-500">
                         Sim
                       </Badge>
                     ) : (

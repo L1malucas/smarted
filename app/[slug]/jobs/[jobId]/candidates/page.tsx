@@ -79,6 +79,74 @@ const radarData = [
   { subject: "Liderança", A: 77.7, fullMark: 100 },
 ]
 
+/**
+ * @page CandidatesPage - Página de Ranking de Candidatos
+ * @description Exibe o ranking de candidatos para uma vaga específica com análises detalhadas por IA
+ * 
+ * @component
+ * @implements {React.FC}
+ * 
+ * @dependencies
+ * - useParams - Hook para acessar parâmetros da URL
+ * - Link - Componente de navegação
+ * - Button, Card, Select etc - Componentes UI
+ * - ResponsiveContainer, RadarChart etc - Componentes de visualização de dados
+ * 
+ * @hooks
+ * - useState - Gerencia o estado da vaga selecionada
+ * 
+ * @param {Object} params - Parâmetros da URL
+ * @param {string} params.slug - Slug do tenant atual
+ * @param {string} params.jobId - ID ou slug da vaga
+ * 
+ * @flow
+ * 1. Recupera parâmetros da URL (tenant e jobId)
+ * 2. Gerencia seleção de vaga via estado
+ * 3. Renderiza interface com:
+ *    - Cabeçalho com navegação
+ *    - Seletor de vaga
+ *    - Gráfico radar com médias
+ *    - Lista de candidatos ranqueados
+ * 
+ * @features
+ * - Filtragem por vaga
+ * - Visualização de scores em gráfico radar
+ * - Ranking detalhado de candidatos
+ * - Exportação de dados (PDF/Excel)
+ * - Compartilhamento de ranking
+ * 
+ * @utilities
+ * - getScoreColor - Define cor baseada no score
+ * - getScoreBadge - Retorna badge visual baseado no score
+ * 
+ * @visualComponents
+ * - Scores são apresentados com código de cores (verde/amarelo/vermelho)
+ * - Cards individuais por candidato mostram:
+ *   - Posição no ranking
+ *   - Informações básicas
+ *   - Scores detalhados
+ *   - Comentários da análise
+ *   - Ações disponíveis
+ * 
+ * @integration
+ * - Requer dados de candidatos (atualmente mockados)
+ * - Integra com sistema de compartilhamento via ShareDialog
+ * - Prepara dados para exportação PDF/Excel
+ * 
+ * @customization
+ * Para adicionar novos critérios de avaliação:
+ * 1. Adicionar novo score no tipo de análise
+ * 2. Incluir visualização no grid de scores
+ * 3. Atualizar dados do gráfico radar
+ * 
+ * Para modificar classificações:
+ * - Ajustar thresholds em getScoreColor e getScoreBadge
+ * 
+ * @related
+ * - ShareDialog
+ * - Página de detalhes do candidato
+ * - Sistema de análise por IA
+ */
 export default function CandidatesPage() {
   const params = useParams()
   const tenantSlug = params.slug as string

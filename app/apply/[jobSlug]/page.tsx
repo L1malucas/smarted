@@ -38,6 +38,50 @@ const mockJobData: Job = {
   criteriaWeights: { experience: 0, skills: 0, certifications: 0, behavioral: 0, leadership: 0 },
 }
 
+/**
+ * Componente de página para o formulário de candidatura a uma vaga.
+ * 
+ * @remarks
+ * Este componente gerencia um processo de candidatura em múltiplos passos, incluindo:
+ * - Upload de currículo em PDF
+ * - Respostas para perguntas específicas da vaga (quando existentes)
+ * 
+ * @dependencies
+ * - Requer um parâmetro `jobSlug` na URL para identificar a vaga
+ * - Utiliza mock data temporário (mockJobData) para simular dados da vaga
+ * - Integra-se com componentes UI da biblioteca shadcn/ui
+ * 
+ * @states
+ * - currentStep: Controla o passo atual do formulário
+ * - job: Armazena os dados da vaga
+ * - resumeFile: Gerencia o arquivo PDF do currículo
+ * - answers: Array de respostas às perguntas da vaga
+ * - isLoading: Controla estados de carregamento
+ * 
+ * @callbacks
+ * - handleFileChange: Processa o upload do arquivo PDF
+ * - handleAnswerChange: Atualiza respostas para perguntas abertas
+ * - handleClosedAnswerChange: Atualiza respostas para perguntas fechadas
+ * - handleSubmitApplication: Processa o envio final da candidatura
+ * 
+ * @navigation
+ * - Redireciona para home ('/') se a vaga não for encontrada
+ * - Redireciona para página de confirmação após submissão
+ * 
+ * @validation
+ * - Verifica se arquivo é PDF
+ * - Requer upload de currículo antes de avançar
+ * - Valida respostas antes da submissão
+ * 
+ * @future-improvements
+ * - Implementar integração real com API
+ * - Adicionar validação de tamanho máximo do arquivo
+ * - Implementar persistência de dados em caso de refresh
+ * - Adicionar tratamento de erros mais robusto
+ * 
+ * @example
+ * URL de acesso: /apply/desenvolvedor-frontend
+ */
 export default function ApplyPage() {
   const params = useParams()
   const router = useRouter()
@@ -106,7 +150,7 @@ export default function ApplyPage() {
 
   const nextStep = () => {
     if (currentStep === 1 && !resumeFile) {
-      toast({ title: "Obrigatório", description: "Por favor, anexe seu currículo em PDF.", variant: "warning" })
+      toast({ title: "Obrigatório", description: "Por favor, anexe seu currículo em PDF.", variant: "default" })
       return
     }
     if (currentStep < totalSteps) {

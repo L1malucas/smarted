@@ -106,6 +106,53 @@ const mockAuditLogs: AuditLog[] = [
   },
 ]
 
+/**
+ * @description Página de administração do sistema que permite gerenciar usuários, vagas expiradas, logs de auditoria e configurações
+ * 
+ * @component AdminPage
+ * 
+ * @remarks
+ * Este componente utiliza o padrão de roteamento do Next.js com páginas dinâmicas ([slug])
+ * 
+ * @state
+ * - newCPF: Armazena o CPF sendo digitado no formulário de novo usuário
+ * - newName: Armazena o nome sendo digitado no formulário de novo usuário 
+ * - newIsAdmin: Controla se o novo usuário terá privilégios de administrador
+ * - auditDateRange: Filtro de período para os logs de auditoria
+ * - auditUserFilter: Filtro de usuário para os logs de auditoria
+ * - auditActionFilter: Filtro de tipo de ação para os logs de auditoria
+ * 
+ * @functions
+ * - formatCPF: Formata string numérica para formato de CPF (000.000.000-00)
+ * - handleCPFChange: Gerencia mudanças no input de CPF, aplicando formatação
+ * - addCPF: Adiciona novo usuário ao sistema (atualmente apenas mock)
+ * - filteredAuditLogs: Filtra logs de auditoria baseado nos filtros selecionados
+ * 
+ * @tabs
+ * - users: Gerenciamento de usuários (adicionar/remover acesso, definir permissões)
+ * - expired_jobs: Gestão de vagas expiradas ou inativas
+ * - audit_logs: Visualização dos logs de auditoria do sistema
+ * - support: Informações de suporte e contato
+ * - system_settings: Configurações gerais do sistema (em desenvolvimento)
+ * 
+ * @todo
+ * - Implementar integração real com backend para:
+ *   - Gerenciamento de usuários
+ *   - Logs de auditoria
+ *   - Gestão de vagas
+ * - Adicionar DatePickerWithRange no filtro de auditoria
+ * - Implementar funcionalidades nas configurações do sistema
+ * - Adicionar confirmação para exclusão de usuários/vagas
+ * 
+ * @dependencies
+ * - useParams: Hook do Next.js para acessar parâmetros da URL
+ * - Componentes UI: Card, Tabs, Button, Input, Switch, Badge, etc
+ * - Icons: Shield, UserCog, CalendarX, History, etc
+ * 
+ * @example
+ * URL de acesso: /[tenant-slug]/admin
+ * Ex: /empresa-abc/admin
+ */
 export default function AdminPage() {
   const params = useParams()
   const tenantSlug = params.slug as string

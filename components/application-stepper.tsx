@@ -24,6 +24,65 @@ interface ApplicationStepperProps {
   className?: string
 }
 
+/**
+ * Componente de navegação em etapas para processos de candidatura/aplicação
+ * 
+ * @component ApplicationStepper
+ * 
+ * @param props - Propriedades do componente
+ * @param props.steps - Array de objetos contendo as informações de cada etapa
+ * @param props.steps[].id - Identificador único da etapa
+ * @param props.steps[].title - Título da etapa
+ * @param props.steps[].description - Descrição detalhada da etapa
+ * @param props.steps[].component - Componente React a ser renderizado no conteúdo da etapa
+ * @param props.steps[].isOptional - Flag que indica se a etapa é opcional
+ * @param props.onComplete - Callback executado quando todas as etapas são completadas
+ * @param props.onStepChange - Callback opcional executado quando há mudança de etapa
+ * @param props.className - Classes CSS adicionais para estilização
+ * 
+ * @remarks
+ * O componente mantém estado interno para:
+ * - currentStep: índice da etapa atual
+ * - completedSteps: Set com índices das etapas já completadas
+ * 
+ * @example
+ * ```tsx
+ * <ApplicationStepper
+ *   steps={[
+ *     { 
+ *       id: '1', 
+ *       title: 'Dados Pessoais',
+ *       description: 'Informações básicas',
+ *       component: <DadosPessoaisForm />
+ *     },
+ *     // ... mais etapas
+ *   ]}
+ *   onComplete={() => handleSubmitApplication()}
+ * />
+ * ```
+ * 
+ * @features
+ * - Barra de progresso indicando porcentagem concluída
+ * - Navegação visual entre etapas com indicadores de status
+ * - Etapas conectadas por linhas de progresso
+ * - Títulos e descrições para cada etapa
+ * - Card com conteúdo da etapa atual
+ * - Botões de navegação (anterior/próximo)
+ * - Suporte a etapas opcionais
+ * - Controle de acessibilidade das etapas
+ * 
+ * @customization
+ * O componente pode ser personalizado através de:
+ * - className para estilização do container
+ * - Tailwind classes para modificação visual
+ * - Componentes shadcn/ui para estilização consistente
+ * 
+ * @dependencies
+ * - useState do React
+ * - cn utility para composição de classes
+ * - Componentes do shadcn/ui (Progress, Card, Button)
+ * - Ícones do lucide-react
+ */
 export function ApplicationStepper({ steps, onComplete, onStepChange, className }: ApplicationStepperProps) {
   const [currentStep, setCurrentStep] = useState(0)
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set())

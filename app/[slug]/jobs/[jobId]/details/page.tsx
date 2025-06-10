@@ -99,6 +99,49 @@ const mockJob: Job = {
   criteriaWeights: { experience: 30, skills: 30, certifications: 15, behavioral: 15, leadership: 10 },
 }
 
+/**
+ * Componente de página para exibição detalhada de uma vaga de emprego.
+ * 
+ * @remarks
+ * Este componente é renderizado na rota `/[slug]/jobs/[jobId]/details` e gerencia:
+ * - O carregamento dos dados da vaga
+ * - O estado de loading
+ * - A exibição do skeleton durante o carregamento
+ * - A renderização dos detalhes da vaga
+ * 
+ * @param params - Parâmetros da rota obtidos via useParams
+ * @param params.slug - Slug do tenant (empresa/organização)
+ * @param params.jobId - ID único da vaga
+ * 
+ * @returns Renderiza o componente {@link JobDetails} com os dados carregados ou estados de loading/erro
+ * 
+ * @dependencies
+ * - Requer o componente {@link JobDetails} para renderização dos dados
+ * - Utiliza mock data temporariamente (mockJob, mockCandidates, radarData)
+ * - Depende do hook useParams para acessar parâmetros da rota
+ * 
+ * @state
+ * - job: {@link Job} - Dados da vaga atual
+ * - candidates: {@link Candidate[]} - Lista de candidatos para a vaga
+ * - loading: boolean - Estado de carregamento
+ * 
+ * @workflow
+ * 1. Componente é montado e inicia o carregamento
+ * 2. Exibe skeleton durante loading
+ * 3. Após carregamento, verifica existência dos dados
+ * 4. Renderiza JobDetails com dados ou mensagem de erro
+ * 
+ * @todo
+ * - Implementar chamadas reais à API removendo dados mock
+ * - Adicionar tratamento de erros mais robusto
+ * - Implementar paginação de candidatos se necessário
+ * 
+ * @example
+ * Uso na navegação:
+ * ```
+ * /empresa-abc/jobs/123/details
+ * ```
+ */
 export default function JobDetailsPage() {
   const params = useParams()
   const tenantSlug = params.slug as string

@@ -21,6 +21,49 @@ interface JobCardProps {
   onStatusChange: (jobId: string, newStatus: JobStatus) => void
 }
 
+/**
+ * Componente para exibir um cartão de vaga de emprego.
+ * 
+ * @component
+ * @param {Object} props - Propriedades do componente
+ * @param {Object} props.job - Objeto contendo os dados da vaga
+ * @param {string} props.job._id - ID único da vaga
+ * @param {string} props.job.title - Título da vaga
+ * @param {string} props.job.slug - Slug da URL da vaga
+ * @param {string} props.job.description - Descrição da vaga
+ * @param {JobStatus} props.job.status - Status atual da vaga ('aberta' | 'recrutamento' | 'triagem' | 'avaliação' | 'contato' | 'vaga fechada' | 'draft')
+ * @param {number} props.job.candidatesCount - Número de candidatos na vaga
+ * @param {string} props.job.createdAt - Data de criação da vaga
+ * @param {string} props.job.createdByName - Nome de quem criou a vaga
+ * @param {string} props.job.lastStatusUpdateByName - Nome de quem atualizou o status por último
+ * @param {string} props.tenantSlug - Slug do tenant/empresa para construção das URLs
+ * @param {Function} props.onStatusChange - Callback executada quando o status da vaga é alterado
+ * 
+ * @example
+ * ```tsx
+ * <JobCard 
+ *   job={jobData}
+ *   tenantSlug="empresa-xyz"
+ *   onStatusChange={(id, newStatus) => handleStatusChange(id, newStatus)}
+ * />
+ * ```
+ * 
+ * @remarks
+ * O componente renderiza um card com:
+ * - Título da vaga com link para detalhes
+ * - Menu dropdown com ações (ver detalhes, editar, duplicar, compartilhar, excluir)
+ * - Badge indicando o status atual
+ * - Descrição da vaga
+ * - Informações como número de candidatos, data de criação e últimas alterações
+ * - Seletor para alteração de status
+ * - Botão de ver detalhes no rodapé
+ * 
+ * @dependencies
+ * - Requer componentes do shadcn/ui (Card, Badge, Button, Select, etc)
+ * - Usa ícones do lucide-react
+ * - Integra com componente ShareDialog para compartilhamento
+ * - Utiliza react-router/Next.js para navegação via Link
+ */
 export function JobCard({ job, tenantSlug, onStatusChange }: JobCardProps) {
   const getStatusBadge = (status: JobStatus) => {
     const statusConfig = {

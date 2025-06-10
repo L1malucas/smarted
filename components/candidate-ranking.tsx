@@ -15,6 +15,46 @@ interface CandidateRankingProps {
   radarData: Array<{ subject: string; A: number; fullMark: number }>
 }
 
+/**
+ * Componente que exibe o ranking de candidatos para uma vaga específica.
+ * 
+ * @component
+ * @param {Object} props - Propriedades do componente
+ * @param {Candidate[]} props.candidates - Array de candidatos a serem exibidos no ranking
+ * @param {string} props.jobTitle - Título da vaga
+ * @param {string} props.jobId - ID único da vaga
+ * @param {string} props.tenantSlug - Slug do tenant (empresa/organização)
+ * @param {RadarData[]} props.radarData - Dados para o gráfico radar de médias dos scores
+ * 
+ * @remarks
+ * Este componente é responsável por:
+ * - Exibir um gráfico radar com as médias dos scores por critério de todos os candidatos
+ * - Listar os candidatos ordenados por ranking, mostrando:
+ *   - Score final e classificação (Excelente, Bom, Regular)
+ *   - Scores individuais (Experiência, Habilidades, Certificações, Comportamental, Liderança)
+ *   - Comentários da análise
+ *   - Opções de visualização detalhada e download
+ * 
+ * @example
+ * ```tsx
+ * <CandidateRanking 
+ *   candidates={candidatesList}
+ *   jobTitle="Desenvolvedor Frontend"
+ *   jobId="123"
+ *   tenantSlug="empresa-abc"
+ *   radarData={analysisData}
+ * />
+ * ```
+ * 
+ * @internal
+ * O componente utiliza as seguintes funções auxiliares:
+ * - getScoreColor: Define a cor do texto baseado no score (verde, amarelo ou vermelho)
+ * - getScoreBadge: Retorna um componente Badge com estilo e texto baseado no score
+ * 
+ * @see ShareDialog - Componente utilizado para compartilhamento do ranking
+ * @see Badge - Componente de badge utilizado para classificação
+ * @see RadarChart - Componente do recharts para renderização do gráfico radar
+ */
 export function CandidateRanking({ candidates, jobTitle, jobId, tenantSlug, radarData }: CandidateRankingProps) {
   const getScoreColor = (score: number) => {
     if (score >= 80) return "text-green-500"

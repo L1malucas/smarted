@@ -13,6 +13,32 @@ export const metadata: Metadata = {
     generator: 'v0.dev'
 }
 
+/**
+ * Layout raiz da aplicação Next.js que envolve todas as páginas.
+ * 
+ * @component RootLayout
+ * @description
+ * Este componente define a estrutura base HTML da aplicação, incluindo:
+ * - Configuração do idioma para português brasileiro
+ * - Integração com o ThemeProvider para gerenciamento de temas claro/escuro
+ * - Suporte ao sistema de notificações toast através do componente Toaster
+ * 
+ * @param {Object} props - Propriedades do componente
+ * @param {React.ReactNode} props.children - Componentes filhos que serão renderizados dentro do layout
+ * 
+ * @remarks
+ * - Utiliza a fonte 'inter' através da classe inter.className
+ * - Suprime avisos de hidratação com suppressHydrationWarning
+ * - Configurado com tema escuro como padrão, mas permite alteração pelo sistema
+ * - Desabilita transições de tema para melhor performance
+ * 
+ * @example
+ * ```tsx
+ * <RootLayout>
+ *   <MinhasPaginas />
+ * </RootLayout>
+ * ```
+ */
 export default function RootLayout({
   children,
 }: {
