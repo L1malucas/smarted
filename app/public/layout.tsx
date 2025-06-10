@@ -51,7 +51,7 @@ export default function PublicLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-br">
       <body className={inter.className}>
         <header className="border-b bg-background">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

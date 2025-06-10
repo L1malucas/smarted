@@ -12,93 +12,7 @@ import { ArrowUpDown, Search, Filter, Eye, CheckCircle, XCircle, Download } from
 import type { Candidate, Job } from "@/types" // Assuming types are defined
 import Link from "next/link"
 import { ShareDialog } from "@/components/share-dialog"
-
-// Mock data - replace with actual API calls
-const mockCandidates: Candidate[] = [
-  // Add mock candidate data here, including `currentStage: 'triagem'`
-  {
-    _id: "cand1",
-    jobId: "1",
-    jobSlug: "dev-frontend",
-    name: "Alice Wonderland",
-    email: "alice@example.com",
-    curriculumUrl: "#",
-    fileName: "alice_cv.pdf",
-    isReferral: false,
-    currentStage: "triagem",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    analysis: {
-      finalScore: 85,
-      experienceScore: 0,
-      skillsScore: 0,
-      certificationsScore: 0,
-      behavioralScore: 0,
-      leadershipScore: 0,
-      comments: { experience: "", skills: "", certifications: "" },
-    },
-    matchLevel: "alto",
-  },
-  {
-    _id: "cand2",
-    jobId: "1",
-    jobSlug: "dev-frontend",
-    name: "Bob The Builder",
-    email: "bob@example.com",
-    curriculumUrl: "#",
-    fileName: "bob_cv.pdf",
-    isReferral: true,
-    currentStage: "triagem",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    analysis: {
-      finalScore: 75,
-      experienceScore: 0,
-      skillsScore: 0,
-      certificationsScore: 0,
-      behavioralScore: 0,
-      leadershipScore: 0,
-      comments: { experience: "", skills: "", certifications: "" },
-    },
-    matchLevel: "médio",
-  },
-]
-
-const mockJobs: Job[] = [
-  // Add mock job data
-  {
-    _id: "1",
-    slug: "dev-frontend",
-    title: "Desenvolvedor Frontend Sênior",
-    description: "Vaga para desenvolvedor frontend sênior",
-    status: "triagem",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    createdBy: "",
-    candidatesCount: 2,
-    competencies: [],
-    questions: [],
-    isPCDExclusive: false,
-    isReferralJob: false,
-    criteriaWeights: { experience: 0, skills: 0, certifications: 0, behavioral: 0, leadership: 0 },
-    // {
-    //   _id: "2",
-    //   slug: "analista-dados",
-    //   title: "Analista de Dados Júnior",
-    //   description: "Vaga para analista de dados júnior",
-    //   status: "triagem",
-    //   createdAt: new Date(),
-    //   updatedAt: new Date(),
-    //   createdBy: "",
-    //   candidatesCount: 0,
-    //   competencies: [],
-    //   questions: [],
-    //   isPCDExclusive: false,
-    //   isReferralJob: false,
-    //   criteriaWeights: { experience: 0, skills: 0, certifications: 0, behavioral: 0, leadership: 0 },
-    // },
-  },
-]
+import { mockCandidatesscrening, mockJobsscrening } from "../mock"
 
 /**
  * @description Página de triagem de candidatos que permite visualizar, filtrar e gerenciar candidatos em processo seletivo
@@ -106,7 +20,7 @@ const mockJobs: Job[] = [
  * @component ScreeningPage
  * 
  * @dependencies
- * - Requer acesso aos dados mockados: mockCandidates, mockJobs
+ * - Requer acesso aos dados mockados: mockCandidates, mockJobsscrening
  * - Utiliza componentes UI do design system: Card, Table, Select, Badge, etc
  * - Integra com o sistema de roteamento através de useParams e useSearchParams
  * 
@@ -155,15 +69,15 @@ export default function ScreeningPage() {
   useEffect(() => {
     if (selectedJobId) {
       // Filter mockCandidates by selectedJobId and ensure they are in 'triagem' stage
-      const jobCandidates = mockCandidates.filter((c) => c.jobId === selectedJobId && c.currentStage === "triagem")
+      const jobCandidates = mockCandidatesscrening.filter((c) => c.jobId === selectedJobId && c.currentStage === "triagem")
       setCandidates(jobCandidates)
     } else {
       // Show all candidates in 'triagem' stage if no job is selected
-      setCandidates(mockCandidates.filter((c) => c.currentStage === "triagem"))
+      setCandidates(mockCandidatesscrening.filter((c) => c.currentStage === "triagem"))
     }
   }, [selectedJobId])
 
-  const selectedJob = mockJobs.find((job) => job._id === selectedJobId)
+  const selectedJob = mockJobsscrening.find((job) => job._id === selectedJobId)
 
   const filteredAndSortedCandidates = candidates
     .filter(
@@ -240,7 +154,7 @@ export default function ScreeningPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas as Vagas em Triagem</SelectItem>
-                {mockJobs
+                {mockJobsscrening
                   .filter((j) => j.status === "triagem" || j.status === "recrutamento" || j.status === "aberta")
                   .map((job) => (
                     <SelectItem key={job._id} value={job._id}>

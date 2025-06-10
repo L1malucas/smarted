@@ -11,51 +11,8 @@ import type { Job, JobStatus } from "@/types"
 import { toast } from "@/components/ui/use-toast"
 import { useParams } from "next/navigation"
 import { JobCard } from "@/components/job-card"
+import { jobStatusOptions, mockCandidatesscrening, mockJobsscrening } from "../mock"
 
-const mockJobs: Job[] = [
-  {
-    _id: "1",
-    slug: "desenvolvedor-frontend-senior",
-    title: "Desenvolvedor Frontend Sênior",
-    description: "Buscamos um desenvolvedor frontend experiente para liderar projetos em React e TypeScript...",
-    status: "recrutamento",
-    candidatesCount: 23,
-    createdAt: new Date("2024-05-15"),
-    updatedAt: new Date("2024-05-20"),
-    createdBy: "joao-silva-abc123",
-    createdByName: "João Silva",
-    competencies: [],
-    questions: [],
-    isPCDExclusive: false,
-    isReferralJob: false,
-    criteriaWeights: { experience: 30, skills: 30, certifications: 15, behavioral: 15, leadership: 10 },
-    statusChangeLog: [
-      {
-        status: "aberta",
-        changedAt: new Date("2024-05-15"),
-        changedBy: "joao-silva-abc123",
-        changedByName: "João Silva",
-      },
-      {
-        status: "recrutamento",
-        changedAt: new Date("2024-05-20"),
-        changedBy: "joao-silva-abc123",
-        changedByName: "João Silva",
-      },
-    ],
-  },
-  // ... (adicione mais vagas mock aqui)
-]
-
-const jobStatusOptions: { value: JobStatus; label: string }[] = [
-  { value: "aberta", label: "Aberta" },
-  { value: "recrutamento", label: "Recrutamento" },
-  { value: "triagem", label: "Triagem" },
-  { value: "avaliação", label: "Avaliação" },
-  { value: "contato", label: "Contato" },
-  { value: "vaga fechada", label: "Vaga Fechada" },
-  { value: "draft", label: "Rascunho" },
-]
 
 /**
  * @description Página de gerenciamento de vagas que permite visualizar, filtrar e atualizar o status das vagas
@@ -97,7 +54,7 @@ const jobStatusOptions: { value: JobStatus; label: string }[] = [
  * - Para integrar com API: Substitua mockJobs e implemente chamadas reais no handleStatusChange
  */
 export default function JobsPage() {
-  const [jobs, setJobsState] = useState<Job[]>(mockJobs)
+  const [jobs, setJobsState] = useState<Job[]>(mockJobsscrening)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<JobStatus | "all">("all")
   const [viewMode, setViewMode] = useState<"card" | "list">("card")

@@ -1,94 +1,65 @@
-interface AllowedCPF {
-  cpf: string
-  name: string
-  isAdmin: boolean
-  createdAt: Date
-}
-
-interface AccessLog {
-  id: string
-  cpf: string
-  name: string
-  action: string
-  timestamp: Date
-  success: boolean
-}
-
-interface SystemMetrics {
-  totalUsers: number
-  activeUsers: number
-  totalJobs: number
-  totalCandidates: number
-  systemUptime: string
-  avgResponseTime: string
-}
+// services/admin.ts
+import { AccessLog, AllowedCPF, SystemMetrics } from "@/types/admin-interface"
 
 export const adminService = {
-  getAllowedCPFs: async (): Promise<AllowedCPF[]> => {
-    // Stub implementation
-    await new Promise((resolve) => setTimeout(resolve, 500))
-
-    return [
-      {
-        cpf: "123.456.789-00",
-        name: "João Silva",
-        isAdmin: true,
-        createdAt: new Date("2024-01-15"),
-      },
-      {
-        cpf: "987.654.321-00",
-        name: "Maria Santos",
-        isAdmin: false,
-        createdAt: new Date("2024-01-10"),
-      },
-    ]
+  createuser: async (cpf: string, name: string, isAdmin: boolean, email: string): Promise<void> => {
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    console.log("Creating user:", { cpf, name, isAdmin, email })
   },
 
-  addAllowedCPF: async (cpf: string, name: string, isAdmin: boolean): Promise<void> => {
-    // Stub implementation
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+  getAllowedCPFs: async (): Promise<AllowedCPF[]> => {
+    await new Promise((resolve) => setTimeout(resolve, 500))
+    return JSON.parse(localStorage.getItem('allowed_cpfs') || '[]', (key, value) => {
+      if (key === "createdAt" || key === "updatedAt") return new Date(value)
+      return value
+    })
+  },
 
-    console.log("Adding allowed CPF:", { cpf, name, isAdmin })
+  addAllowedCPF: async (cpf: string, name: string, isAdmin: boolean, email: string): Promise<void> => {
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const currentCPFs: AllowedCPF[] = await adminService.getAllowedCPFs()
+    const newCPF: AllowedCPF = {
+      cpf,
+      name,
+      isAdmin,
+      email,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }
+    const updatedCPFs = [...currentCPFs, newCPF]
+    localStorage.setItem('allowed_cpfs', JSON.stringify(updatedCPFs))
+    console.log("Adding allowed CPF:", { cpf, name, isAdmin, email })
   },
 
   removeAllowedCPF: async (cpf: string): Promise<void> => {
-    // Stub implementation
     await new Promise((resolve) => setTimeout(resolve, 800))
-
+    const currentCPFs: AllowedCPF[] = await adminService.getAllowedCPFs()
+    const updatedCPFs = currentCPFs.filter((user) => user.cpf !== cpf)
+    localStorage.setItem('allowed_cpfs', JSON.stringify(updatedCPFs))
     console.log("Removing allowed CPF:", cpf)
   },
 
   getAccessLogs: async (): Promise<AccessLog[]> => {
-    // Stub implementation
     await new Promise((resolve) => setTimeout(resolve, 600))
+    return JSON.parse(localStorage.getItem('access_logs') || '[]', (key, value) => {
+      if (key === "timestamp") return new Date(value)
+      return value
+    })
+  },
 
-    return [
-      {
-        id: "1",
-        cpf: "123.456.789-00",
-        name: "João Silva",
-        action: "Login",
-        timestamp: new Date(),
-        success: true,
-      },
-      {
-        id: "2",
-        cpf: "987.654.321-00",
-        name: "Maria Santos",
-        action: "Upload",
-        timestamp: new Date(),
-        success: true,
-      },
-    ]
+  addAccessLog: async (log: AccessLog): Promise<void> => {
+    await new Promise((resolve) => setTimeout(resolve, 600))
+    const currentLogs: AccessLog[] = await adminService.getAccessLogs()
+    const updatedLogs = [...currentLogs, log]
+    localStorage.setItem('access_logs', JSON.stringify(updatedLogs))
   },
 
   getSystemMetrics: async (): Promise<SystemMetrics> => {
-    // Stub implementation
     await new Promise((resolve) => setTimeout(resolve, 400))
-
+    const cpfs = await adminService.getAllowedCPFs()
     return {
-      totalUsers: 15,
-      activeUsers: 8,
+      totalUsers: cpfs.length,
+      activeUsers: Math.floor(cpfs.length * 0.6),
       totalJobs: 23,
       totalCandidates: 456,
       systemUptime: "99.9%",

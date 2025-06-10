@@ -3,7 +3,7 @@ export interface User {
   cpf: string
   slug: string // Hash do CPF para URLs seguras
   name: string
-  email?: string
+  email: string
   roles: string[]
   permissions: string[]
   isAdmin: boolean

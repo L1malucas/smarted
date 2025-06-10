@@ -52,7 +52,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-br">
       <body className={inter.className}>
         <Navbar />
         <main className="min-h-screen bg-gray-50">

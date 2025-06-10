@@ -1,6 +1,7 @@
-import { motion } from 'framer-motion';
+'use client'
 
-export default function Loading() {
+import { motion } from 'framer-motion'
+export default function CustomLoading() {
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <motion.div
@@ -26,5 +27,5 @@ export default function Loading() {
         ))}
       </motion.div>
     </div>
-  );
+  )
 }

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -32,7 +32,6 @@ interface NavbarProps {
  * - Logo da empresa linkando para o dashboard
  * - Links de navegação principal (Dashboard, Recrutamento)
  * - Link de administração (visível apenas para admins)
- * - Indicador de status online/offline
  * - Sistema de notificações
  * - Menu de usuário com opção de logout
  * - Versão responsiva para mobile com menu hamburguer
@@ -60,8 +59,8 @@ interface NavbarProps {
  */
 export function Navbar({ tenantSlug, user }: NavbarProps) {
   const pathname = usePathname()
+  const router = useRouter()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [isOnline, setIsOnline] = useState(true)
   const [notifications, setNotifications] = useState<SystemNotification[]>([])
   const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false)
 
@@ -94,7 +93,7 @@ export function Navbar({ tenantSlug, user }: NavbarProps) {
 
   const handleLogout = () => {
     console.log("Logging out...")
-    // router.push('/login'); // In a real app
+    router.push('/login'); // In a real app
   }
 
   // Do not render Navbar on login, public, or apply pages
@@ -158,10 +157,6 @@ export function Navbar({ tenantSlug, user }: NavbarProps) {
             </div>
           </div>
           <div className="hidden sm:ml-6 sm:flex sm:items-center sm:space-x-3">
-            <div className="flex items-center gap-1">
-              {isOnline ? <Wifi className="h-4 w-4 text-green-500" /> : <WifiOff className="h-4 w-4 text-red-500" />}
-              <span className="text-xs text-muted-foreground">{isOnline ? "Online" : "Offline"}</span>
-            </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative">

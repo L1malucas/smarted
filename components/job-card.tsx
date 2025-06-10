@@ -109,10 +109,6 @@ export function JobCard({ job, tenantSlug, onStatusChange }: JobCardProps) {
                   Editar Vaga
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem className="flex items-center">
-                <Copy className="mr-2 h-4 w-4" />
-                Duplicar Vaga
-              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <ShareDialog
                 title={`Compartilhar Vaga: ${job.title}`}

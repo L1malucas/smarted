@@ -57,10 +57,20 @@ export function CandidateButton() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (tenantSlug) {
-      router.push(`/${tenantSlug}/jobs`)
+      router.push(`/${tenantSlug}/jobs/public`)
       setIsOpen(false)
     }
   }
+
+  // Add this at the top of the component
+  const [tenants] = useState([
+    { id: 1, name: "Renova Soluções em Tecnologia", slug: "smarted-tenant" },
+    { id: 2, name: "Opal Bytes", slug: "smarted-tenant" },
+    { id: 3, name: "SmartEd Soluções Tecnológicas", slug: "smarted-tenant" },
+    { id: 4, name: "Empresa XYZ", slug: "smarted-tenant" },
+    { id: 5, name: "Empresa XYZ", slug: "smarted-tenant" },
+    // Add more tenants as needed
+  ])
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -69,28 +79,26 @@ export function CandidateButton() {
           Sou Candidato
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Acesso para Candidatos</DialogTitle>
-          <DialogDescription>Informe o código da empresa para acessar as vagas disponíveis.</DialogDescription>
+          <DialogTitle>Selecione uma Empresa</DialogTitle>
+          <DialogDescription>Escolha a empresa para visualizar as vagas disponíveis.</DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="tenant-slug">Código da Empresa</Label>
-              <Input
-                id="tenant-slug"
-                placeholder="Ex: empresa-abc"
-                value={tenantSlug}
-                onChange={(e) => setTenantSlug(e.target.value)}
-                required
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button type="submit">Acessar Vagas</Button>
-          </DialogFooter>
-        </form>
+        <div className="grid gap-2 py-4">
+          {tenants.map((tenant) => (
+            <Button
+              key={tenant.id}
+              variant="outline"
+              className="w-full justify-start"
+              onClick={(e) => {
+                setTenantSlug(tenant.slug)
+                handleSubmit(e as React.FormEvent)
+              }}
+            >
+              {tenant.name}
+            </Button>
+          ))}
+        </div>
       </DialogContent>
     </Dialog>
   )
