@@ -31,6 +31,72 @@ interface PublicJob {
   // expiryTimestamp?: number; // For frontend expiry check
 }
 
+/**
+ * @page PublicJobPage
+ * @description Página pública para visualização de vagas compartilhadas, com suporte a proteção por senha.
+ * 
+ * @component PublicJobPage
+ * @returns {JSX.Element} Renderiza a interface da vaga compartilhada
+ * 
+ * @state
+ * - job: {PublicJob | null} Armazena os dados da vaga
+ * - loading: {boolean} Controla o estado de carregamento
+ * - error: {string | null} Armazena mensagens de erro
+ * - isAuthenticated: {boolean} Indica se o usuário está autenticado para ver a vaga
+ * - passwordAttempt: {string} Armazena a tentativa de senha do usuário
+ * - showPasswordPrompt: {boolean} Controla a exibição do prompt de senha
+ * 
+ * @hooks
+ * - useEffect: Realiza o fetch inicial dos dados da vaga
+ * - useParams: Obtém o hash da URL para identificar a vaga
+ * 
+ * @flow
+ * 1. Obtém o hash da URL
+ * 2. Carrega os dados da vaga (mockado)
+ * 3. Verifica se a vaga é protegida por senha
+ * 4. Se protegida, exibe prompt de senha
+ * 5. Após autenticação, exibe os detalhes da vaga
+ * 
+ * @authentication
+ * - Utiliza localStorage para simular proteção por senha
+ * - Chave `share_pwd_${hash}` armazena a senha da vaga
+ * - Chave `share_info_${hash}` pode armazenar informações adicionais (como expiração)
+ * 
+ * @displays
+ * - Loading: Skeleton loader durante carregamento
+ * - Error: Card de erro para problemas de acesso
+ * - Password Prompt: Formulário de senha para vagas protegidas
+ * - Job Details: Detalhes completos da vaga após autenticação
+ * 
+ * @layout
+ * - Cabeçalho com título e status
+ * - Descrição da vaga
+ * - Métricas (data, candidatos, ID)
+ * - Critérios de avaliação com pesos visuais
+ * 
+ * @integration
+ * - Substituir mock por chamada API real
+ * - Implementar verificação de expiração do compartilhamento
+ * - Integrar com sistema de autenticação real
+ * 
+ * @customization
+ * Para adicionar novas funcionalidades:
+ * 1. Expandir interface PublicJob para novos campos
+ * 2. Adicionar novos estados se necessário
+ * 3. Implementar novas seções no layout de detalhes
+ * 4. Considerar implementar sistema de cache para dados
+ * 
+ * @dependencies
+ * - shadcn/ui para componentes de UI
+ * - lucide-react para ícones
+ * - next/navigation para useParams
+ * 
+ * @security
+ * - Implementar rate limiting para tentativas de senha
+ * - Adicionar expiração de compartilhamento
+ * - Sanitizar dados da API
+ * - Implementar proteção contra força bruta
+ */
 export default function PublicJobPage() {
   const params = useParams()
   const hash = params.hash as string // Get hash from URL

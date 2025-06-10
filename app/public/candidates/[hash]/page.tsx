@@ -35,6 +35,71 @@ const radarData = [
   { subject: "Liderança", A: 77.7, fullMark: 100 },
 ]
 
+/**
+ * @page PublicCandidatesPage
+ * @description Página pública para visualização de candidatos ranqueados para uma vaga específica
+ * 
+ * @component
+ * @public
+ * 
+ * @remarks
+ * Esta página é acessível publicamente através de um hash único e exibe:
+ * - Título da vaga
+ * - Gráfico radar com médias gerais
+ * - Lista de candidatos ordenada por pontuação
+ * 
+ * @dependencies
+ * - useParams - Para capturar o hash da URL
+ * - useState - Gerenciamento de estado dos candidatos, título da vaga, loading e erros
+ * - useEffect - Efeito para carregar dados dos candidatos
+ * - RadarChart - Componente para visualização gráfica das médias
+ * - Card, Badge - Componentes UI
+ * 
+ * @states
+ * - candidates: PublicCandidate[] - Lista de candidatos com suas análises
+ * - jobTitle: string - Título da vaga em questão
+ * - loading: boolean - Estado de carregamento da página
+ * - error: string | null - Mensagem de erro, se houver
+ * 
+ * @functions
+ * - fetchCandidates() - Função assíncrona que busca os dados dos candidatos
+ *   Atualmente usando dados mockados, deve ser substituída por chamada real à API
+ * 
+ * - getScoreColor(score: number) - Retorna classe CSS de cor baseada na pontuação
+ *   >= 80: verde
+ *   >= 60: amarelo
+ *   < 60: vermelho
+ * 
+ * - getScoreBadge(score: number) - Retorna componente Badge com status baseado na pontuação
+ *   >= 80: Excelente
+ *   >= 60: Bom
+ *   < 60: Regular
+ * 
+ * @visualElements
+ * - Loading: Skeleton components para loading state
+ * - Error: Card com mensagem de erro
+ * - Main Content:
+ *   1. Cabeçalho com título e informações da vaga
+ *   2. Gráfico radar com médias gerais
+ *   3. Lista de candidatos com scores e comentários
+ *   4. Footer com mensagem informativa
+ * 
+ * @extensionPoints
+ * - Implementação real do fetchCandidates com chamada à API
+ * - Adição de filtros e ordenação
+ * - Expansão dos critérios de avaliação
+ * - Implementação de interatividade para usuários logados
+ * 
+ * @securityConsiderations
+ * - Página é pública mas requer hash válido
+ * - Dados sensíveis devem ser filtrados no backend
+ * - Considerar implementação de rate limiting
+ * 
+ * @related
+ * - Componente deve se integrar com API de candidatos
+ * - Sistema de autenticação para funcionalidades extras
+ * - Sistema de compartilhamento de links públicos
+ */
 export default function PublicCandidatesPage() {
   const params = useParams()
   const [candidates, setCandidates] = useState<PublicCandidate[]>([])
