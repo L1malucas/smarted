@@ -1,0 +1,270 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import Link from "next/link"
+import Image from "next/image"
+import { usePathname } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { LayoutDashboard, Briefcase, Shield, LogOut, Menu, X, Wifi, WifiOff, Bell } from "lucide-react"
+import { cn } from "@/lib/utils"
+import type { SystemNotification, User } from "@/types"
+
+interface NavbarProps {
+  tenantSlug: string
+  user: User | null // Pass user prop
+}
+
+export function Navbar({ tenantSlug, user }: NavbarProps) {
+  const pathname = usePathname()
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isOnline, setIsOnline] = useState(true)
+  const [notifications, setNotifications] = useState<SystemNotification[]>([])
+  const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false)
+
+  const navigation = [
+    { name: "Dashboard", href: `/${tenantSlug}/dashboard`, icon: LayoutDashboard },
+    { name: "Recrutamento", href: `/${tenantSlug}/jobs`, icon: Briefcase }, // "Recrutamento" now links to jobs list
+    // Triagem, Avaliação, Contato are accessed from within the /jobs flow or specific job details
+  ]
+
+  const adminNavigation = user?.isAdmin ? { name: "Administração", href: `/${tenantSlug}/admin`, icon: Shield } : null
+
+  useEffect(() => {
+    if (user) {
+      const mockNotificationsData: SystemNotification[] = [
+        {
+          _id: "1",
+          userId: user.slug,
+          message: "Nova candidatura para a vaga 'Desenvolvedor Frontend Sênior'",
+          type: "info",
+          relatedResource: { type: "job", id: "desenvolvedor-frontend-senior", title: "Desenvolvedor Frontend Sênior" },
+          isRead: false,
+          createdAt: new Date(Date.now() - 3600000),
+          link: `/${tenantSlug}/screening?jobId=desenvolvedor-frontend-senior`,
+        },
+      ]
+      setNotifications(mockNotificationsData)
+      setHasUnreadNotifications(mockNotificationsData.some((n) => !n.isRead))
+    }
+  }, [user, tenantSlug])
+
+  const handleLogout = () => {
+    console.log("Logging out...")
+    // router.push('/login'); // In a real app
+  }
+
+  // Do not render Navbar on login, public, or apply pages
+  if (
+    pathname === "/login" ||
+    pathname.startsWith("/public/") ||
+    pathname.startsWith("/apply/") ||
+    !user // Also don't render if no user (should be caught by layout, but good check)
+  ) {
+    return null
+  }
+
+  return (
+    <nav className="border-b bg-background sticky top-0 z-50">
+      <div className="mx-auto max-w-full px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 justify-between">
+          <div className="flex">
+            <div className="flex flex-shrink-0 items-center">
+              <Link href={`/${tenantSlug}/dashboard`} className="flex items-center gap-2">
+                <Image src="/logo.png" alt="SMARTED TECH SOLUTIONS" width={150} height={35} />
+              </Link>
+            </div>
+            <div className="hidden sm:ml-6 sm:flex sm:space-x-4">
+              {navigation.map((item) => {
+                const Icon = item.icon
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className={cn(
+                      "inline-flex items-center gap-2 px-1 pt-1 text-sm font-medium border-b-2 transition-colors",
+                      pathname.startsWith(item.href) ||
+                        (item.name === "Recrutamento" &&
+                          (pathname.startsWith(`/${tenantSlug}/jobs`) ||
+                            pathname.startsWith(`/${tenantSlug}/screening`) ||
+                            pathname.startsWith(`/${tenantSlug}/evaluation`) ||
+                            pathname.startsWith(`/${tenantSlug}/contact`)))
+                        ? "border-blue-500 text-blue-500"
+                        : "border-transparent text-foreground hover:border-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {item.name}
+                  </Link>
+                )
+              })}
+              {adminNavigation && (
+                <Link
+                  href={adminNavigation.href}
+                  className={cn(
+                    "inline-flex items-center gap-2 px-1 pt-1 text-sm font-medium border-b-2 transition-colors",
+                    pathname.startsWith(adminNavigation.href)
+                      ? "border-red-500 text-red-500"
+                      : "border-transparent text-foreground hover:border-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  <adminNavigation.icon className="h-4 w-4" />
+                  {adminNavigation.name}
+                </Link>
+              )}
+            </div>
+          </div>
+          <div className="hidden sm:ml-6 sm:flex sm:items-center sm:space-x-3">
+            <div className="flex items-center gap-1">
+              {isOnline ? <Wifi className="h-4 w-4 text-green-500" /> : <WifiOff className="h-4 w-4 text-red-500" />}
+              <span className="text-xs text-muted-foreground">{isOnline ? "Online" : "Offline"}</span>
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative">
+                  <Bell className="h-5 w-5" />
+                  {hasUnreadNotifications && (
+                    <span className="absolute top-1 right-1 flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                    </span>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-80">
+                <div className="p-2 font-medium">Notificações</div>
+                {notifications.length === 0 ? (
+                  <div className="p-4 text-sm text-muted-foreground">Nenhuma notificação.</div>
+                ) : (
+                  notifications.map((notif) => (
+                    <DropdownMenuItem key={notif._id} asChild className={cn(!notif.isRead && "bg-muted/50")}>
+                      <Link href={notif.link || "#"} className="block p-2 hover:bg-muted">
+                        <p className="text-sm">{notif.message}</p>
+                        <p className="text-xs text-muted-foreground">{new Date(notif.createdAt).toLocaleString()}</p>
+                      </Link>
+                    </DropdownMenuItem>
+                  ))
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="flex items-center gap-2">
+                  <div className="text-right">
+                    <p className="text-sm font-medium">{user.name}</p>
+                    <p className="text-xs text-muted-foreground">{user.slug}</p>
+                  </div>
+                  {user.isAdmin && (
+                    <Badge variant="destructive" className="text-xs">
+                      Admin
+                    </Badge>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sair
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          <div className="-mr-2 flex items-center sm:hidden">
+            <Button variant="ghost" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+              {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {isMobileMenuOpen && (
+        <div className="sm:hidden">
+          <div className="space-y-1 pb-3 pt-2">
+            {navigation.map((item) => {
+              const Icon = item.icon
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-2 border-l-4 py-2 pl-3 pr-4 text-base font-medium transition-colors",
+                    pathname.startsWith(item.href) ||
+                      (item.name === "Recrutamento" &&
+                        (pathname.startsWith(`/${tenantSlug}/jobs`) ||
+                          pathname.startsWith(`/${tenantSlug}/screening`) ||
+                          pathname.startsWith(`/${tenantSlug}/evaluation`) ||
+                          pathname.startsWith(`/${tenantSlug}/contact`)))
+                      ? "border-blue-500 bg-blue-950/10 text-blue-500"
+                      : "border-transparent text-foreground hover:border-muted-foreground hover:bg-muted/50 hover:text-foreground",
+                  )}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <Icon className="h-5 w-5" />
+                  {item.name}
+                </Link>
+              )
+            })}
+            {adminNavigation && (
+              <Link
+                href={adminNavigation.href}
+                className={cn(
+                  "flex items-center gap-2 border-l-4 py-2 pl-3 pr-4 text-base font-medium transition-colors",
+                  pathname.startsWith(adminNavigation.href)
+                    ? "border-red-500 bg-red-950/10 text-red-500"
+                    : "border-transparent text-foreground hover:border-muted-foreground hover:bg-muted/50 hover:text-foreground",
+                )}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <adminNavigation.icon className="h-5 w-5" />
+                {adminNavigation.name}
+              </Link>
+            )}
+          </div>
+          <div className="border-t border-muted pb-3 pt-4">
+            <div className="flex items-center justify-between px-4">
+              <div className="flex-shrink-0">
+                <div className="text-base font-medium">{user.name}</div>
+                <div className="text-sm text-muted-foreground">{user.slug}</div>
+              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="relative">
+                    <Bell className="h-5 w-5" />
+                    {hasUnreadNotifications && (
+                      <span className="absolute top-1 right-1 flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                      </span>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-80">
+                  <div className="p-2 font-medium">Notificações</div>
+                  {notifications.length === 0 ? (
+                    <div className="p-4 text-sm text-muted-foreground">Nenhuma notificação.</div>
+                  ) : (
+                    notifications.map((notif) => (
+                      <DropdownMenuItem key={notif._id} asChild className={cn(!notif.isRead && "bg-muted/50")}>
+                        <Link href={notif.link || "#"} className="block p-2 hover:bg-muted">
+                          <p className="text-sm">{notif.message}</p>
+                          <p className="text-xs text-muted-foreground">{new Date(notif.createdAt).toLocaleString()}</p>
+                        </Link>
+                      </DropdownMenuItem>
+                    ))
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+            <div className="mt-3 space-y-1 px-2">
+              <Button variant="ghost" className="w-full justify-start" onClick={handleLogout}>
+                <LogOut className="h-5 w-5 mr-2" />
+                Sair
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </nav>
+  )
+}

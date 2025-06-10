@@ -1,0 +1,293 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { useSearchParams, useParams } from "next/navigation"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Badge } from "@/components/ui/badge"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { ArrowUpDown, Search, Filter, Eye, CheckCircle, XCircle, Download } from "lucide-react"
+import type { Candidate, Job } from "@/types" // Assuming types are defined
+import Link from "next/link"
+import { ShareDialog } from "@/components/share-dialog"
+
+// Mock data - replace with actual API calls
+const mockCandidates: Candidate[] = [
+  // Add mock candidate data here, including `currentStage: 'triagem'`
+  {
+    _id: "cand1",
+    jobId: "1",
+    jobSlug: "dev-frontend",
+    name: "Alice Wonderland",
+    email: "alice@example.com",
+    curriculumUrl: "#",
+    fileName: "alice_cv.pdf",
+    isReferral: false,
+    currentStage: "triagem",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    analysis: {
+      finalScore: 85,
+      experienceScore: 0,
+      skillsScore: 0,
+      certificationsScore: 0,
+      behavioralScore: 0,
+      leadershipScore: 0,
+      comments: { experience: "", skills: "", certifications: "" },
+    },
+    matchLevel: "alto",
+  },
+  {
+    _id: "cand2",
+    jobId: "1",
+    jobSlug: "dev-frontend",
+    name: "Bob The Builder",
+    email: "bob@example.com",
+    curriculumUrl: "#",
+    fileName: "bob_cv.pdf",
+    isReferral: true,
+    currentStage: "triagem",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    analysis: {
+      finalScore: 75,
+      experienceScore: 0,
+      skillsScore: 0,
+      certificationsScore: 0,
+      behavioralScore: 0,
+      leadershipScore: 0,
+      comments: { experience: "", skills: "", certifications: "" },
+    },
+    matchLevel: "médio",
+  },
+]
+
+const mockJobs: Job[] = [
+  // Add mock job data
+  {
+    _id: "1",
+    slug: "dev-frontend",
+    title: "Desenvolvedor Frontend Sênior",
+    status: "triagem",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    createdBy: "",
+    candidatesCount: 2,
+    competencies: [],
+    questions: [],
+    isPCDExclusive: false,
+    isReferralJob: false,
+    criteriaWeights: { experience: 0, skills: 0, certifications: 0, behavioral: 0, leadership: 0 },
+  },
+  {
+    _id: "2",
+    slug: "analista-dados",
+    title: "Analista de Dados Júnior",
+    status: "triagem",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    createdBy: "",
+    candidatesCount: 0,
+    competencies: [],
+    questions: [],
+    isPCDExclusive: false,
+    isReferralJob: false,
+    criteriaWeights: { experience: 0, skills: 0, certifications: 0, behavioral: 0, leadership: 0 },
+  },
+]
+
+export default function ScreeningPage() {
+  const searchParams = useSearchParams()
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(searchParams.get("jobId"))
+  const [candidates, setCandidates] = useState<Candidate[]>([])
+  const [searchTerm, setSearchTerm] = useState("")
+  const [sortBy, setSortBy] = useState<keyof Candidate | "finalScore">("createdAt")
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc")
+
+  const params = useParams()
+  const tenantSlug = params.slug as string
+
+  useEffect(() => {
+    if (selectedJobId) {
+      // Filter mockCandidates by selectedJobId and ensure they are in 'triagem' stage
+      const jobCandidates = mockCandidates.filter((c) => c.jobId === selectedJobId && c.currentStage === "triagem")
+      setCandidates(jobCandidates)
+    } else {
+      // Show all candidates in 'triagem' stage if no job is selected
+      setCandidates(mockCandidates.filter((c) => c.currentStage === "triagem"))
+    }
+  }, [selectedJobId])
+
+  const selectedJob = mockJobs.find((job) => job._id === selectedJobId)
+
+  const filteredAndSortedCandidates = candidates
+    .filter(
+      (c) =>
+        c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        c.email?.toLowerCase().includes(searchTerm.toLowerCase()),
+    )
+    .sort((a, b) => {
+      let valA, valB
+      if (sortBy === "finalScore") {
+        valA = a.analysis?.finalScore || 0
+        valB = b.analysis?.finalScore || 0
+      } else {
+        valA = a[sortBy as keyof Candidate]
+        valB = b[sortBy as keyof Candidate]
+      }
+
+      if (valA === undefined || valA === null) valA = "" // Handle undefined for sorting
+      if (valB === undefined || valB === null) valB = ""
+
+      if (typeof valA === "number" && typeof valB === "number") {
+        return sortOrder === "asc" ? valA - valB : valB - valA
+      }
+      if (valA instanceof Date && valB instanceof Date) {
+        return sortOrder === "asc" ? valA.getTime() - valB.getTime() : valB.getTime() - valA.getTime()
+      }
+      return sortOrder === "asc" ? String(valA).localeCompare(String(valB)) : String(valB).localeCompare(String(valA))
+    })
+
+  const handleSort = (column: keyof Candidate | "finalScore") => {
+    if (sortBy === column) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+    } else {
+      setSortBy(column)
+      setSortOrder("desc")
+    }
+  }
+
+  const getMatchBadge = (level?: "baixo" | "médio" | "alto") => {
+    if (!level) return <Badge variant="outline">N/A</Badge>
+    const config = {
+      baixo: { className: "bg-red-500 hover:bg-red-600", label: "Baixo" },
+      médio: { className: "bg-yellow-500 hover:bg-yellow-600", label: "Médio" },
+      alto: { className: "bg-green-500 hover:bg-green-600", label: "Alto" },
+    }
+    return <Badge className={config[level].className}>{config[level].label}</Badge>
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap justify-between items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold">Triagem de Candidatos</h1>
+          <p className="text-muted-foreground">Analise e mova candidatos para as próximas etapas.</p>
+        </div>
+        {selectedJob && (
+          <ShareDialog
+            title={`Compartilhar Triagem - ${selectedJob.title}`}
+            resourceType="candidates" // ou um novo tipo "screening_report"
+            resourceId={`screening-${selectedJob._id}`}
+            resourceName={`Relatório de Triagem - ${selectedJob.title}`}
+            tenantSlug={tenantSlug}
+          />
+        )}
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Filtros e Seleção de Vaga</CardTitle>
+          <div className="flex flex-col sm:flex-row gap-4 mt-4">
+            <Select value={selectedJobId || ""} onValueChange={setSelectedJobId}>
+              <SelectTrigger className="w-full sm:w-[300px]">
+                <SelectValue placeholder="Selecione uma vaga para triagem" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as Vagas em Triagem</SelectItem>
+                {mockJobs
+                  .filter((j) => j.status === "triagem" || j.status === "recrutamento" || j.status === "aberta")
+                  .map((job) => (
+                    <SelectItem key={job._id} value={job._id}>
+                      {job.title}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+            <div className="relative flex-grow">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nome, email..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Button variant="outline">
+              <Filter className="mr-2 h-4 w-4" /> Filtros Avançados
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {selectedJob && <p className="mb-4 text-lg font-semibold">Exibindo candidatos para: {selectedJob.title}</p>}
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead onClick={() => handleSort("name")} className="cursor-pointer">
+                  Nome <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+                </TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead onClick={() => handleSort("finalScore")} className="cursor-pointer">
+                  Match IA <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+                </TableHead>
+                <TableHead>Indicação?</TableHead>
+                <TableHead onClick={() => handleSort("createdAt")} className="cursor-pointer">
+                  Data Aplicação <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+                </TableHead>
+                <TableHead>Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredAndSortedCandidates.map((candidate) => (
+                <TableRow key={candidate._id}>
+                  <TableCell className="font-medium">{candidate.name}</TableCell>
+                  <TableCell>{candidate.email}</TableCell>
+                  <TableCell>
+                    {getMatchBadge(candidate.matchLevel)} ({candidate.analysis?.finalScore}%)
+                  </TableCell>
+                  <TableCell>
+                    {candidate.isReferral ? (
+                      <Badge variant="info" className="bg-teal-500">
+                        Sim
+                      </Badge>
+                    ) : (
+                      "Não"
+                    )}
+                  </TableCell>
+                  <TableCell>{new Date(candidate.createdAt).toLocaleDateString()}</TableCell>
+                  <TableCell className="space-x-2">
+                    <Button variant="ghost" size="icon" asChild title="Ver Detalhes">
+                      <Link href={`/${tenantSlug}/candidate/${candidate._id}?jobId=${selectedJobId}`}>
+                        <Eye className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                    <Button variant="ghost" size="icon" title="Aprovar para Avaliação">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    </Button>
+                    <Button variant="ghost" size="icon" title="Reprovar Candidato">
+                      <XCircle className="h-4 w-4 text-red-500" />
+                    </Button>
+                    <Button variant="ghost" size="icon" asChild title="Download CV">
+                      <a href={candidate.curriculumUrl} download={candidate.fileName}>
+                        <Download className="h-4 w-4" />
+                      </a>
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          {filteredAndSortedCandidates.length === 0 && (
+            <p className="text-center text-muted-foreground py-8">
+              {selectedJobId
+                ? `Nenhum candidato em triagem para "${selectedJob?.title}".`
+                : "Nenhum candidato em triagem no momento."}
+            </p>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
