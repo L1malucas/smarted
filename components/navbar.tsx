@@ -159,34 +159,6 @@ export function Navbar({ tenantSlug, user }: NavbarProps) {
           <div className="hidden sm:ml-6 sm:flex sm:items-center sm:space-x-3">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative">
-                  <Bell className="h-5 w-5" />
-                  {hasUnreadNotifications && (
-                    <span className="absolute top-1 right-1 flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                    </span>
-                  )}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-80">
-                <div className="p-2 font-medium">Notificações</div>
-                {notifications.length === 0 ? (
-                  <div className="p-4 text-sm text-muted-foreground">Nenhuma notificação.</div>
-                ) : (
-                  notifications.map((notif) => (
-                    <DropdownMenuItem key={notif._id} asChild className={cn(!notif.isRead && "bg-muted/50")}>
-                      <Link href={notif.link || "#"} className="block p-2 hover:bg-muted">
-                        <p className="text-sm">{notif.message}</p>
-                        <p className="text-xs text-muted-foreground">{new Date(notif.createdAt).toLocaleString()}</p>
-                      </Link>
-                    </DropdownMenuItem>
-                  ))
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="flex items-center gap-2">
                   <div className="text-right">
                     <p className="text-sm font-medium">{user.name}</p>

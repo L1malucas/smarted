@@ -1,0 +1,45 @@
+% lib/pdf-template.tex
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{longtable}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\geometry{margin=1in}
+
+\begin{document}
+
+\title{Dashboard Report - \VAR{tenantSlug}}
+\author{}
+\date{\VAR{period}}
+\maketitle
+
+\section{Metrics Summary}
+\begin{tabular}{ll}
+\toprule
+Metric & Value \\
+\midrule
+Vagas Criadas & \VAR{metrics.vagasCriadas} \\
+Candidatos Cadastrados & \VAR{metrics.candidatosCadastrados} \\
+Contatos Realizados & \VAR{metrics.contatosRealizados} \\
+Matches Gerados & \VAR{metrics.matches} \\
+Ações Pendentes & \VAR{metrics.acoesPendentes} \\
+\bottomrule
+\end{tabular}
+
+\section{User Activity}
+\begin{longtable}{lrr}
+\toprule
+Day & Logins & Actions \\
+\midrule
+\BLOCK{ for item in userActivity }
+\VAR{item.name} & \VAR{item.logins} & \VAR{item.acoes} \\
+\BLOCK{ endfor }
+\bottomrule
+\end{longtable}
+
+\end{document}

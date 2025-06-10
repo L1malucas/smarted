@@ -3,7 +3,6 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Shield, Settings, CalendarX, UserCog, History, LifeBuoy } from "lucide-react"
 import { useParams } from "next/navigation"
@@ -23,14 +22,11 @@ export default function AdminPage() {
   const [accessLogs, setAccessLogs] = useState<AccessLog[]>([])
   const [systemMetrics, setSystemMetrics] = useState<SystemMetrics | null>(null)
 
-  // Local storage keys
   const ALLOWED_CPFS_KEY = `allowed_cpfs_${tenantSlug}`
   const ACCESS_LOGS_KEY = `access_logs_${tenantSlug}`
 
-  // Load data from local storage on mount
   useEffect(() => {
     const loadData = async () => {
-      // Load allowed CPFs
       const storedCPFs = localStorage.getItem(ALLOWED_CPFS_KEY)
       if (storedCPFs) {
         setAllowedCPFs(JSON.parse(storedCPFs, (key, value) => {
@@ -43,7 +39,6 @@ export default function AdminPage() {
         localStorage.setItem(ALLOWED_CPFS_KEY, JSON.stringify(cpfs))
       }
 
-      // Load access logs
       const storedLogs = localStorage.getItem(ACCESS_LOGS_KEY)
       if (storedLogs) {
         setAccessLogs(JSON.parse(storedLogs, (key, value) => {
@@ -56,7 +51,6 @@ export default function AdminPage() {
         localStorage.setItem(ACCESS_LOGS_KEY, JSON.stringify(logs))
       }
 
-      // Load system metrics
       const metrics = await adminService.getSystemMetrics()
       setSystemMetrics(metrics)
     }
@@ -70,7 +64,6 @@ export default function AdminPage() {
     setAllowedCPFs(updatedCPFs)
     localStorage.setItem(ALLOWED_CPFS_KEY, JSON.stringify(updatedCPFs))
 
-    // Log the action
     const newLog: AccessLog = {
       id: `${Date.now()}`,
       cpf: newUser.cpf,
@@ -90,7 +83,6 @@ export default function AdminPage() {
     setAllowedCPFs(updatedCPFs)
     localStorage.setItem(ALLOWED_CPFS_KEY, JSON.stringify(updatedCPFs))
 
-    // Log the action
     const user = allowedCPFs.find((u) => u.cpf === cpf)
     const newLog: AccessLog = {
       id: `${Date.now()}`,
@@ -108,9 +100,6 @@ export default function AdminPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <div className="p-2 bg-red-100 rounded-lg">
-          <Shield className="h-6 w-6 text-red-500" />
-        </div>
         <div>
           <h1 className="text-3xl font-bold">Painel Administrativo</h1>
           <p className="text-muted-foreground">Gerenciamento do sistema ({tenantSlug}), usuários e logs.</p>
