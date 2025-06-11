@@ -102,9 +102,9 @@ export function JobFilter({
             <line x1="3" x2="3.01" y1="18" y2="18" />
           </svg>
         </Button>
-        <Button variant="outline">
+        {/* <Button variant="outline">
           <Filter className="mr-2 h-4 w-4" /> Filtros Avançados
-        </Button>
+        </Button> */}
       </div>
     </div>
   );

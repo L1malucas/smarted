@@ -1,65 +1,7 @@
-/**
- * @component CreateJobPage
- * @description Página de criação de vagas de emprego. Permite criar novas vagas com informações detalhadas,
- * competências e perguntas para candidatos.
- * 
- * @state {Partial<Job>} formData - Estado principal que armazena todos os dados do formulário da vaga
- * @state {number} mandatoryCompetenciesCount - Contador de competências obrigatórias
- * 
- * @hooks
- * - useRouter: Utilizado para navegação
- * - useParams: Obtém o slug do tenant da URL
- * - useEffect: Atualiza o contador de competências obrigatórias
- * 
- * @handlers
- * - handleInputChange: Gerencia mudanças nos campos básicos do formulário
- * - handleCompetencyChange: Gerencia mudanças nas competências
- * - addCompetency: Adiciona nova competência (máximo 5 obrigatórias)
- * - removeCompetency: Remove competência (mantém mínimo 1 obrigatória)
- * - handleQuestionChange: Gerencia mudanças nas perguntas
- * - handleQuestionOptionChange: Gerencia mudanças nas opções de perguntas fechadas
- * - addQuestionOption: Adiciona opção em pergunta fechada
- * - removeQuestionOption: Remove opção de pergunta fechada
- * - addQuestion: Adiciona nova pergunta
- * - removeQuestion: Remove pergunta existente
- * - handleSubmit: Valida e salva a vaga (como rascunho ou publicada)
- * 
- * @validations
- * - Mínimo 1 e máximo 5 competências obrigatórias
- * - Título e descrição são obrigatórios
- * - Perguntas fechadas precisam ter pelo menos 1 opção
- * 
- * @communications
- * - Integra com serviço de vagas (jobsService) para persistência
- * - Usa sistema de toast para feedback ao usuário
- * - Navegação baseada no tenant atual
- * 
- * @UI
- * - Layout responsivo (2 colunas em desktop)
- * - Preview em tempo real da vaga
- * - Campos dinâmicos para competências e perguntas
- * - Tooltips informativos
- * 
- * @modifications
- * Para modificar/estender:
- * 1. Altere initialCompetency/initialQuestion para novos campos padrão
- * 2. Adicione validações em handleSubmit
- * 3. Expanda interface Job para novos campos
- * 4. Modifique preview no Card lateral
- * 5. Ajuste pesos e limites de competências nas constantes
- * 
- * @dependencies
- * - shadcn/ui para componentes
- * - lucide-react para ícones
- * - next/navigation para roteamento
- * 
- * @example
- * // Uso básico do componente em uma rota Next.js:
- * app/[slug]/jobs/create/page.tsx
- */
-
 "use client";
-
+// conectar o audit no s logs
+//  ajuste dos campos
+// gerar interface de job para backend 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";

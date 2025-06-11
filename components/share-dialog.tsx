@@ -141,7 +141,7 @@ export function ShareDialog({ title, resourceType, resourceId, resourceName, ten
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
+        <Button variant="ghost" size="sm">
           <Share2 className="h-4 w-4 mr-2" />
           Compartilhar
         </Button>

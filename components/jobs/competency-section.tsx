@@ -4,8 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { HelpCircle, PlusCircle, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, HelpCircle, PlusCircle, Trash2 } from "lucide-react";
 import { Competency } from "@/types/jobs-interface";
+import { useState } from "react";
 
 interface CompetencySectionProps {
   competencies: Competency[];
@@ -14,6 +15,7 @@ interface CompetencySectionProps {
 }
 
 export function CompetencySection({ competencies, onChange, error }: CompetencySectionProps) {
+  const [isOpen, setIsOpen] = useState(true);
   const handleCompetencyChange = (index: number, field: keyof Competency, value: any) => {
     const updated = [...competencies];
     updated[index] = { ...updated[index], [field]: value };
@@ -38,7 +40,7 @@ export function CompetencySection({ competencies, onChange, error }: CompetencyS
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row justify-between items-center">
         <CardTitle className="flex items-center">
           Competências da Vaga
           <TooltipProvider>
@@ -54,54 +56,59 @@ export function CompetencySection({ competencies, onChange, error }: CompetencyS
             </Tooltip>
           </TooltipProvider>
         </CardTitle>
+        <button onClick={() => setIsOpen(!isOpen)}>
+          {isOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+        </button>
         {error && <p className="text-sm text-red-500">{error}</p>}
       </CardHeader>
-      <CardContent className="space-y-4">
-        {competencies.map((comp, index) => (
-          <div key={comp.id} className="p-3 border rounded-md space-y-3">
-            <div className="flex gap-2 items-end">
-              <div className="flex-grow">
-                <Label htmlFor={`comp-name-${index}`}>Nome da Competência</Label>
-                <Input
-                  id={`comp-name-${index}`}
-                  value={comp.name}
-                  onChange={(e) => handleCompetencyChange(index, "name", e.target.value)}
-                  placeholder="Ex: React, Liderança, Comunicação"
-                />
-              </div>
-              <div className="w-24">
-                <Label htmlFor={`comp-weight-${index}`}>Peso (1-5)</Label>
-                <Select
-                  value={String(comp.weight)}
-                  onValueChange={(val) => handleCompetencyChange(index, "weight", Number.parseInt(val))}
+      {isOpen && (
+        <CardContent className="space-y-4">
+          {competencies.map((comp, index) => (
+            <div key={comp.id} className="p-3 border rounded-md space-y-3">
+              <div className="flex gap-2 items-end">
+                <div className="flex-grow">
+                  <Label htmlFor={`comp-name-${index}`}>Nome da Competência</Label>
+                  <Input
+                    id={`comp-name-${index}`}
+                    value={comp.name}
+                    onChange={(e) => handleCompetencyChange(index, "name", e.target.value)}
+                    placeholder="Ex: React, Liderança, Comunicação"
+                  />
+                </div>
+                <div className="w-24">
+                  <Label htmlFor={`comp-weight-${index}`}>Peso (1-5)</Label>
+                  <Select
+                    value={String(comp.weight)}
+                    onValueChange={(val) => handleCompetencyChange(index, "weight", Number.parseInt(val))}
+                  >
+                    <SelectTrigger id={`comp-weight-${index}`}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[1, 2, 3, 4, 5].map(w => (
+                        <SelectItem key={w} value={String(w)}>{w}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => removeCompetency(index)}
+                  className="text-red-500 hover:text-red-700"
+                  disabled={competencies.length <= 3}
                 >
-                  <SelectTrigger id={`comp-weight-${index}`}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[1, 2, 3, 4, 5].map(w => (
-                      <SelectItem key={w} value={String(w)}>{w}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => removeCompetency(index)}
-                className="text-red-500 hover:text-red-700"
-                disabled={competencies.length <= 3}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
             </div>
-          </div>
-        ))}
-        <Button variant="outline" onClick={addCompetency}>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Adicionar Competência
-        </Button>
-      </CardContent>
+          ))}
+          <Button variant="outline" onClick={addCompetency}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Adicionar Competência
+          </Button>
+        </CardContent>
+      )}
     </Card>
   );
 }

@@ -8,8 +8,8 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ArrowLeft, Briefcase, Calendar, Users, Edit } from "lucide-react"
 import { ShareDialog } from "@/components/share-dialog"
-import type { Job, Candidate } from "@/types"
-import { CandidateRanking } from "./candidate-ranking"
+import type { Job, Candidate } from "@/types/jobs-interface"
+import { CandidateRanking } from "@/components/candidate-ranking"
 
 interface JobDetailsProps {
   job: Job

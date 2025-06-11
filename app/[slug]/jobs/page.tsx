@@ -49,7 +49,7 @@ import { toast } from "@/components/ui/use-toast";
 import { JobService } from "@/services/jobs";
 import { Job, JobStatus } from "@/types/jobs-interface";
 import { JobFilter } from "@/components/jobs/jobs-list-filters";
-import { JobList } from "@/components/jobs/jobs-list-view";
+import { JobView } from "@/components/jobs/jobs-view";
 
 export default function JobsPage() {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -124,7 +124,7 @@ export default function JobsPage() {
         onViewModeChange={setViewMode}
       />
 
-      <JobList
+      <JobView
         jobs={filteredJobs}
         tenantSlug={tenantSlug}
         viewMode={viewMode}

@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
 import { Skeleton } from "@/components/ui/skeleton"
-import type { Job, Candidate } from "@/types"
-import { JobDetails } from "@/components/job-details"
+import type { Job, Candidate } from "@/types/jobs-interface"
+import { JobDetails } from "@/components/jobs/job-details"
 
 // Mock data para o gráfico radar
 const radarData = [
