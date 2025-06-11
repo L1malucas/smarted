@@ -1,110 +1,150 @@
-import type { Job } from "@/types"
+import { v4 as uuidv4 } from 'uuid';
+import { Job, JobStatus } from '@/types/jobs-interface';
+import { AuditService } from './audit';
 
-export const jobsService = {
-  createJob: async (job: Partial<Job>): Promise<Job> => {
-    // Stub implementation
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+const STORAGE_KEY = 'jobs';
 
-    const newJob: Job = {
-      _id: Math.random().toString(36).substr(2, 9),
-      slug: job.title?.toLowerCase().replace(/\s+/g, "-") || "nova-vaga",
-      title: job.title || "",
-      description: job.description || "",
-      criteriaWeights: job.criteriaWeights || {
-        experience: 25,
-        skills: 25,
-        certifications: 20,
-        behavioral: 15,
-        leadership: 15,
-      },
-      createdBy: "joao-silva-abc123",
-      status: job.status || "draft",
-      candidatesCount: 0,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+export class JobService {
+  private auditService: AuditService;
+
+  constructor() {
+    this.auditService = new AuditService();
+  }
+
+  private getStoredJobs(): Job[] {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : [];
+  }
+
+  private saveToStorage(jobs: Job[]): void {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(jobs));
+    } catch (error) {
+      throw new Error('Failed to save jobs to local storage');
     }
+  }
 
-    console.log("Job created:", newJob)
-    return newJob
-  },
+  async saveJob(job: Omit<Job, '_id' | 'createdAt' | 'updatedAt' | 'candidatesCount'>): Promise<Job> {
+    try {
+      const jobs = this.getStoredJobs();
+      const newJob: Job = {
+        ...job,
+        _id: uuidv4(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        candidatesCount: 0,
+        isDraft: job.isDraft ?? true,
+      };
 
-  getJobs: async (): Promise<Job[]> => {
-    // Stub implementation
-    await new Promise((resolve) => setTimeout(resolve, 500))
+      jobs.push(newJob);
+      this.saveToStorage(jobs);
 
-    return [
-      {
-        _id: "1",
-        slug: "desenvolvedor-frontend-senior",
-        title: "Desenvolvedor Frontend Sênior",
-        description: "Buscamos um desenvolvedor frontend experiente...",
-        criteriaWeights: {
-          experience: 30,
-          skills: 30,
-          certifications: 15,
-          behavioral: 15,
-          leadership: 10,
-        },
-        createdBy: "joao-silva-abc123",
-        status: "active",
-        candidatesCount: 23,
-        createdAt: new Date("2024-01-15"),
-        updatedAt: new Date("2024-01-15"),
-      },
-    ]
-  },
+      await this.auditService.saveAuditLog({
+        userId: job.createdBy,
+        userName: job.createdByName,
+        actionType: 'create',
+        resourceType: 'job',
+        resourceId: newJob._id,
+        details: `Job created: ${newJob.title}`,
+        newState: newJob,
+      });
 
-  getJobBySlug: async (slug: string): Promise<Job | null> => {
-    // Stub implementation
-    await new Promise((resolve) => setTimeout(resolve, 300))
+      return newJob;
+    } catch (error) {
+      console.error('Error saving job:', error);
+      throw error;
+    }
+  }
 
-    if (slug === "desenvolvedor-frontend-senior") {
-      return {
-        _id: "1",
-        slug,
-        title: "Desenvolvedor Frontend Sênior",
-        description: "Buscamos um desenvolvedor frontend experiente...",
-        criteriaWeights: {
-          experience: 30,
-          skills: 30,
-          certifications: 15,
-          behavioral: 15,
-          leadership: 10,
-        },
-        createdBy: "joao-silva-abc123",
-        status: "active",
-        candidatesCount: 23,
-        createdAt: new Date("2024-01-15"),
-        updatedAt: new Date("2024-01-15"),
+  async updateJob(jobId: string, updates: Partial<Job>, userId: string, userName: string): Promise<Job> {
+    try {
+      const jobs = this.getStoredJobs();
+      const jobIndex = jobs.findIndex(job => job._id === jobId);
+      if (jobIndex === -1) {
+        throw new Error('Job not found');
       }
+
+      const existingJob = jobs[jobIndex];
+      const updatedJob = {
+        ...existingJob,
+        ...updates,
+        updatedAt: new Date(),
+      };
+
+      jobs[jobIndex] = updatedJob;
+      this.saveToStorage(jobs);
+
+      await this.auditService.saveAuditLog({
+        userId,
+        userName,
+        actionType: 'update',
+        resourceType: 'job',
+        resourceId: jobId,
+        details: `Job updated: ${updatedJob.title}`,
+        previousState: existingJob,
+        newState: updatedJob,
+      });
+
+      return updatedJob;
+    } catch (error) {
+      console.error('Error updating job:', error);
+      throw error;
     }
+  }
 
-    return null
-  },
+  async getAllJobs(): Promise<Job[]> {
+    return this.getStoredJobs().filter(job => !job.isDraft);
+  }
 
-  updateJob: async (slug: string, job: Partial<Job>): Promise<Job> => {
-    // Stub implementation
-    await new Promise((resolve) => setTimeout(resolve, 800))
+  async getJobById(jobId: string): Promise<Job | null> {
+    const jobs = this.getStoredJobs();
+    return jobs.find(job => job._id === jobId) || null;
+  }
 
-    console.log("Updating job:", slug, job)
+  async updateJobStatus(jobId: string, newStatus: JobStatus, userId: string, userName: string): Promise<Job> {
+    try {
+      const jobs = this.getStoredJobs();
+      const jobIndex = jobs.findIndex(job => job._id === jobId);
+      if (jobIndex === -1) {
+        throw new Error('Job not found');
+      }
 
-    return {
-      _id: "1",
-      slug,
-      title: job.title || "Updated Job",
-      description: job.description || "",
-      criteriaWeights: job.criteriaWeights || {
-        experience: 25,
-        skills: 25,
-        certifications: 20,
-        behavioral: 15,
-        leadership: 15,
-      },
-      createdBy: "joao-silva-abc123",
-      status: job.status || "active",
-      candidatesCount: 23,
-      createdAt: new Date("2024-01-15"),
-      updatedAt: new Date(),
+      const job = jobs[jobIndex];
+      const updatedJob = {
+        ...job,
+        status: newStatus,
+        updatedAt: new Date(),
+        lastStatusUpdateBy: userId,
+        lastStatusUpdateByName: userName,
+        statusChangeLog: [
+          ...(job.statusChangeLog || []),
+          {
+            status: newStatus,
+            changedAt: new Date(),
+            changedBy: userId,
+            changedByName: userName,
+          },
+        ],
+      };
+
+      jobs[jobIndex] = updatedJob;
+      this.saveToStorage(jobs);
+
+      await this.auditService.saveAuditLog({
+        userId,
+        userName,
+        actionType: 'status_change',
+        resourceType: 'job',
+        resourceId: jobId,
+        details: `Status changed to ${newStatus}`,
+        previousState: { status: job.status },
+        newState: { status: newStatus },
+      });
+
+      return updatedJob;
+    } catch (error) {
+      console.error('Error updating job status:', error);
+      throw error;
     }
-  },
+  }
 }

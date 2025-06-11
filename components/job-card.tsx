@@ -1,26 +1,3 @@
-"use client"
-import Link from "next/link"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { MoreHorizontal, Users, Calendar, Eye, Edit, Copy, Trash2 } from "lucide-react"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu"
-import { ShareDialog } from "@/components/share-dialog"
-import type { Job, JobStatus } from "@/types"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-
-interface JobCardProps {
-  job: Job
-  tenantSlug: string
-  onStatusChange: (jobId: string, newStatus: JobStatus) => void
-}
-
 /**
  * Componente para exibir um cartão de vaga de emprego.
  * 
@@ -64,6 +41,30 @@ interface JobCardProps {
  * - Integra com componente ShareDialog para compartilhamento
  * - Utiliza react-router/Next.js para navegação via Link
  */
+
+"use client"
+import Link from "next/link"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { MoreHorizontal, Users, Calendar, Eye, Edit, Copy, Trash2 } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu"
+import { ShareDialog } from "@/components/share-dialog"
+import type { Job, JobStatus } from "@/types"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+
+interface JobCardProps {
+  job: Job
+  tenantSlug: string
+  onStatusChange: (jobId: string, newStatus: JobStatus) => void
+}
+
 export function JobCard({ job, tenantSlug, onStatusChange }: JobCardProps) {
   const getStatusBadge = (status: JobStatus) => {
     const statusConfig = {
