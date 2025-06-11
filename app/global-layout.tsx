@@ -1,17 +1,3 @@
-import type React from "react"
-import type { Metadata } from "next"
-import { Inter } from "next/font/google"
-import "./globals.css"
-import { Navbar } from "@/components/navbar"
-import { Toaster } from "@/components/ui/toaster"
-
-const inter = Inter({ subsets: ["latin"] })
-
-export const metadata: Metadata = {
-  title: "Sistema de Recrutamento IA",
-  description: "Sistema inteligente de recrutamento com análise de currículos por IA",
-}
-
 /**
  * Componente de layout raiz da aplicação que envolve todas as páginas.
  * 
@@ -46,20 +32,46 @@ export const metadata: Metadata = {
  * - Para alterar o tenant padrão, modifique a constante tenantSlug
  * - Para implementar autenticação, substitua o user null pelo objeto de usuário atual
  */
+
+// app/layout.tsx
+import type React from "react";
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import "./globals.css";
+import { Toaster } from "@/components/ui/toaster";
+import { ThemeProvider } from "@/components/theme-provider";
+import { Navbar } from "@/components/navbar";
+
+const inter = Inter({ subsets: ["latin"] });
+
+export const metadata: Metadata = {
+  title: "Sistema de Recrutamento IA - SMARTED",
+  description: "Sistema inteligente de recrutamento com análise de currículos por IA",
+};
+
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <html lang="pt-br">
       <body className={inter.className}>
-        <Navbar />
-        <main className="min-h-screen bg-gray-50">
-          <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">{children}</div>
-        </main>
-        <Toaster />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <Navbar />
+          <main className="min-h-screen bg-gray-50">
+            <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+              {children}
+            </div>
+          </main>
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
-  )
+  );
 }
