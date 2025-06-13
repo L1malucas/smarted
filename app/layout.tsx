@@ -4,6 +4,7 @@ import { Inter } from "next/font/google"
 import "./globals.css" // globals.css remains at the app root
 import { Toaster } from "@/components/ui/toaster"
 import { ThemeProvider } from "@/components/theme-provider" // Assuming you have this
+import { LoadingProvider } from "@/contexts/loading-context"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -38,6 +39,7 @@ export const metadata: Metadata = {
  * </RootLayout>
  * ```
  */
+//layout.tsx
 export default function RootLayout({
   children,
 }: {
@@ -47,8 +49,10 @@ export default function RootLayout({
     <html lang="pt-br" suppressHydrationWarning>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-          {children}
-          <Toaster />
+          <LoadingProvider>
+            {children}
+            <Toaster />
+          </LoadingProvider>
         </ThemeProvider>
       </body>
     </html>

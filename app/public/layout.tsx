@@ -32,18 +32,21 @@
  */
 
 // app/public/layout.tsx
-import type React from "react";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
+"use client"
+
+import type React from "react"
+import Image from "next/image"
+import { Button } from "@/components/ui/button"
+import Link from "next/link"
+import { LoadingProvider } from "@/contexts/loading-context"
 
 export default function PublicLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) {
   return (
-    <>
+    <LoadingProvider>
       <header className="border-b bg-background">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 justify-between items-center">
@@ -78,6 +81,6 @@ export default function PublicLayout({
           </p>
         </div>
       </footer>
-    </>
-  );
+    </LoadingProvider>
+  )
 }

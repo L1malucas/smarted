@@ -36,6 +36,11 @@ export function usePublicJobs(tenantSlug?: string) {
     totalJobs: jobs.length,
     totalCandidates: jobs.reduce((acc, job) => acc + job.candidatesCount, 0),
     pcdJobs: jobs.filter(job => job.isPCDExclusive).length,
+    models: {
+      presencial: 10,
+      hibrido: 10,
+      remoto: 10
+    }
   };
 
   return {

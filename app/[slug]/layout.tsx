@@ -4,6 +4,7 @@ import { Navbar } from "@/components/navbar"
 import { authService } from "@/services/auth" // Mock auth service
 import { redirect } from "next/navigation"
 import { TenantProvider } from "@/contexts/tenant-context"
+import { LoadingProvider } from "@/contexts/loading-context"
 
 // Helper to get tenant data, in a real app this might involve validation
 async function getTenantData(slug: string) {
@@ -69,10 +70,12 @@ export default async function TenantAppLayout({
 
   return (
     <TenantProvider>
-      <Navbar tenantSlug={params.slug} user={currentUser} />
-      <main className="min-h-[calc(100vh-4rem)] bg-background">
-        <div className="mx-auto max-w-full px-4 py-6 sm:px-6 lg:px-8">{children}</div>
-      </main>
+      <LoadingProvider>
+        <Navbar tenantSlug={params.slug} user={currentUser} />
+        <main className="min-h-[calc(100vh-4rem)] bg-background">
+          <div className="mx-auto max-w-full px-4 py-6 sm:px-6 lg:px-8">{children}</div>
+        </main>
+      </LoadingProvider>
     </TenantProvider>
   )
 }

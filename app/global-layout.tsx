@@ -41,6 +41,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Navbar } from "@/components/navbar";
+import { LoadingProvider } from "@/contexts/loading-context";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -63,13 +64,15 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Navbar />
-          <main className="min-h-screen bg-gray-50">
-            <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-              {children}
-            </div>
-          </main>
-          <Toaster />
+          <LoadingProvider>
+            <Navbar />
+            <main className="min-h-screen bg-gray-50">
+              <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+                {children}
+              </div>
+            </main>
+            <Toaster />
+          </LoadingProvider>
         </ThemeProvider>
       </body>
     </html>

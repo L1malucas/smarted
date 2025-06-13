@@ -2,8 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Briefcase, Calendar, Users, MapPin, Clock, Building } from "lucide-react";
-import Link from "next/link";
 import { Job } from "@/types/jobs-interface";
+import { useRouter } from "next/navigation";
 
 interface JobListProps {
   jobs: Job[];
@@ -12,6 +12,7 @@ interface JobListProps {
 }
 
 export function JobList({ jobs, loading, tenantSlug }: JobListProps) {
+  const router = useRouter();
   if (loading) {
     return (
       <div className="space-y-4">
@@ -52,9 +53,9 @@ export function JobList({ jobs, loading, tenantSlug }: JobListProps) {
             <div className="flex justify-between items-start">
               <div className="space-y-2">
                 <CardTitle className="text-2xl text-gray-900 hover:text-blue-600 transition-colors">
-                  <Link href={`/public/${tenantSlug ? `${tenantSlug}/` : ''}jobs/${job.slug}`}>
+                  <Button variant="outline" asChild onClick={() => router.push(`/public/${tenantSlug ? `${tenantSlug}/` : ''}jobs/${job.slug}`)}>
                     {job.title}
-                  </Link>
+                  </Button>
                 </CardTitle>
                 <div className="flex items-center gap-4 text-sm text-gray-500">
                   {job.department && (
@@ -114,15 +115,11 @@ export function JobList({ jobs, loading, tenantSlug }: JobListProps) {
                 </div>
               </div>
               <div className="flex gap-3">
-                <Button variant="outline" asChild>
-                  <Link href={`/public/${tenantSlug ? `${tenantSlug}/` : ''}jobs/${job.slug}`}>
-                    Ver Detalhes
-                  </Link>
+                <Button variant="outline" asChild onClick={() => router.push(`/public/${tenantSlug ? `${tenantSlug}/` : ''}jobs/${job.slug}`)}>
+                  Ver Detalhes
                 </Button>
-                <Button asChild className="bg-blue-600 hover:bg-blue-700">
-                  <Link href={`/public/${tenantSlug ? `${tenantSlug}/` : ''}jobs/${job.slug}/apply`}>
-                    Candidatar-se
-                  </Link>
+                <Button asChild className="bg-blue-600 hover:bg-blue-700" onClick={() => router.push(`${tenantSlug}/apply/${job.slug}/`)}>
+                  Candidatar-se
                 </Button>
               </div>
             </div>
