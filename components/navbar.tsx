@@ -7,9 +7,10 @@ import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { LayoutDashboard, Briefcase, Shield, LogOut, Menu, X, Wifi, WifiOff, Bell } from "lucide-react"
+import { LayoutDashboard, Briefcase, Shield, LogOut, Menu, X, Bell } from "lucide-react"
 import { cn } from "@/lib/utils"
-import type { SystemNotification, User } from "@/types"
+import type { SystemNotification } from "@/types"
+import { User } from "@/types/user-interface"
 
 interface NavbarProps {
   tenantSlug: string
@@ -61,8 +62,6 @@ export function Navbar({ tenantSlug, user }: NavbarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [notifications, setNotifications] = useState<SystemNotification[]>([])
-  const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false)
 
   const navigation = [
     { name: "Dashboard", href: `/${tenantSlug}/dashboard`, icon: LayoutDashboard },
@@ -71,25 +70,6 @@ export function Navbar({ tenantSlug, user }: NavbarProps) {
   ]
 
   const adminNavigation = user?.isAdmin ? { name: "Administração", href: `/${tenantSlug}/admin`, icon: Shield } : null
-
-  useEffect(() => {
-    if (user) {
-      const mockNotificationsData: SystemNotification[] = [
-        {
-          _id: "1",
-          userId: user.slug,
-          message: "Nova candidatura para a vaga 'Desenvolvedor Frontend Sênior'",
-          type: "info",
-          relatedResource: { type: "job", id: "desenvolvedor-frontend-senior", title: "Desenvolvedor Frontend Sênior" },
-          isRead: false,
-          createdAt: new Date(Date.now() - 3600000),
-          link: `/${tenantSlug}/screening?jobId=desenvolvedor-frontend-senior`,
-        },
-      ]
-      setNotifications(mockNotificationsData)
-      setHasUnreadNotifications(mockNotificationsData.some((n) => !n.isRead))
-    }
-  }, [user, tenantSlug])
 
   const handleLogout = () => {
     console.log("Logging out...")
@@ -236,34 +216,6 @@ export function Navbar({ tenantSlug, user }: NavbarProps) {
                 <div className="text-base font-medium">{user.name}</div>
                 <div className="text-sm text-muted-foreground">{user.slug}</div>
               </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="relative">
-                    <Bell className="h-5 w-5" />
-                    {hasUnreadNotifications && (
-                      <span className="absolute top-1 right-1 flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                      </span>
-                    )}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-80">
-                  <div className="p-2 font-medium">Notificações</div>
-                  {notifications.length === 0 ? (
-                    <div className="p-4 text-sm text-muted-foreground">Nenhuma notificação.</div>
-                  ) : (
-                    notifications.map((notif) => (
-                      <DropdownMenuItem key={notif._id} asChild className={cn(!notif.isRead && "bg-muted/50")}>
-                        <Link href={notif.link || "#"} className="block p-2 hover:bg-muted">
-                          <p className="text-sm">{notif.message}</p>
-                          <p className="text-xs text-muted-foreground">{new Date(notif.createdAt).toLocaleString()}</p>
-                        </Link>
-                      </DropdownMenuItem>
-                    ))
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
             </div>
             <div className="mt-3 space-y-1 px-2">
               <Button variant="ghost" className="w-full justify-start" onClick={handleLogout}>

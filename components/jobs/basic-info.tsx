@@ -1,3 +1,4 @@
+// JobBasicInfo.tsx
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,9 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import AsyncSelect from "react-select/async";
 import { Job } from "@/types/jobs-interface";
 import { useState } from "react";
-import { ChevronUp, ChevronDown, HelpCircle } from "lucide-react";
+import { ChevronUp, ChevronDown, HelpCircle, CheckCircle2 } from "lucide-react";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@radix-ui/react-tooltip";
 import { Button } from "@/components/ui/button";
+import { useAddressAutocomplete } from "@/hooks/use-address";
+import { useToast } from "@/components/ui/use-toast";
 
 interface JobBasicInfoProps {
   formData: Partial<Job>;
@@ -25,14 +28,74 @@ interface JobBasicInfoProps {
 
 export function JobBasicInfo({ formData, onChange, errors }: JobBasicInfoProps) {
   const [isOpen, setIsOpen] = useState(true);
+  const { loadOptions } = useAddressAutocomplete();
+  const { toast } = useToast();
+
+  const [fieldStatus, setFieldStatus] = useState({
+    title: false,
+    description: false,
+    department: false,
+    location: false,
+    salaryRange: false,
+  });
+
+  const validateField = (field: keyof typeof fieldStatus, value: any) => {
+    let isValid = false;
+    switch (field) {
+      case "title":
+        isValid = !!value && value.trim().length >= 3;
+        break;
+      case "description":
+        isValid = !!value && value.trim().length >= 10;
+        break;
+      case "department":
+        isValid = !!value && value.trim().length >= 3;
+        break;
+      case "location":
+        isValid = !!value && value.trim().length >= 3;
+        break;
+      case "salaryRange":
+        isValid = value?.min > 0 && value?.max > value?.min;
+        break;
+      default:
+        isValid = true;
+    }
+
+    if (isValid && !fieldStatus[field]) {
+      toast({
+        title: "Campo preenchido",
+        description: `O campo ${field} foi preenchido corretamente.`,
+        className: "bg-green-100 border-green-500 text-green-800",
+      });
+    }
+
+    setFieldStatus((prev) => ({ ...prev, [field]: isValid }));
+    return isValid;
+  };
+
+  const handleInputChange = (field: keyof Job, value: any) => {
+    onChange(field, value);
+    if (field in fieldStatus) {
+      validateField(field as keyof typeof fieldStatus, value);
+    }
+  };
+
   const handleSalaryChange = (field: 'min' | 'max' | 'currency', value: any) => {
-    onChange("salaryRange", { ...formData.salaryRange, [field]: value });
+    const newSalaryRange = { ...formData.salaryRange, [field]: value };
+    onChange("salaryRange", newSalaryRange);
+    validateField("salaryRange", newSalaryRange);
+  };
+
+  const getBorderClass = (field: keyof typeof fieldStatus) => {
+    if (errors[field]) return "border-red-500";
+    return fieldStatus[field] ? "border-green-500" : "border-red-500";
   };
 
   return (
     <Card>
       <CardHeader className="flex flex-row justify-between items-center">
-        <CardTitle className="flex items-center">Informações Básicas
+        <CardTitle className="flex items-center">
+          Informações Básicas
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -52,35 +115,78 @@ export function JobBasicInfo({ formData, onChange, errors }: JobBasicInfoProps) 
       </CardHeader>
       {isOpen && (
         <CardContent className="space-y-4">
-          <div>
+          <div className="relative">
             <Label htmlFor="title">Título da Vaga <span className="text-red-500">*</span></Label>
             <Input
               id="title"
               placeholder="Ex: Engenheiro de Software Backend Pleno"
               value={formData.title || ""}
-              onChange={(e) => onChange("title", e.target.value)}
-              className={errors.title ? "border-red-500" : ""}
+              onChange={(e) => handleInputChange("title", e.target.value)}
+              className={getBorderClass("title")}
             />
+            {fieldStatus.title && (
+              <CheckCircle2 className="absolute right-2 top-8 h-5 w-5 text-green-500" />
+            )}
             {errors.title && <p className="text-sm text-red-500">{errors.title}</p>}
           </div>
-          <div>
+          <div className="relative">
             <Label htmlFor="description">Descrição Completa da Vaga <span className="text-red-500">*</span></Label>
             <Textarea
               id="description"
               placeholder="Detalhe as responsabilidades, requisitos, cultura da empresa, benefícios, etc."
               value={formData.description || ""}
-              onChange={(e) => onChange("description", e.target.value)}
+              onChange={(e) => handleInputChange("description", e.target.value)}
               rows={8}
-              className={errors.description ? "border-red-500" : ""}
+              className={getBorderClass("description")}
             />
+            {fieldStatus.description && (
+              <CheckCircle2 className="absolute right-2 top-8 h-5 w-5 text-green-500" />
+            )}
             {errors.description && <p className="text-sm text-red-500">{errors.description}</p>}
           </div>
-          <div>
+          <div className="relative">
+            <Label htmlFor="department">Departamento <span className="text-red-500">*</span></Label>
+            <Input
+              id="department"
+              placeholder="Ex: Tecnologia"
+              value={formData.department || ""}
+              onChange={(e) => handleInputChange("department", e.target.value)}
+              className={getBorderClass("department")}
+            />
+            {fieldStatus.department && (
+              <CheckCircle2 className="absolute right-2 top-8 h-5 w-5 text-green-500" />
+            )}
+            {errors.department && <p className="text-sm text-red-500">{errors.department}</p>}
+          </div>
+          <div className="relative">
             <Label htmlFor="location">Localização <span className="text-red-500">*</span></Label>
-
+            <AsyncSelect
+              cacheOptions
+              loadOptions={loadOptions}
+              defaultOptions
+              placeholder="Digite o nome da cidade..."
+              value={formData.location ? { value: formData.location, label: formData.location } : null}
+              onChange={(selectedOption) => handleInputChange("location", selectedOption?.value || "")}
+              noOptionsMessage={({ inputValue }) =>
+                inputValue.length < 3 ? "Digite pelo menos 3 caracteres" : "Nenhuma localização encontrada"
+              }
+              loadingMessage={() => "Buscando localizações..."}
+              styles={{
+                control: (base) => ({
+                  ...base,
+                  borderColor: getBorderClass("location").replace("border-", ""),
+                  "&:hover": {
+                    borderColor: getBorderClass("location").replace("border-", ""),
+                  },
+                }),
+              }}
+            />
+            {fieldStatus.location && (
+              <CheckCircle2 className="absolute right-2 top-8 h-5 w-5 text-green-500" />
+            )}
             {errors.location && <p className="text-sm text-red-500">{errors.location}</p>}
           </div>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-2 relative">
             <div>
               <Label htmlFor="salaryMin">Salário Mínimo</Label>
               <Input
@@ -98,7 +204,7 @@ export function JobBasicInfo({ formData, onChange, errors }: JobBasicInfoProps) 
                   const value = e.target.value.replace(/\D/g, "");
                   handleSalaryChange("min", Number(value) / 100);
                 }}
-                className={errors.salaryRange ? "border-red-500" : ""}
+                className={getBorderClass("salaryRange")}
               />
             </div>
             <div>
@@ -118,7 +224,7 @@ export function JobBasicInfo({ formData, onChange, errors }: JobBasicInfoProps) 
                   const value = e.target.value.replace(/\D/g, "");
                   handleSalaryChange("max", Number(value) / 100);
                 }}
-                className={errors.salaryRange ? "border-red-500" : ""}
+                className={getBorderClass("salaryRange")}
               />
             </div>
             <div>
@@ -127,7 +233,7 @@ export function JobBasicInfo({ formData, onChange, errors }: JobBasicInfoProps) 
                 value={formData.salaryRange?.currency || "BRL"}
                 onValueChange={(value) => handleSalaryChange("currency", value)}
               >
-                <SelectTrigger id="currency">
+                <SelectTrigger id="currency" className={getBorderClass("salaryRange")}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -137,13 +243,16 @@ export function JobBasicInfo({ formData, onChange, errors }: JobBasicInfoProps) 
                 </SelectContent>
               </Select>
             </div>
+            {fieldStatus.salaryRange && (
+              <CheckCircle2 className="absolute right-2 top-8 h-5 w-5 text-green-500" />
+            )}
             {errors.salaryRange && <p className="text-sm text-red-500 col-span-3">{errors.salaryRange}</p>}
           </div>
           <div>
             <Label htmlFor="employmentType">Tipo de Contrato</Label>
             <Select
               value={formData.employmentType || ""}
-              onValueChange={(value) => onChange("employmentType", value)}
+              onValueChange={(value) => handleInputChange("employmentType", value)}
             >
               <SelectTrigger id="employmentType">
                 <SelectValue placeholder="Selecione" />
@@ -160,7 +269,7 @@ export function JobBasicInfo({ formData, onChange, errors }: JobBasicInfoProps) 
             <Label htmlFor="experienceLevel">Nível de Experiência</Label>
             <Select
               value={formData.experienceLevel || ""}
-              onValueChange={(value) => onChange("experienceLevel", value)}
+              onValueChange={(value) => handleInputChange("experienceLevel", value)}
             >
               <SelectTrigger id="experienceLevel">
                 <SelectValue placeholder="Selecione" />
@@ -177,17 +286,9 @@ export function JobBasicInfo({ formData, onChange, errors }: JobBasicInfoProps) 
             <Switch
               id="isPCDExclusive"
               checked={formData.isPCDExclusive || false}
-              onCheckedChange={(checked) => onChange("isPCDExclusive", checked)}
+              onCheckedChange={(checked) => handleInputChange("isPCDExclusive", checked)}
             />
             <Label htmlFor="isPCDExclusive">Vaga exclusiva para Pessoa com Deficiência (PCD)</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="isReferralJob"
-              checked={formData.isReferralJob || false}
-              onCheckedChange={(checked) => onChange("isReferralJob", checked)}
-            />
-            <Label htmlFor="isReferralJob">Permitir candidatura simplificada por indicação</Label>
           </div>
         </CardContent>
       )}
