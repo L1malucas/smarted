@@ -11,6 +11,8 @@ import { Label } from "@/components/ui/label"
 import { Building2 } from "lucide-react"
 import { authService } from "@/services/auth"
 import { CandidateButton } from "@/components/candidate-button"
+import { LoginThemeSelector } from "@/components/login-theme-selector"
+import { ThemeProvider as CustomThemeProvider } from "@/contexts/theme-context"
 
 export default function LoginPage() {
   const [cpf, setCpf] = useState("")
@@ -53,40 +55,43 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-orange-50 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <div className="p-3 bg-blue-100 rounded-full">
-              <Building2 className="h-8 w-8 text-blue-600" />
+    <CustomThemeProvider>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-orange-50 p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="flex justify-center mb-4">
+              <div className="p-3 bg-blue-100 rounded-full">
+                <LoginThemeSelector />
+                <Building2 className="h-8 w-8 text-blue-600" />
+              </div>
             </div>
-          </div>
-          <CardTitle className="text-2xl font-bold">Sistema de Recrutamento IA</CardTitle>
-          <CardDescription>Entre com seu CPF para acessar o sistema</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="cpf">CPF</Label>
-              <Input
-                id="cpf"
-                type="text"
-                placeholder="000.000.000-00"
-                value={cpf}
-                onChange={handleCPFChange}
-                required
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Entrando..." : "Entrar"}
-            </Button>
-          </form>
-        </CardContent>
-        <CardFooter className="flex flex-col">
-          <div className="w-full border-t my-2"></div>
-          <CandidateButton />
-        </CardFooter>
-      </Card>
-    </div>
+            <CardTitle className="text-2xl font-bold">Sistema de Recrutamento IA</CardTitle>
+            <CardDescription>Entre com seu CPF para acessar o sistema</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="cpf">CPF</Label>
+                <Input
+                  id="cpf"
+                  type="text"
+                  placeholder="000.000.000-00"
+                  value={cpf}
+                  onChange={handleCPFChange}
+                  required
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Entrando..." : "Entrar"}
+              </Button>
+            </form>
+          </CardContent>
+          <CardFooter className="flex flex-col">
+            <div className="w-full border-t my-2"></div>
+            <CandidateButton />
+          </CardFooter>
+        </Card>
+      </div>
+    </CustomThemeProvider>
   )
 }

@@ -11,6 +11,7 @@ import { LayoutDashboard, Briefcase, Shield, LogOut, Menu, X, Bell } from "lucid
 import { cn } from "@/lib/utils"
 import type { SystemNotification } from "@/types"
 import { User } from "@/types/user-interface"
+import { ThemeSelector } from "./theme-selector"
 
 interface NavbarProps {
   tenantSlug: string
@@ -136,6 +137,7 @@ export function Navbar({ tenantSlug, user }: NavbarProps) {
               )}
             </div>
           </div>
+          <ThemeSelector />
           <div className="hidden sm:ml-6 sm:flex sm:items-center sm:space-x-3">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -218,6 +220,7 @@ export function Navbar({ tenantSlug, user }: NavbarProps) {
               </div>
             </div>
             <div className="mt-3 space-y-1 px-2">
+              <ThemeSelector size="icon" />
               <Button variant="ghost" className="w-full justify-start" onClick={handleLogout}>
                 <LogOut className="h-5 w-5 mr-2" />
                 Sair

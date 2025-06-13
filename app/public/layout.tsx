@@ -39,6 +39,7 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { LoadingProvider } from "@/contexts/loading-context"
+import { ThemeSelector } from "@/components/theme-selector"
 
 export default function PublicLayout({
   children,
@@ -58,6 +59,7 @@ export default function PublicLayout({
                 height={40}
               />
             </div>
+            <ThemeSelector />
             <div>
               <Link href="/login">
                 <Button variant="outline" size="sm">
