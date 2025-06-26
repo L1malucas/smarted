@@ -1,7 +1,7 @@
-% lib/pdf-template.tex
 \documentclass[a4paper,12pt]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
+\usepackage[portuguese]{babel}
 \usepackage{amsmath}
 \usepackage{geometry}
 \usepackage{booktabs}
@@ -9,37 +9,179 @@
 \usepackage{longtable}
 \usepackage{xcolor}
 \usepackage{hyperref}
-\geometry{margin=1in}
+\usepackage{fancyhdr}
+\usepackage{colortbl}
+\usepackage{array}
+\usepackage{tabularx}
+
+\geometry{margin=0.8in}
+
+% Definir cores
+\definecolor{tealheader}{RGB}{0,102,102}
+\definecolor{yellowaccent}{RGB}{255,215,0}
+\definecolor{lightgray}{RGB}{240,240,240}
+
+% Configurar cabeçalho
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{
+    \colorbox{tealheader}{
+        \parbox{12cm}{
+            \textcolor{white}{\textbf{Empresa}}\\
+            \textcolor{white}{Endereço, Cidade, Estado e CEP}\\
+            \textcolor{white}{Telefone Telefone Fax Fax}
+        }
+    }
+}
+\fancyhead[R]{
+    \colorbox{yellowaccent}{
+        \parbox{3cm}{
+            \centering
+            \textbf{Nome do}\\
+            \textbf{logotipo}
+        }
+    }
+}
+
+% Configurar rodapé
+\fancyfoot[C]{
+    \hrule
+    \vspace{2mm}
+    \small
+    \textbf{© 2025 - Todos os direitos reservados}\\
+    Este documento é confidencial e propriedade da empresa. Reprodução ou distribuição não autorizada é proibida.\\
+    Gerado em: \today
+}
+
+% Redefinir altura do rodapé
+\setlength{\footskip}{30pt}
+
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0.4pt}
 
 \begin{document}
 
-\title{Dashboard Report - \VAR{tenantSlug}}
-\author{}
-\date{\VAR{period}}
-\maketitle
+% Título principal
+\vspace{1cm}
+\begin{center}
+    {\Huge \textbf{\textcolor{tealheader}{RELATÓRIO DE STATUS DO PROJETO}}}
+\end{center}
+\vspace{1cm}
 
-\section{Metrics Summary}
-\begin{tabular}{ll}
-\toprule
-Metric & Value \\
-\midrule
-Vagas Criadas & \VAR{metrics.vagasCriadas} \\
-Candidatos Cadastrados & \VAR{metrics.candidatosCadastrados} \\
-Contatos Realizados & \VAR{metrics.contatosRealizados} \\
-Matches Gerados & \VAR{metrics.matches} \\
-Ações Pendentes & \VAR{metrics.acoesPendentes} \\
-\bottomrule
-\end{tabular}
+% Seção: Resumo do Projeto
+\section*{\textcolor{tealheader}{RESUMO DO PROJETO}}
 
-\section{User Activity}
-\begin{longtable}{lrr}
-\toprule
-Day & Logins & Actions \\
-\midrule
-\BLOCK{ for item in userActivity }
-\VAR{item.name} & \VAR{item.logins} & \VAR{item.acoes} \\
+\begin{tabularx}{\textwidth}{|>{\columncolor{tealheader}\color{white}\bfseries}p{3cm}|>{\columncolor{lightgray}}p{4cm}|>{\columncolor{tealheader}\color{white}\bfseries}p{3cm}|>{\columncolor{lightgray}}X|}
+\hline
+DATA DO RELATÓRIO & \VAR{reportDate} & PREPARADO POR & \VAR{preparedBy} \\
+\hline
+NOME DO PROJETO & \multicolumn{3}{p{11cm}|}{{\VAR{projectName}}} \\
+\hline
+\end{tabularx}
+
+\vspace{0.5cm}
+
+% Seção: Relatório do Status
+\section*{\textcolor{tealheader}{RELATÓRIO DO STATUS}}
+
+\colorbox{yellowaccent}{
+    \parbox{\textwidth}{
+        \textbf{Para começar agora, toque em qualquer espaço reservado para texto (como este) e comece a digitar para substituir por próprio seu texto.}
+    }
+}
+
+\vspace{0.5cm}
+
+% Seção: Visão Geral do Projeto
+\section*{\textcolor{tealheader}{VISÃO GERAL DO PROJETO}}
+
+\begin{tabularx}{\textwidth}{|>{\columncolor{tealheader}\color{white}\bfseries}p{2.5cm}|>{\columncolor{tealheader}\color{white}\bfseries}p{2.5cm}|>{\columncolor{tealheader}\color{white}\bfseries}p{2.5cm}|>{\columncolor{tealheader}\color{white}\bfseries}p{2cm}|>{\columncolor{tealheader}\color{white}\bfseries}X|}
+\hline
+TAREFA & \% CONCLUÍDA & DATA DE ENTREGA & DRIVER & ANOTAÇÕES \\
+\hline
+\rowcolor{lightgray}
+Vagas Criadas & \VAR{metrics.vagasCriadas}\% & \VAR{metrics.dataEntregaVagas} & \VAR{metrics.responsavelVagas} & \VAR{metrics.anotacoesVagas} \\
+\hline
+\rowcolor{white}
+Candidatos Cadastrados & \VAR{metrics.candidatosCadastrados}\% & \VAR{metrics.dataEntregaCandidatos} & \VAR{metrics.responsavelCandidatos} & \VAR{metrics.anotacoesCandidatos} \\
+\hline
+\rowcolor{lightgray}
+Contatos Realizados & \VAR{metrics.contatosRealizados}\% & \VAR{metrics.dataEntregaContatos} & \VAR{metrics.responsavelContatos} & \VAR{metrics.anotacoesContatos} \\
+\hline
+\rowcolor{white}
+Matches Gerados & \VAR{metrics.matches}\% & \VAR{metrics.dataEntregaMatches} & \VAR{metrics.responsavelMatches} & \VAR{metrics.anotacoesMatches} \\
+\hline
+\end{tabularx}
+
+\vspace{0.5cm}
+
+% Seção: Visão Geral do Orçamento
+\section*{\textcolor{tealheader}{VISÃO GERAL DO ORÇAMENTO}}
+
+\begin{tabularx}{\textwidth}{|>{\columncolor{tealheader}\color{white}\bfseries}p{3cm}|>{\columncolor{tealheader}\color{white}\bfseries}p{2.5cm}|>{\columncolor{tealheader}\color{white}\bfseries}p{2.5cm}|>{\columncolor{tealheader}\color{white}\bfseries}p{2.5cm}|>{\columncolor{tealheader}\color{white}\bfseries}X|}
+\hline
+CATEGORIA & GASTO & \% DO TOTAL & NO ORÇAMENTO? & ANOTAÇÕES \\
+\hline
+\rowcolor{lightgray}
+Recrutamento & R\$ \VAR{budget.recrutamento} & \VAR{budget.percRecrutamento}\% & \VAR{budget.statusRecrutamento} & \VAR{budget.anotacoesRecrutamento} \\
+\hline
+\rowcolor{white}
+Tecnologia & R\$ \VAR{budget.tecnologia} & \VAR{budget.percTecnologia}\% & \VAR{budget.statusTecnologia} & \VAR{budget.anotacoesTecnologia} \\
+\hline
+\rowcolor{lightgray}
+Marketing & R\$ \VAR{budget.marketing} & \VAR{budget.percMarketing}\% & \VAR{budget.statusMarketing} & \VAR{budget.anotacoesMarketing} \\
+\hline
+\end{tabularx}
+
+\vspace{0.5cm}
+
+% Seção: Risco e Histórico de Problema
+\section*{\textcolor{tealheader}{RISCO E HISTÓRICO DE PROBLEMA}}
+
+\begin{tabularx}{\textwidth}{|>{\columncolor{tealheader}\color{white}\bfseries}p{6cm}|>{\columncolor{tealheader}\color{white}\bfseries}p{4cm}|>{\columncolor{tealheader}\color{white}\bfseries}X|}
+\hline
+PROBLEMA & ATRIBUÍDO A & DATA \\
+\hline
+\BLOCK{ for problem in problems }
+\rowcolor{lightgray}
+\VAR{problem.descricao} & \VAR{problem.responsavel} & \VAR{problem.data} \\
+\hline
 \BLOCK{ endfor }
-\bottomrule
+\end{tabularx}
+
+\vspace{0.5cm}
+
+% Seção: Atividade do Usuário
+\section*{\textcolor{tealheader}{ATIVIDADE DO USUÁRIO}}
+
+\begin{longtable}{|>{\columncolor{tealheader}\color{white}\bfseries}p{4cm}|>{\columncolor{tealheader}\color{white}\bfseries}p{3cm}|>{\columncolor{tealheader}\color{white}\bfseries}p{3cm}|}
+\hline
+DIA & LOGINS & AÇÕES \\
+\hline
+\endfirsthead
+\hline
+\rowcolor{tealheader}
+\textcolor{white}{\textbf{DIA}} & \textcolor{white}{\textbf{LOGINS}} & \textcolor{white}{\textbf{AÇÕES}} \\
+\hline
+\endhead
+\BLOCK{ for item in userActivity }
+\ifodd\value{rownum}
+\rowcolor{lightgray}
+\fi
+\VAR{item.name} & \VAR{item.logins} & \VAR{item.acoes} \\
+\hline
+\BLOCK{ endfor }
 \end{longtable}
+
+\vspace{0.5cm}
+
+% Seção: Conclusões/Recomendações
+\section*{\textcolor{tealheader}{CONCLUSÕES/RECOMENDAÇÕES}}
+
+\colorbox{yellowaccent}{
+    \parbox{\textwidth}{
+        \textbf{Você acha que um documento apresentado na parede deve ser difícil de formatá-lo? Achou errado! Para aplicar facilmente qualquer formatação, destaque o texto desejado e use as opções de texto na guia Página Inicial. Você pode até mesmo alterar as opções.}
+    }
+}
 
 \end{document}
