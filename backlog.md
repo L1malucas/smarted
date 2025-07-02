@@ -65,12 +65,12 @@ Este documento detalha o backlog de tarefas técnicas e de negócio para o proje
   2.  Refatorar os arquivos de tema (`brutalism.css`, `friendly.css`, `neo-clean.css`, `system.css`) para que apenas declarem os valores dessas variáveis dentro de um seletor de classe (ex: `.theme-brutalism`) e incluam as diretivas `@tailwind base;`, `@tailwind components;`, e `@tailwind utilities;`.
   3.  Atualizar o `ThemeProvider` (`components/theme-provider.tsx`) para aplicar a classe do tema selecionado ao elemento `<html>`, ativando dinamicamente o conjunto de variáveis correto.
 
-### 2. Centralização dos Esquemas de Validação com Zod
-- **Descrição:** A validação de formulários, embora presente no `use-job-validation.tsx`, precisa ser centralizada para garantir consistência em toda a aplicação (criação de vagas, formulário de candidatura, login, etc.). Esquemas de validação espalhados pelo código são difíceis de manter.
-- **Ação Necessária:**
-  1.  Criar uma pasta `/lib/schemas` para armazenar todos os esquemas de validação do Zod.
-  2.  Criar arquivos distintos por domínio (ex: `job.schema.ts`, `candidate.schema.ts`).
-  3.  Refatorar todos os formulários gerenciados pelo React Hook Form para importar e utilizar esses esquemas centralizados.
+### 2. Centralização dos Esquemas de Validação com Zod (Concluída)
+- **Descrição:** A validação de formulários foi centralizada para garantir consistência em toda a aplicação. Esquemas de validação espalhados pelo código eram difíceis de manter.
+- **Ação Realizada:**
+  1.  Criada a pasta `/lib/schemas` para armazenar todos os esquemas de validação do Zod.
+  2.  Criado o arquivo `lib/schemas/job.schema.ts` e movidos os esquemas Zod relacionados a vagas para lá.
+  3.  Atualizado `hooks/use-job-validation.tsx` para importar e utilizar os esquemas centralizados.
 
 ### 3. Implementação Completa do Módulo de Administração
 - **Descrição:** Os componentes do painel de administração (`UserManagement`, `AuditLogs`, `SystemSettings`) parecem ser apenas placeholders. É necessário implementar a lógica de UI e a integração com os serviços de backend para que se tornem funcionais.
@@ -105,17 +105,13 @@ Este documento detalha o backlog de tarefas técnicas e de negócio para o proje
   4.  **Contraste de Cores:** Auditar as paletas de cores nos temas para garantir que atendam às diretrizes do WCAG.
   5.  **Ferramentas Automatizadas:** Instalar e configurar o plugin `eslint-plugin-jsx-a11y` para capturar problemas de acessibilidade durante o desenvolvimento.
 
-### 7. Implementação de Estados de Carregamento (Loading) Globais e Locais
-- **Descrição:** A aplicação precisa de um feedback visual claro para o usuário durante o carregamento de dados, seja na navegação entre páginas ou durante a execução de uma ação assíncrona (Server Action). Isso melhora a percepção de performance e evita interações duplicadas.
-- **Ação Necessária:**
-  1.  **Loading de Navegação (Página Inteira):**
-      - Criar um arquivo `loading.tsx` na raiz do diretório `app/`. O Next.js App Router usará este arquivo como um *Instant Loading State* envolto por um `React.Suspense`.
-      - Desenvolver um componente de loading de tela cheia (ex: `components/loading.tsx`, que já existe mas pode ser aprimorado) com uma animação ou skeleton screen que corresponda ao layout principal da aplicação.
-  2.  **Loading de Ações (Local):**
-      - Utilizar o estado `isLoading` (ou o `useTransition` hook do React) nos componentes que disparam Server Actions (ex: `LoginPage`, `JobCreateForm`).
-      - Desabilitar botões de submissão e exibir um ícone de carregamento (spinner) dentro do botão enquanto a ação estiver em andamento para fornecer feedback contextual e prevenir cliques múltiplos.
-  3.  **Loading de Componentes (Suspense):**
-      - Para componentes que fazem seu próprio fetch de dados, envolvê-los com o componente `<Suspense>` do React e fornecer um componente de fallback (ex: `components/ui/skeleton`) para evitar que o carregamento de uma parte da UI bloqueie a renderização da página inteira.
+### 7. Implementação de Estados de Carregamento (Loading) Globais e Locais (Concluída)
+- **Descrição:** A aplicação agora fornece feedback visual claro para o usuário durante o carregamento de dados, seja na navegação entre páginas ou durante a execução de uma ação assíncrona (Server Action). Isso melhora a percepção de performance e evita interações duplicadas.
+- **Ação Realizada:**
+  1.  **Loading de Navegação (Página Inteira):** Implementado `loading.tsx` na raiz do diretório `app/` e aprimorado `components/loading.tsx` para um feedback visual proeminente durante as transições de rota.
+  2.  **Loading de Ações (Local):** Utilizado `useTransition` em `LoginPage` para desabilitar botões de submissão e exibir um indicador de carregamento.
+  3.  **Loading de Componentes (Suspense):** Demonstrado o uso de `React.Suspense` com `Skeleton` como fallback em `app/page.tsx` para carregamento de dados em nível de componente.
+  4.  **Consistência:** `LoadingProvider` atualizado para usar `CustomLoading` e layouts (`app/layout.tsx`, `app/public/layout.tsx`, `app/global-layout.tsx`) configurados com `Suspense` para garantir feedback visual em todas as transições.
 
 ---
 
