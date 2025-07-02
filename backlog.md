@@ -104,6 +104,18 @@ Este documento detalha o backlog de tarefas técnicas e de negócio para o proje
   4.  **Contraste de Cores:** Auditar as paletas de cores nos temas para garantir que atendam às diretrizes do WCAG.
   5.  **Ferramentas Automatizadas:** Instalar e configurar o plugin `eslint-plugin-jsx-a11y` para capturar problemas de acessibilidade durante o desenvolvimento.
 
+### 7. Implementação de Estados de Carregamento (Loading) Globais e Locais
+- **Descrição:** A aplicação precisa de um feedback visual claro para o usuário durante o carregamento de dados, seja na navegação entre páginas ou durante a execução de uma ação assíncrona (Server Action). Isso melhora a percepção de performance e evita interações duplicadas.
+- **Ação Necessária:**
+  1.  **Loading de Navegação (Página Inteira):**
+      - Criar um arquivo `loading.tsx` na raiz do diretório `app/`. O Next.js App Router usará este arquivo como um *Instant Loading State* envolto por um `React.Suspense`.
+      - Desenvolver um componente de loading de tela cheia (ex: `components/loading.tsx`, que já existe mas pode ser aprimorado) com uma animação ou skeleton screen que corresponda ao layout principal da aplicação.
+  2.  **Loading de Ações (Local):**
+      - Utilizar o estado `isLoading` (ou o `useTransition` hook do React) nos componentes que disparam Server Actions (ex: `LoginPage`, `JobCreateForm`).
+      - Desabilitar botões de submissão e exibir um ícone de carregamento (spinner) dentro do botão enquanto a ação estiver em andamento para fornecer feedback contextual e prevenir cliques múltiplos.
+  3.  **Loading de Componentes (Suspense):**
+      - Para componentes que fazem seu próprio fetch de dados, envolvê-los com o componente `<Suspense>` do React e fornecer um componente de fallback (ex: `components/ui/skeleton`) para evitar que o carregamento de uma parte da UI bloqueie a renderização da página inteira.
+
 ---
 
 ## 🟢 Criticidade Baixa
@@ -136,3 +148,13 @@ Este documento detalha o backlog de tarefas técnicas e de negócio para o proje
 - **Ação Necessária:**
   1.  **Busca Pública:** Adicionar filtros por localidade, tipo de contrato (remoto, híbrido), e faixa salarial.
   2.  **Busca de Candidatos (Recrutador):** Implementar uma busca por palavras-chave nos currículos e filtros por competências ou status no processo seletivo.
+
+### 5. Criação de Página 404 Personalizada e Temática (Concluída)
+- **Descrição:** Atualmente, o Next.js renderiza uma página 404 padrão, que não está alinhada com a identidade visual do sistema. Uma página de "Não Encontrado" personalizada melhora a experiência do usuário, retém o visitante no site e reforça a marca.
+- **Ação Necessária:**
+  1.  **Criar o Arquivo:** No diretório `app/`, crie um novo arquivo chamado `not-found.tsx`. O App Router do Next.js irá automaticamente utilizar este arquivo para renderizar todas as rotas 404.
+  2.  **Design da Página:** Desenvolver um componente visualmente agradável que se alinhe com o tema da aplicação. A página deve conter:
+      - Uma mensagem clara e amigável (ex: "Página Não Encontrada").
+      - Uma ilustração ou ícone relacionado ao tema do sistema (um robô perdido, um currículo voando, etc.).
+      - Um botão (componente `Button`) com um `Link` do Next.js para que o usuário possa retornar à página inicial (`/`) ou ao dashboard.
+  3.  **Componente Reutilizável:** Construir a UI da página 404 como um componente separado (ex: `components/not-found-page.tsx`) para manter o arquivo `app/not-found.tsx` limpo e apenas responsável pela lógica de roteamento.
