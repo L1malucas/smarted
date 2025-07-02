@@ -112,6 +112,7 @@ O projeto segue a estrutura padrão do Next.js App Router:
 *   **Qualidade de Vida**:
     *   Tema escuro por padrão.
     *   Design responsivo.
+    *   Imagens otimizadas com `next/image`.
     *   Busca e filtros em diversas telas operacionais.
 
 ## Configuração e Execução

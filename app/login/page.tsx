@@ -5,7 +5,8 @@ import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
+import Image from "next/image";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label"
 import { Building2, TrendingUp, Users, BarChart3, Star, CheckCircle, UserPlus, Target } from "lucide-react"
 import { authService } from "@/services/auth"
@@ -144,9 +145,11 @@ export default function LoginPage() {
 
           <Card className="col-span-1 sm:col-span-2 md:col-start-2 md:row-start-2 md:col-span-2 md:row-span-2">
             <CardHeader className="text-center pb-4">
-              <img
+              <Image
               src="/logo.png"
               alt="Company Logo"
+              width={112}
+              height={112}
               className="h-16 sm:h-24 md:h-28 mx-auto mb-4 opacity-80 object-contain"
               />
               <CardTitle className="text-lg sm:text-xl md:text-2xl font-bold">Acesso ao Sistema</CardTitle>

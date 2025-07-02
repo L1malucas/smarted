@@ -12,6 +12,9 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "Sistema de Recrutamento IA - SMARTED",
   description: "Sistema inteligente de recrutamento com análise de currículos por IA",
+  icons: {
+    icon: "/favicon.ico",
+  }
 }
 
 export default function RootLayout({
