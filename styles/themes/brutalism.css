@@ -3,18 +3,8 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: 'DM Sans', 'Inter', sans-serif;
-}
-
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-}
-
 @layer base {
-  :root {
+  .theme-brutalism {
     --background: 300 20% 98%;
     --foreground: 240 10% 10%;
 
@@ -61,7 +51,7 @@ body {
     --sidebar-ring: 267 77% 65%;
   }
 
-  .dark {
+  .dark.theme-brutalism {
     --background: 240 10% 10%;
     --foreground: 0 0% 100%;
 
@@ -104,14 +94,5 @@ body {
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 240 10% 30%;
     --sidebar-ring: 267 77% 65%;
-  }
-}
-
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
   }
 }

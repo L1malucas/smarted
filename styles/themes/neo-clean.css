@@ -3,18 +3,8 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: 'Bebas Neue', 'IBM Plex Mono', sans-serif;
-}
-
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-}
-
 @layer base {
-  :root {
+  .theme-neo-clean {
     --background: 48 100% 94%;
     --foreground: 0 0% 0%;
 
@@ -61,7 +51,7 @@ body {
     --sidebar-ring: 0 100% 50%;
   }
 
-  .dark {
+  .dark.theme-neo-clean {
     --background: 0 0% 10%;
     --foreground: 0 0% 100%;
 
@@ -104,14 +94,5 @@ body {
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 0 0% 100%;
     --sidebar-ring: 0 100% 50%;
-  }
-}
-
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
   }
 }
