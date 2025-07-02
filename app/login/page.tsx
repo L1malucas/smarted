@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useTransition } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -44,7 +44,7 @@ const testimonials = [
 
 export default function LoginPage() {
   const [cpf, setCpf] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
+  const [isPending, startTransition] = useTransition()
   const [currentTestimonial, setCurrentTestimonial] = useState(0)
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -65,22 +65,20 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
-
-    try {
-      await authService.login(cpf)
-      if (tenantSlugFromQuery && nextPath) {
-        router.push(nextPath)
-      } else if (tenantSlugFromQuery) {
-        router.push(`/${tenantSlugFromQuery}/dashboard`)
-      } else {
-        router.push("/smarted-tenant/dashboard")
+    startTransition(async () => {
+      try {
+        await authService.login(cpf)
+        if (tenantSlugFromQuery && nextPath) {
+          router.push(nextPath)
+        } else if (tenantSlugFromQuery) {
+          router.push(`/${tenantSlugFromQuery}/dashboard`)
+        } else {
+          router.push("/smarted-tenant/dashboard")
+        }
+      } catch (error) {
+        console.error("Login failed:", error)
       }
-    } catch (error) {
-      console.error("Login failed:", error)
-    } finally {
-      setIsLoading(false)
-    }
+    })
   }
 
   useEffect(() => {
@@ -169,8 +167,8 @@ export default function LoginPage() {
                     className="h-10 sm:h-12 text-sm sm:text-base"
                   />
                 </div>
-                <Button type="submit" className="w-full h-10 sm:h-12 text-sm sm:text-base" disabled={isLoading}>
-                  {isLoading ? "Entrando..." : "Entrar no Sistema"}
+                <Button type="submit" className="w-full h-10 sm:h-12 text-sm sm:text-base" disabled={isPending}>
+                  {isPending ? "Entrando..." : "Entrar no Sistema"}
                 </Button>
               </form>
             </CardContent>

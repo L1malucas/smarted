@@ -35,6 +35,7 @@
 
 // app/layout.tsx
 import type React from "react";
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -42,6 +43,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Navbar } from "@/components/navbar";
 import { LoadingProvider } from "@/contexts/loading-context";
+import CustomLoading from "@/components/loading";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -65,10 +67,12 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <LoadingProvider>
-            <Navbar />
+            <Navbar tenantSlug="default" user={null} />
             <main className="min-h-screen bg-gray-50">
               <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-                {children}
+                <Suspense fallback={<CustomLoading />}>
+                  {children}
+                </Suspense>
               </div>
             </main>
             <Toaster />

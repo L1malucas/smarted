@@ -123,12 +123,6 @@ Este documento detalha o backlog de tarefas técnicas e de negócio para o proje
 
 *Melhorias de qualidade de vida para desenvolvedores (DX), otimizações de performance e novas funcionalidades que agregam valor, mas não são essenciais para o funcionamento principal do produto.*
 
-### 1. Implementação do Storybook para a Biblioteca de Componentes UI
-- **Descrição:** O projeto possui uma rica biblioteca de componentes em `/components/ui`. A implementação do Storybook permitiria desenvolver, documentar e testar esses componentes de forma isolada, melhorando a reutilização e a velocidade de desenvolvimento.
-- **Ação Necessária:**
-  1.  Instalar e configurar o Storybook no projeto.
-  2.  Criar "stories" para cada um dos componentes da pasta `/components/ui`.
-  3.  Integrar o Storybook ao fluxo de trabalho de desenvolvimento da equipe.
 
 ### 2. Otimização de Imagens e Ativos Estáticos (Concluída)
 - **Descrição:** As imagens na pasta `/public` (logos, placeholders) devem ser otimizadas para a web e servidas através do componente `next/image` para aproveitar o lazy loading e a otimização automática de formato e tamanho.
@@ -160,12 +154,6 @@ Este documento detalha o backlog de tarefas técnicas e de negócio para o proje
       - Um botão (componente `Button`) com um `Link` do Next.js para que o usuário possa retornar à página inicial (`/`) ou ao dashboard.
   3.  **Componente Reutilizável:** Construir a UI da página 404 como um componente separado (ex: `components/not-found-page.tsx`) para manter o arquivo `app/not-found.tsx` limpo e apenas responsável pela lógica de roteamento.
 
-### 6. Implementação e Execução do Script de População de Dados
-- **Descrição:** O script `scripts/populate-db.ts` foi criado para popular o banco de dados com dados iniciais (usuário, vaga, logs). É crucial garantir que este script possa ser executado de forma confiável para configurar ambientes de desenvolvimento e teste.
-- **Ação Necessária:**
-  1.  **Configurar Execução:** Ajustar o script `populate-db` no `package.json` para que ele compile e execute o arquivo TypeScript corretamente, resolvendo os aliases de caminho (`@/`) e garantindo a compatibilidade com módulos ES.
-  2.  **Testar Execução:** Executar o script e verificar se os dados são inseridos no banco de dados conforme o esperado.
-  3.  **Documentar:** Adicionar instruções claras no `README.md` sobre como executar o script de população.
 
 ### 6. Implementação e Execução do Script de População de Dados
 - **Descrição:** O script `scripts/populate-db.ts` foi criado para popular o banco de dados com dados iniciais (usuário, vaga, logs). É crucial garantir que este script possa ser executado de forma confiável para configurar ambientes de desenvolvimento e teste.

@@ -1,9 +1,10 @@
 'use client'
 
 import { motion } from 'framer-motion'
+
 export default function CustomLoading() {
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm">
       <motion.div
         className="flex gap-2"
         initial={{ scale: 0.5, opacity: 0 }}
@@ -26,6 +27,7 @@ export default function CustomLoading() {
           />
         ))}
       </motion.div>
+      <p className="mt-4 text-lg font-medium text-foreground">Carregando...</p>
     </div>
   )
 }

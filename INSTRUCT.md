@@ -69,3 +69,4 @@ Sua tarefa é **entender completamente** um sistema digital a partir do **códig
 ⚠️ Seja extremamente detalhista, mantenha coerência técnica e considere boas práticas de desenvolvimento como SOLID, DRY, KISS, separação de responsabilidades, uso adequado de estados, tipagens, modularização e legibilidade.
 
 Aguarde o carregamento dos arquivos do sistema antes de começar a análise.
+RESPONDA EM PTBR

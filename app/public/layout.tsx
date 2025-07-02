@@ -38,8 +38,10 @@ import type React from "react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { Suspense } from "react"
 import { LoadingProvider } from "@/contexts/loading-context"
 import { ThemeSelector } from "@/components/theme-selector"
+import CustomLoading from "@/components/loading"
 
 export default function PublicLayout({
   children,
@@ -72,7 +74,9 @@ export default function PublicLayout({
       </header>
       <main className="min-h-screen bg-background">
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-          {children}
+          <Suspense fallback={<CustomLoading />}>
+            {children}
+          </Suspense>
         </div>
       </main>
       <footer className="border-t bg-background py-6">
