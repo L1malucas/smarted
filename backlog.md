@@ -79,7 +79,7 @@ Este documento detalha o backlog de tarefas técnicas e de negócio para o proje
   2.  **Audit Logs:** Integrar com o `services/audit.ts` para exibir um log de ações importantes no sistema, com filtros por data e usuário.
   3.  **System Settings:** Implementar o formulário para alterar configurações globais do sistema.
 
-### 4. Melhoria de UX no Formulário de Aplicação de Vaga (`application-stepper`)
+### 4. Melhoria de UX no Formulário de Aplicação de Vaga (`application-stepper`) (concluída)
 - **Descrição:** Um formulário de múltiplos passos pode ser uma fonte de frustração para o usuário se não for bem implementado. É crucial fornecer feedback claro, lidar com estados de carregamento e validar os dados de forma inteligente.
 - **Ação Necessária:**
   1.  Adicionar indicadores de carregamento (loading spinners) nos botões de "Avançar" e "Enviar" para desabilitá-los durante a submissão e evitar cliques duplos.
@@ -96,14 +96,14 @@ Este documento detalha o backlog de tarefas técnicas e de negócio para o proje
   4.  **Análise de Modelos:** Avaliar as entidades 'User', 'Job' e 'Candidate'. Para cada uma, determinar se a criação de uma classe TypeScript (Model) seria vantajosa para encapsular lógica de negócio (ex: um método `job.isExpired()` ou `user.hasPermission('admin')`).
   5.  **Implementação de Modelos (se aplicável):** Implementar as classes de modelo decididas na etapa anterior e refatorar o código para utilizá-las, simplificando a lógica nos componentes e serviços.
 
-### 6. Auditoria e Implementação de Acessibilidade (a11y)
+### 6. Auditoria e Implementação de Acessibilidade (a11y) (Em Progresso)
 - **Descrição:** Acessibilidade não é uma feature, mas um requisito fundamental. O sistema deve ser utilizável por todos, incluindo pessoas que dependem de tecnologias assistivas como leitores de tela.
 - **Ação Necessária:**
   1.  **HTML Semântico:** Revisar todo o JSX para garantir o uso correto de tags como `<main>`, `<nav>`, `<header>`, `<section>`, e `<button>`.
   2.  **Atributos ARIA:** Adicionar `aria-label`, `aria-describedby` e outros atributos ARIA em componentes complexos ou não-nativos para fornecer contexto aos leitores de tela.
   3.  **Navegação por Teclado:** Garantir que todos os elementos interativos sejam focáveis e operáveis via teclado, na ordem lógica.
   4.  **Contraste de Cores:** Auditar as paletas de cores nos temas para garantir que atendam às diretrizes do WCAG.
-  5.  **Ferramentas Automatizadas:** Instalar e configurar o plugin `eslint-plugin-jsx-a11y` para capturar problemas de acessibilidade durante o desenvolvimento.
+  5.  **Ferramentas Automatizadas (Concluída):** Instalado e configurado o plugin `eslint-plugin-jsx-a11y` para capturar problemas de acessibilidade durante o desenvolvimento. Este plugin agora está ativo e ajudará a identificar automaticamente muitos problemas de acessibilidade no código JSX.
 
 ### 7. Implementação de Estados de Carregamento (Loading) Globais e Locais (Concluída)
 - **Descrição:** A aplicação agora fornece feedback visual claro para o usuário durante o carregamento de dados, seja na navegação entre páginas ou durante a execução de uma ação assíncrona (Server Action). Isso melhora a percepção de performance e evita interações duplicadas.
@@ -149,11 +149,3 @@ Este documento detalha o backlog de tarefas técnicas e de negócio para o proje
       - Uma ilustração ou ícone relacionado ao tema do sistema (um robô perdido, um currículo voando, etc.).
       - Um botão (componente `Button`) com um `Link` do Next.js para que o usuário possa retornar à página inicial (`/`) ou ao dashboard.
   3.  **Componente Reutilizável:** Construir a UI da página 404 como um componente separado (ex: `components/not-found-page.tsx`) para manter o arquivo `app/not-found.tsx` limpo e apenas responsável pela lógica de roteamento.
-
-
-### 6. Implementação e Execução do Script de População de Dados
-- **Descrição:** O script `scripts/populate-db.ts` foi criado para popular o banco de dados com dados iniciais (usuário, vaga, logs). É crucial garantir que este script possa ser executado de forma confiável para configurar ambientes de desenvolvimento e teste.
-- **Ação Necessária:**
-  1.  **Configurar Execução:** Ajustar o script `populate-db` no `package.json` para que ele compile e execute o arquivo TypeScript corretamente, resolvendo os aliases de caminho (`@/`) e garantindo a compatibilidade com módulos ES.
-  2.  **Testar Execução:** Executar o script e verificar se os dados são inseridos no banco de dados conforme o esperado.
-  3.  **Documentar:** Adicionar instruções claras no `README.md` sobre como executar o script de população.

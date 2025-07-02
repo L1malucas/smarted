@@ -1,0 +1,38 @@
+{
+  "extends": [
+    "next/core-web-vitals",
+    "plugin:jsx-a11y/recommended"
+  ],
+  "plugins": [
+    "jsx-a11y"
+  ],
+  "rules": {
+    "jsx-a11y/alt-text": [
+      "warn",
+      {
+        "elements": ["img"],
+        "img": ["Image"]
+      }
+    ],
+    "jsx-a11y/aria-props": "warn",
+    "jsx-a11y/aria-proptypes": "warn",
+    "jsx-a11y/aria-role": [
+      "warn",
+      {
+        "ignoreNonDOM": true
+      }
+    ],
+    "jsx-a11y/heading-has-content": "warn",
+    "jsx-a11y/label-has-associated-control": [
+      "warn",
+      {
+        "depth": 3
+      }
+    ],
+    "jsx-a11y/no-access-keys": "warn",
+    "jsx-a11y/no-redundant-roles": "warn",
+    "jsx-a11y/role-has-required-aria-props": "warn",
+    "jsx-a11y/role-supports-aria-props": "warn",
+    "jsx-a11y/scope": "warn"
+  }
+}

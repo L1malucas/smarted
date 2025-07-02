@@ -1,13 +1,13 @@
 "use client"
 
-import type React from "react"
 
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { Check, ChevronLeft, ChevronRight } from "lucide-react"
+import { Check, ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { toast, } from "@/components/ui/use-toast"
 
 interface Step {
   id: string
@@ -21,6 +21,7 @@ interface ApplicationStepperProps {
   steps: Step[]
   onComplete: () => void
   onStepChange?: (stepIndex: number) => void
+  onValidateStep?: (stepIndex: number) => Promise<boolean> | boolean // New prop for step validation
   className?: string
 }
 
@@ -38,12 +39,14 @@ interface ApplicationStepperProps {
  * @param props.steps[].isOptional - Flag que indica se a etapa é opcional
  * @param props.onComplete - Callback executado quando todas as etapas são completadas
  * @param props.onStepChange - Callback opcional executado quando há mudança de etapa
+ * @param props.onValidateStep - Callback opcional executado para validar a etapa atual antes de avançar. Deve retornar true para sucesso, false para falha.
  * @param props.className - Classes CSS adicionais para estilização
  * 
  * @remarks
  * O componente mantém estado interno para:
  * - currentStep: índice da etapa atual
  * - completedSteps: Set com índices das etapas já completadas
+ * - isSubmitting: Flag que indica se o formulário está em processo de submissão ou avanço de etapa.
  * 
  * @example
  * ```tsx
@@ -58,6 +61,11 @@ interface ApplicationStepperProps {
  *     // ... mais etapas
  *   ]}
  *   onComplete={() => handleSubmitApplication()}
+ *   onValidateStep={async (stepIndex) => {
+ *     // Lógica de validação para a etapa específica
+ *     // Ex: return await validateDadosPessoais();
+ *     return true; // ou false
+ *   }}
  * />
  * ```
  * 
@@ -67,7 +75,7 @@ interface ApplicationStepperProps {
  * - Etapas conectadas por linhas de progresso
  * - Títulos e descrições para cada etapa
  * - Card com conteúdo da etapa atual
- * - Botões de navegação (anterior/próximo)
+ * - Botões de navegação (anterior/próximo) com indicadores de carregamento.
  * - Suporte a etapas opcionais
  * - Controle de acessibilidade das etapas
  * 
@@ -76,16 +84,20 @@ interface ApplicationStepperProps {
  * - className para estilização do container
  * - Tailwind classes para modificação visual
  * - Componentes shadcn/ui para estilização consistente
- * 
- * @dependencies
- * - useState do React
- * - cn utility para composição de classes
- * - Componentes do shadcn/ui (Progress, Card, Button)
  * - Ícones do lucide-react
+ * 
+ * @accessibility
+ * - Botões de navegação com `aria-current="step"` para a etapa atual.
+ * - Indicadores de carregamento para feedback visual e para desabilitar interações.
+ * 
+ * @note
+ * A persistência do progresso do usuário (ex: em localStorage) deve ser gerenciada pelo componente pai que utiliza o ApplicationStepper, 
+ * pois ele detém o estado completo do formulário de aplicação.
  */
-export function ApplicationStepper({ steps, onComplete, onStepChange, className }: ApplicationStepperProps) {
+export function ApplicationStepper({ steps, onComplete, onStepChange, onValidateStep, className }: ApplicationStepperProps) {
   const [currentStep, setCurrentStep] = useState(0)
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set())
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const progress = ((currentStep + 1) / steps.length) * 100
 
@@ -96,25 +108,47 @@ export function ApplicationStepper({ steps, onComplete, onStepChange, className 
     }
   }
 
-  const nextStep = () => {
-    if (currentStep < steps.length - 1) {
-      setCompletedSteps((prev) => new Set([...prev, currentStep]))
-      goToStep(currentStep + 1)
-    } else {
-      setCompletedSteps((prev) => new Set([...prev, currentStep]))
-      onComplete()
+  const nextStep = async () => {
+    setIsSubmitting(true);
+    try {
+      if (onValidateStep) {
+        const isValid = await Promise.resolve(onValidateStep(currentStep));
+        if (!isValid) {
+          toast({
+            title: "Erro de Validação",
+            description: "Por favor, preencha todos os campos obrigatórios da etapa atual.",
+            variant: "destructive",
+          });
+          return; // Stop if validation fails
+        }
+      }
+
+      if (currentStep < steps.length - 1) {
+        setCompletedSteps((prev) => new Set([...prev, currentStep]));
+        goToStep(currentStep + 1);
+      } else {
+        setCompletedSteps((prev) => new Set([...prev, currentStep]));
+        onComplete();
+        toast({
+          title: "Candidatura Enviada!",
+          description: "Sua candidatura foi enviada com sucesso. Boa sorte!",
+          variant: "default",
+        });
+      }
+    } finally {
+      setIsSubmitting(false);
     }
-  }
+  };
 
   const prevStep = () => {
     if (currentStep > 0) {
-      goToStep(currentStep - 1)
+      goToStep(currentStep - 1);
     }
-  }
+  };
 
-  const isStepCompleted = (stepIndex: number) => completedSteps.has(stepIndex)
-  const isCurrentStep = (stepIndex: number) => stepIndex === currentStep
-  const isStepAccessible = (stepIndex: number) => stepIndex <= currentStep || isStepCompleted(stepIndex)
+  const isStepCompleted = (stepIndex: number) => completedSteps.has(stepIndex);
+  const isCurrentStep = (stepIndex: number) => stepIndex === currentStep;
+  const isStepAccessible = (stepIndex: number) => stepIndex <= currentStep || isStepCompleted(stepIndex);
 
   return (
     <div className={cn("space-y-8", className)}>
@@ -133,17 +167,18 @@ export function ApplicationStepper({ steps, onComplete, onStepChange, className 
           <div key={step.id} className="flex items-center">
             <button
               onClick={() => isStepAccessible(index) && goToStep(index)}
-              disabled={!isStepAccessible(index)}
+              disabled={!isStepAccessible(index) || isSubmitting}
               className={cn(
                 "flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all",
                 isCurrentStep(index) && "border-blue-600 bg-blue-600 text-white",
                 isStepCompleted(index) && !isCurrentStep(index) && "border-green-600 bg-green-600 text-white",
                 !isCurrentStep(index) &&
-                  !isStepCompleted(index) &&
-                  isStepAccessible(index) &&
-                  "border-gray-300 hover:border-blue-400",
+                !isStepCompleted(index) &&
+                isStepAccessible(index) &&
+                "border-gray-300 hover:border-blue-400",
                 !isStepAccessible(index) && "border-gray-200 text-gray-400 cursor-not-allowed",
               )}
+              aria-current={isCurrentStep(index) ? "step" : undefined}
             >
               {isStepCompleted(index) ? (
                 <Check className="h-5 w-5" />
@@ -194,13 +229,17 @@ export function ApplicationStepper({ steps, onComplete, onStepChange, className 
 
       {/* Navigation Buttons */}
       <div className="flex justify-between">
-        <Button variant="outline" onClick={prevStep} disabled={currentStep === 0} className="flex items-center gap-2">
+        <Button variant="outline" onClick={prevStep} disabled={currentStep === 0 || isSubmitting} className="flex items-center gap-2">
           <ChevronLeft className="h-4 w-4" />
           Anterior
         </Button>
-        <Button onClick={nextStep} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700">
-          {currentStep === steps.length - 1 ? "Enviar Candidatura" : "Próximo"}
-          {currentStep < steps.length - 1 && <ChevronRight className="h-4 w-4" />}
+        <Button onClick={nextStep} disabled={isSubmitting} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700">
+          {isSubmitting ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            currentStep === steps.length - 1 ? "Enviar Candidatura" : "Próximo"
+          )}
+          {!isSubmitting && currentStep < steps.length - 1 && <ChevronRight className="h-4 w-4" />}
         </Button>
       </div>
     </div>
