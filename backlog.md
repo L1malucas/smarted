@@ -159,3 +159,17 @@ Este documento detalha o backlog de tarefas técnicas e de negócio para o proje
       - Uma ilustração ou ícone relacionado ao tema do sistema (um robô perdido, um currículo voando, etc.).
       - Um botão (componente `Button`) com um `Link` do Next.js para que o usuário possa retornar à página inicial (`/`) ou ao dashboard.
   3.  **Componente Reutilizável:** Construir a UI da página 404 como um componente separado (ex: `components/not-found-page.tsx`) para manter o arquivo `app/not-found.tsx` limpo e apenas responsável pela lógica de roteamento.
+
+### 6. Implementação e Execução do Script de População de Dados
+- **Descrição:** O script `scripts/populate-db.ts` foi criado para popular o banco de dados com dados iniciais (usuário, vaga, logs). É crucial garantir que este script possa ser executado de forma confiável para configurar ambientes de desenvolvimento e teste.
+- **Ação Necessária:**
+  1.  **Configurar Execução:** Ajustar o script `populate-db` no `package.json` para que ele compile e execute o arquivo TypeScript corretamente, resolvendo os aliases de caminho (`@/`) e garantindo a compatibilidade com módulos ES.
+  2.  **Testar Execução:** Executar o script e verificar se os dados são inseridos no banco de dados conforme o esperado.
+  3.  **Documentar:** Adicionar instruções claras no `README.md` sobre como executar o script de população.
+
+### 6. Implementação e Execução do Script de População de Dados
+- **Descrição:** O script `scripts/populate-db.ts` foi criado para popular o banco de dados com dados iniciais (usuário, vaga, logs). É crucial garantir que este script possa ser executado de forma confiável para configurar ambientes de desenvolvimento e teste.
+- **Ação Necessária:**
+  1.  **Configurar Execução:** Ajustar o script `populate-db` no `package.json` para que ele compile e execute o arquivo TypeScript corretamente, resolvendo os aliases de caminho (`@/`) e garantindo a compatibilidade com módulos ES.
+  2.  **Testar Execução:** Executar o script e verificar se os dados são inseridos no banco de dados conforme o esperado.
+  3.  **Documentar:** Adicionar instruções claras no `README.md` sobre como executar o script de população.

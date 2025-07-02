@@ -34,6 +34,7 @@ O projeto segue a estrutura padrão do Next.js App Router:
     *   `app/login/`: Página de login.
     *   `app/public/`: Layout e páginas para visualização pública de recursos compartilhados.
     *   `app/apply/[jobSlug]/`: Fluxo de candidatura para uma vaga específica.
+    *   `app/not-found.tsx`: Página 404 personalizada para rotas não encontradas.
 *   `components/`: Componentes React reutilizáveis.
     *   `ui/`: Componentes do shadcn/ui (geralmente não modificados diretamente).
     *   `navbar.tsx`: Componente da barra de navegação principal.
@@ -119,47 +120,39 @@ O projeto segue a estrutura padrão do Next.js App Router:
 ## Configuração e Execução
 
 1.  **Clone o repositório:**
-    \`\`\`bash
+    ```bash
     git clone <url-do-repositorio>
     cd <nome-do-projeto>
-    \`\`\`
+    ```
 
 2.  **Instale as dependências:**
-    \`\`\`bash
-    npm install
-    # ou
+    ```bash
     yarn install
-    # ou
-    pnpm install
-    # ou
-    bun install
-    \`\`\`
+    ```
 
 3.  **Variáveis de Ambiente:**
-    *   Crie um arquivo `.env.local` na raiz do projeto, se necessário, para configurar variáveis de ambiente (atualmente não são estritamente necessárias para a versão mockada).
+    *   Crie um arquivo `.env.local` na raiz do projeto com a seguinte variável:
+        ```
+        MONGODB_URI="mongodb://localhost:27017/SMARTED"
+        ```
+        Substitua `mongodb://localhost:27017` pela sua string de conexão do MongoDB, se for diferente.
 
-4.  **Execute o servidor de desenvolvimento:**
-    \`\`\`bash
-    npm run dev
-    # ou
+4.  **Popule o Banco de Dados (Opcional, para desenvolvimento/testes):**
+    ```bash
+    yarn populate-db
+    ```
+    Este script irá inserir um usuário administrador, uma vaga de exemplo e um log inicial no banco de dados `SMARTED`.
+
+5.  **Execute o servidor de desenvolvimento:**
+    ```bash
     yarn dev
-    # ou
-    pnpm dev
-    # ou
-    bun run dev
-    \`\`\`
+    ```
     Abra [http://localhost:3000](http://localhost:3000) no seu navegador.
 
-5.  **Build para Produção:**
-    \`\`\`bash
-    npm run build
-    # ou
+6.  **Build para Produção:**
+    ```bash
     yarn build
-    # ou
-    pnpm build
-    # ou
-    bun run build
-    \`\`\`
+    ```
 
 ## Próximos Passos e Melhorias (Sugestões)
 
