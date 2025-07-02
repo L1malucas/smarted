@@ -37,12 +37,13 @@ Este documento detalha o backlog de tarefas técnicas e de negócio para o proje
   2.  Implementar testes automatizados que tentem "cruzar" os limites dos tenants, por exemplo, um usuário do `tenant-a` tentando acessar uma vaga do `tenant-b`.
   3.  Assegurar que os tokens de sessão ou autenticação estejam estritamente ligados ao tenant do usuário.
 
-### 5. Configuração da Conexão com o Banco de Dados (MongoDB)
-- **Descrição:** A aplicação precisa de uma conexão estável e otimizada com o MongoDB para persistir todos os dados. A configuração inicial deve seguir as melhores práticas para ambientes serverless, como o da Vercel, para evitar a criação excessiva de conexões.
+### 5. Configuração da Conexão com o Banco de Dados (MongoDB) e Schemas Mongoose (Concluída)
+- **Descrição:** A aplicação agora possui uma conexão estável e otimizada com o MongoDB, utilizando Mongoose para a definição de schemas para as principais entidades do sistema (Log, User, Job).
 - **Ação Necessária:**
   1.  Adicionar a variável de ambiente `MONGODB_URI` ao projeto.
   2.  Criar um arquivo utilitário em `lib/mongodb.ts` que exporta uma `Promise` de um cliente MongoDB, reutilizando a conexão em todo o aplicativo para otimizar a performance.
   3.  Garantir que o padrão de implementação lide corretamente com o Hot Module Replacement (HMR) em desenvolvimento.
+  4.  Definir schemas Mongoose para `Log` (em `models/Log.ts`), `User` (em `models/User.ts`) e `Job` (em `models/Job.ts`), incluindo sub-schemas para entidades aninhadas como `Competency`, `JobQuestion`, `CriteriaWeights` e `StatusChangeLog`.
 
 ### 6. Implementação do Wrapper Unificado para Feedback e Logs
 - **Descrição:** Para garantir consistência e robustez, todas as Server Actions devem fornecer feedback ao usuário (via toasts) e registrar logs de auditoria de forma padronizada. A criação de um wrapper unificado para essa finalidade é a abordagem mais limpa e manutenível.
@@ -57,12 +58,12 @@ Este documento detalha o backlog de tarefas técnicas e de negócio para o proje
 
 *Tarefas relacionadas a débitos técnicos, refatorações importantes para escalabilidade e a finalização de funcionalidades-chave que não são bloqueadoras, mas são essenciais para a experiência completa do produto.*
 
-### 1. Refatoração do Sistema de Temas para CSS Variables
-- **Descrição:** O sistema de temas atual, baseado em múltiplos arquivos CSS (`/styles/themes/*.css`), não é escalável. Ele aumenta o tamanho do bundle e dificulta a criação de novos temas ou a customização de temas existentes.
+### 1. Refatoração do Sistema de Temas para CSS Variables (Concluída e Corrigida)
+- **Descrição:** O sistema de temas foi refatorado para usar variáveis CSS, tornando-o mais escalável e manutenível. A correção de um erro de build relacionado à ausência de diretivas `@tailwind` nos arquivos de tema individuais foi implementada.
 - **Ação Necessária:**
-  1.  Definir um conjunto de CSS variables (custom properties) para todas as cores, fontes, espaçamentos e outros elementos de design no arquivo de CSS global ou no `tailwind.config.ts`.
-  2.  Refatorar os arquivos de tema (`brutalism.css`, etc.) para que apenas declarem os valores dessas variáveis dentro de um seletor de classe (ex: `.theme-brutalism`).
-  3.  Utilizar o `ThemeContext` para aplicar a classe do tema correspondente ao elemento `<body>` ou `<html>`, ativando dinamicamente o conjunto de variáveis correto.
+  1.  Definir um conjunto de CSS variables (custom properties) para todas as cores, fontes, espaçamentos e outros elementos de design no arquivo de CSS global (`app/globals.css`).
+  2.  Refatorar os arquivos de tema (`brutalism.css`, `friendly.css`, `neo-clean.css`, `system.css`) para que apenas declarem os valores dessas variáveis dentro de um seletor de classe (ex: `.theme-brutalism`) e incluam as diretivas `@tailwind base;`, `@tailwind components;`, e `@tailwind utilities;`.
+  3.  Atualizar o `ThemeProvider` (`components/theme-provider.tsx`) para aplicar a classe do tema selecionado ao elemento `<html>`, ativando dinamicamente o conjunto de variáveis correto.
 
 ### 2. Centralização dos Esquemas de Validação com Zod
 - **Descrição:** A validação de formulários, embora presente no `use-job-validation.tsx`, precisa ser centralizada para garantir consistência em toda a aplicação (criação de vagas, formulário de candidatura, login, etc.). Esquemas de validação espalhados pelo código são difíceis de manter.

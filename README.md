@@ -10,7 +10,8 @@ O sistema permite que recrutadores gerenciem vagas, processem candidaturas, aval
 
 *   **Next.js 14 (App Router)**: Framework React para desenvolvimento full-stack.
 *   **TypeScript**: Superset do JavaScript que adiciona tipagem estática.
-*   **Tailwind CSS**: Framework CSS utility-first para estilização rápida.
+*   **MongoDB & Mongoose**: Banco de dados NoSQL e ODM (Object Data Modeling) para Node.js, utilizados para persistência de dados e modelagem de schemas.
+*   **Tailwind CSS**: Framework CSS utility-first para estilização rápida, agora com sistema de temas baseado em variáveis CSS.
 *   **shadcn/ui**: Coleção de componentes de UI reutilizáveis, construídos com Radix UI e Tailwind CSS.
 *   **Lucide React**: Biblioteca de ícones SVG.
 *   **Recharts**: Biblioteca de gráficos para visualização de dados.
