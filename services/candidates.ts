@@ -1,11 +1,10 @@
-import type { Candidate } from "@/types"
+import { Candidate } from "@/types/jobs-interface"
+
 
 export const candidatesService = {
   uploadCurriculums: async (jobSlug: string, files: File[]): Promise<string[]> => {
     // Stub implementation
     await new Promise((resolve) => setTimeout(resolve, 2000))
-
-    console.log("Uploading curriculums for job:", jobSlug, files)
 
     return files.map((file) => Math.random().toString(36).substr(2, 9))
   },
@@ -101,14 +100,11 @@ export const candidatesService = {
     // Stub implementation
     await new Promise((resolve) => setTimeout(resolve, 5000))
 
-    console.log("Analyzing candidates for job:", jobSlug)
   },
 
   downloadCurriculum: async (candidateId: string): Promise<Blob> => {
     // Stub implementation
     await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    console.log("Downloading curriculum for candidate:", candidateId)
 
     // Return mock PDF blob
     return new Blob(["Mock PDF content"], { type: "application/pdf" })

@@ -7,8 +7,17 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
-import { Plus, Trash2 } from "lucide-react"
+import { Plus, Trash2, Loader2 } from "lucide-react"
 import { AllowedCPF } from "@/types/admin-interface"
+import { toast } from "@/components/ui/use-toast"
+import { z } from "zod"
+
+const newUserSchema = z.object({
+  cpf: z.string().regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, "CPF inválido"),
+  name: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
+  email: z.string().email("Email inválido"),
+  isAdmin: z.boolean(),
+});
 
 interface UserManagementProps {
   allowedCPFs: AllowedCPF[]
@@ -21,6 +30,8 @@ export default function UserManagement({ allowedCPFs, addCPF, removeCPF }: UserM
   const [newName, setNewName] = useState("")
   const [newEmail, setNewEmail] = useState("")
   const [newIsAdmin, setNewIsAdmin] = useState(false)
+  const [isAddingUser, setIsAddingUser] = useState(false)
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   const formatCPF = (value: string) => {
     const numbers = value.replace(/\D/g, "")
@@ -35,22 +46,68 @@ export default function UserManagement({ allowedCPFs, addCPF, removeCPF }: UserM
   }
 
   const handleAddCPF = async () => {
-    if (newCPF && newName && newEmail) {
-      const newUser: AllowedCPF = {
+    setValidationErrors({});
+    try {
+      const newUser: AllowedCPF = newUserSchema.parse({
         cpf: newCPF,
         name: newName,
-        isAdmin: newIsAdmin,
         email: newEmail,
+        isAdmin: newIsAdmin,
+      }) as AllowedCPF;
+
+      setIsAddingUser(true);
+      await addCPF({
+        ...newUser,
         createdAt: new Date(),
         updatedAt: new Date(),
+      });
+      toast({
+        title: "Usuário Adicionado",
+        description: `O usuário ${newName} (${newCPF}) foi adicionado com sucesso.`, 
+      });
+      setNewCPF("");
+      setNewName("");
+      setNewEmail("");
+      setNewIsAdmin(false);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const errors: Record<string, string> = {};
+        error.errors.forEach((err) => {
+          errors[err.path[0]] = err.message;
+        });
+        setValidationErrors(errors);
+        toast({
+          title: "Erro de Validação",
+          description: "Por favor, corrija os erros no formulário.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erro",
+          description: "Não foi possível adicionar o usuário.",
+          variant: "destructive",
+        });
       }
-      await addCPF(newUser)
-      setNewCPF("")
-      setNewName("")
-      setNewEmail("")
-      setNewIsAdmin(false)
+    } finally {
+      setIsAddingUser(false);
     }
-  }
+  };
+
+  const handleRemoveCPF = async (cpf: string, name: string) => {
+    try {
+      await removeCPF(cpf);
+      toast({
+        title: "Usuário Removido",
+        description: `O usuário ${name} (${cpf}) foi removido com sucesso.`, 
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível remover o usuário.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <>
@@ -64,6 +121,7 @@ export default function UserManagement({ allowedCPFs, addCPF, removeCPF }: UserM
             <div className="space-y-1">
               <Label htmlFor="cpf">CPF</Label>
               <Input id="cpf" placeholder="000.000.000-00" value={newCPF} onChange={handleCPFChange} />
+              {validationErrors.cpf && <p className="text-red-500 text-xs mt-1">{validationErrors.cpf}</p>}
             </div>
             <div className="space-y-1">
               <Label htmlFor="name">Nome Completo</Label>
@@ -73,6 +131,7 @@ export default function UserManagement({ allowedCPFs, addCPF, removeCPF }: UserM
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
               />
+              {validationErrors.name && <p className="text-red-500 text-xs mt-1">{validationErrors.name}</p>}
             </div>
             <div className="space-y-1">
               <Label htmlFor="email">Email</Label>
@@ -83,15 +142,16 @@ export default function UserManagement({ allowedCPFs, addCPF, removeCPF }: UserM
                 value={newEmail}
                 onChange={(e) => setNewEmail(e.target.value)}
               />
+              {validationErrors.email && <p className="text-red-500 text-xs mt-1">{validationErrors.email}</p>}
             </div>
             <div className="flex items-center space-x-2 pt-2">
               <Switch id="admin" checked={newIsAdmin} onCheckedChange={setNewIsAdmin} />
               <Label htmlFor="admin">Permissão de Administrador</Label>
             </div>
           </div>
-          <Button onClick={handleAddCPF} disabled={!newCPF || !newName || !newEmail}>
-            <Plus className="h-4 w-4 mr-2" />
-            Adicionar Usuário
+          <Button onClick={handleAddCPF} disabled={isAddingUser}>
+            {isAddingUser ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
+            {isAddingUser ? "Adicionando..." : "Adicionar Usuário"}
           </Button>
         </CardContent>
       </Card>
@@ -122,7 +182,7 @@ export default function UserManagement({ allowedCPFs, addCPF, removeCPF }: UserM
                   variant="ghost"
                   size="icon"
                   className="text-red-500 hover:text-red-700"
-                  onClick={() => removeCPF(user.cpf)}
+                  onClick={() => handleRemoveCPF(user.cpf, user.name)}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>

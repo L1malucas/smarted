@@ -5,6 +5,7 @@ import { useParams } from "next/navigation"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { Job, Candidate } from "@/types/jobs-interface"
 import { JobDetails } from "@/components/jobs/job-details"
+import { toast } from "@/hooks/use-toast"
 
 // Mock data para o gráfico radar
 const radarData = [
@@ -161,7 +162,11 @@ export default function JobDetailsPage() {
         setJob(mockJob)
         setCandidates(mockCandidates)
       } catch (error) {
-        console.error("Erro ao carregar dados:", error)
+        toast({
+          title: "Erro ao carregar dados",
+          description: "Não foi possível carregar os detalhes da vaga.",
+          variant: "destructive",
+        });
       } finally {
         setLoading(false)
       }

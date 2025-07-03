@@ -23,7 +23,6 @@ export const authService = {
   logout: async (): Promise<void> => {
     // Stub implementation
     await new Promise((resolve) => setTimeout(resolve, 500))
-    console.log("User logged out")
   },
 
   getCurrentUser: async (): Promise<User | null> => {

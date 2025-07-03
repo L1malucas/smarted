@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Job } from '@/types/jobs-interface';
 import { PublicJobService } from '@/services/public-jobs';
+import { toast } from './use-toast';
 
 export function usePublicJobs(tenantSlug?: string) {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -15,7 +16,11 @@ export function usePublicJobs(tenantSlug?: string) {
         const publicJobs = await jobService.getPublicJobs(tenantSlug);
         setJobs(publicJobs);
       } catch (error) {
-        console.error('Error loading jobs:', error);
+        toast({
+          title: "Erro ao carregar vagas",
+          description: "Não foi possível carregar as vagas públicas." + error,
+          variant: "destructive",
+        });
       } finally {
         setLoading(false);
       }

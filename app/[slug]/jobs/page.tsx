@@ -61,19 +61,18 @@ export default function JobsPage() {
   const jobService = new JobService();
 
   useEffect(() => {
-    jobService.getAllJobs().then(setJobs).catch((error) => {
+    JobService.getAllJobs().then(setJobs).catch((error) => {
       toast({
         title: "Erro",
-        description: "Falha ao carregar vagas",
+        description: "Falha ao carregar vagas" + error,
         variant: "destructive",
       });
-      console.error(error);
     });
   }, []);
 
   const handleStatusChange = async (jobId: string, newStatus: JobStatus) => {
     try {
-      const updatedJob = await jobService.updateJobStatus(jobId, newStatus, "current-user-slug", "Usuário Atual");
+      const updatedJob = await JobService.updateJobStatus(jobId, newStatus, "current-user-slug", "Usuário Atual");
       setJobs((prevJobs) =>
         prevJobs.map((job) => (job._id === jobId ? updatedJob : job))
       );
@@ -84,10 +83,9 @@ export default function JobsPage() {
     } catch (error) {
       toast({
         title: "Erro",
-        description: "Falha ao atualizar status da vaga",
+        description: "Falha ao atualizar status da vaga" + error,
         variant: "destructive",
       });
-      console.error(error);
     }
   };
 

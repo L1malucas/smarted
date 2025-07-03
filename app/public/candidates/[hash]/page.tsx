@@ -158,9 +158,8 @@ export default function PublicCandidatesPage() {
         ])
         setError(null)
       } catch (err) {
-        console.error("Error fetching candidates:", err)
         setError(
-          "Não foi possível carregar os dados dos candidatos. O link pode ter expirado ou o recurso não existe mais.",
+          "Não foi possível carregar os dados dos candidatos. O link pode ter expirado ou o recurso não existe mais." +err,
         )
       } finally {
         setLoading(false)

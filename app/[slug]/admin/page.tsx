@@ -4,7 +4,7 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Shield, Settings, CalendarX, UserCog, History, LifeBuoy } from "lucide-react"
+import { Settings, CalendarX, UserCog, History, LifeBuoy } from "lucide-react"
 import { useParams } from "next/navigation"
 import { AccessLog, AllowedCPF, SystemMetrics } from "@/types/admin-interface"
 import { adminService } from "@/services/admin"
@@ -13,6 +13,8 @@ import AuditLogs from "@/components/admin/audit-logs"
 import ExpiredJobs from "@/components/admin/expired-jobs"
 import Support from "@/components/admin/support"
 import SystemSettings from "@/components/admin/system-settings"
+import { Skeleton } from "@/components/ui/skeleton"
+import { toast } from "@/hooks/use-toast"
 
 export default function AdminPage() {
   const params = useParams()
@@ -21,41 +23,83 @@ export default function AdminPage() {
   const [allowedCPFs, setAllowedCPFs] = useState<AllowedCPF[]>([])
   const [accessLogs, setAccessLogs] = useState<AccessLog[]>([])
   const [systemMetrics, setSystemMetrics] = useState<SystemMetrics | null>(null)
+  const [isLoadingCPFs, setIsLoadingCPFs] = useState(true)
+  const [isLoadingLogs, setIsLoadingLogs] = useState(true)
+  const [isLoadingMetrics, setIsLoadingMetrics] = useState(true)
 
   const ALLOWED_CPFS_KEY = `allowed_cpfs_${tenantSlug}`
   const ACCESS_LOGS_KEY = `access_logs_${tenantSlug}`
 
   useEffect(() => {
-    const loadData = async () => {
-      const storedCPFs = localStorage.getItem(ALLOWED_CPFS_KEY)
-      if (storedCPFs) {
-        setAllowedCPFs(JSON.parse(storedCPFs, (key, value) => {
-          if (key === "createdAt" || key === "updatedAt") return new Date(value)
-          return value
-        }))
-      } else {
-        const cpfs = await adminService.getAllowedCPFs()
-        setAllowedCPFs(cpfs)
-        localStorage.setItem(ALLOWED_CPFS_KEY, JSON.stringify(cpfs))
+    const loadCPFs = async () => {
+      setIsLoadingCPFs(true)
+      try {
+        const storedCPFs = localStorage.getItem(ALLOWED_CPFS_KEY)
+        if (storedCPFs) {
+          setAllowedCPFs(JSON.parse(storedCPFs, (key, value) => {
+            if (key === "createdAt" || key === "updatedAt") return new Date(value)
+            return value
+          }))
+        } else {
+          const cpfs = await adminService.getAllowedCPFs()
+          setAllowedCPFs(cpfs)
+          localStorage.setItem(ALLOWED_CPFS_KEY, JSON.stringify(cpfs))
+        }
+      } catch (error) {
+        toast({
+          title: "Erro ao carregar CPFs",
+          description: "Não foi possível carregar a lista de CPFs autorizados." + error,
+          variant: "destructive",
+        })
+      } finally {
+        setIsLoadingCPFs(false)
       }
-
-      const storedLogs = localStorage.getItem(ACCESS_LOGS_KEY)
-      if (storedLogs) {
-        setAccessLogs(JSON.parse(storedLogs, (key, value) => {
-          if (key === "timestamp") return new Date(value)
-          return value
-        }))
-      } else {
-        const logs = await adminService.getAccessLogs()
-        setAccessLogs(logs)
-        localStorage.setItem(ACCESS_LOGS_KEY, JSON.stringify(logs))
-      }
-
-      const metrics = await adminService.getSystemMetrics()
-      setSystemMetrics(metrics)
     }
 
-    loadData()
+    const loadLogs = async () => {
+      setIsLoadingLogs(true)
+      try {
+        const storedLogs = localStorage.getItem(ACCESS_LOGS_KEY)
+        if (storedLogs) {
+          setAccessLogs(JSON.parse(storedLogs, (key, value) => {
+            if (key === "timestamp") return new Date(value)
+            return value
+          }))
+        } else {
+          const logs = await adminService.getAccessLogs()
+          setAccessLogs(logs)
+          localStorage.setItem(ACCESS_LOGS_KEY, JSON.stringify(logs))
+        }
+      } catch (error) {
+        toast({
+          title: "Erro ao carregar Logs",
+          description: "Não foi possível carregar os logs de acesso." + error,
+          variant: "destructive",
+        })
+      } finally {
+        setIsLoadingLogs(false)
+      }
+    }
+
+    const loadMetrics = async () => {
+      setIsLoadingMetrics(true)
+      try {
+        const metrics = await adminService.getSystemMetrics()
+        setSystemMetrics(metrics)
+      } catch (error) {
+        toast({
+          title: "Erro ao carregar Métricas",
+          description: "Não foi possível carregar as métricas do sistema." + error,
+          variant: "destructive",
+        })
+      } finally {
+        setIsLoadingMetrics(false)
+      }
+    }
+
+    loadCPFs()
+    loadLogs()
+    loadMetrics()
   }, [tenantSlug])
 
   const addCPF = async (newUser: AllowedCPF) => {
@@ -131,19 +175,34 @@ export default function AdminPage() {
         </TabsList>
 
         <TabsContent value="users" className="space-y-6">
-          <UserManagement allowedCPFs={allowedCPFs} addCPF={addCPF} removeCPF={removeCPF} />
+          {isLoadingCPFs ? (
+            <div className="space-y-4">
+              <Skeleton className="h-[150px] w-full" />
+              <Skeleton className="h-[200px] w-full" />
+            </div>
+          ) : (
+            <UserManagement allowedCPFs={allowedCPFs} addCPF={addCPF} removeCPF={removeCPF} />
+          )}
         </TabsContent>
         <TabsContent value="expired_jobs" className="space-y-6">
           <ExpiredJobs />
         </TabsContent>
         <TabsContent value="audit_logs" className="space-y-6">
-          <AuditLogs accessLogs={accessLogs} allowedCPFs={allowedCPFs} />
+          {isLoadingLogs ? (
+            <Skeleton className="h-[300px] w-full" />
+          ) : (
+            <AuditLogs accessLogs={accessLogs} allowedCPFs={allowedCPFs} />
+          )}
         </TabsContent>
         <TabsContent value="support" className="space-y-6">
           <Support />
         </TabsContent>
         <TabsContent value="system_settings" className="space-y-6">
-          <SystemSettings systemMetrics={systemMetrics} />
+          {isLoadingMetrics ? (
+            <Skeleton className="h-[200px] w-full" />
+          ) : (
+            <SystemSettings systemMetrics={systemMetrics} />
+          )}
         </TabsContent>
       </Tabs>
     </div>

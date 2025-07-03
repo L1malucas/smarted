@@ -72,12 +72,14 @@ Este documento detalha o backlog de tarefas técnicas e de negócio para o proje
   2.  Criado o arquivo `lib/schemas/job.schema.ts` e movidos os esquemas Zod relacionados a vagas para lá.
   3.  Atualizado `hooks/use-job-validation.tsx` para importar e utilizar os esquemas centralizados.
 
-### 3. Implementação Completa do Módulo de Administração
-- **Descrição:** Os componentes do painel de administração (`UserManagement`, `AuditLogs`, `SystemSettings`) parecem ser apenas placeholders. É necessário implementar a lógica de UI e a integração com os serviços de backend para que se tornem funcionais.
-- **Ação Necessária:**
-  1.  **User Management:** Implementar a listagem, criação, edição e desativação de usuários.
-  2.  **Audit Logs:** Integrar com o `services/audit.ts` para exibir um log de ações importantes no sistema, com filtros por data e usuário.
-  3.  **System Settings:** Implementar o formulário para alterar configurações globais do sistema.
+### 3. Implementação Completa do Módulo de Administração (Concluída)
+- **Descrição:** Os componentes do painel de administração foram implementados com lógica de UI e integração com serviços de backend mockados, tornando-os funcionais.
+- **Ação Realizada:**
+  1.  **User Management (`components/admin/user-management.tsx`):** Implementado com validação de inputs, estados de carregamento e notificações toast para adicionar/remover usuários.
+  2.  **Audit Logs (`components/admin/audit-logs.tsx`):** O `app/[slug]/admin/page.tsx` foi atualizado para gerenciar o carregamento dos logs, exibindo skeletons e toasts em caso de erro.
+  3.  **System Settings (`components/admin/system-settings.tsx`):** Adicionados campos de formulário para configurações de exemplo, com estados de carregamento e notificações toast para salvar.
+  4.  **Expired Jobs (`components/admin/expired-jobs.tsx`):** Implementado com dados mockados, exibição em tabela, estados de carregamento e funcionalidade de reativação (mockada) com toasts.
+  5.  **Support (`components/admin/support.tsx`):** Adicionado um formulário de contato simples com estados de carregamento e notificações toast para envio.
 
 ### 4. Melhoria de UX no Formulário de Aplicação de Vaga (`application-stepper`) (concluída)
 - **Descrição:** Um formulário de múltiplos passos pode ser uma fonte de frustração para o usuário se não for bem implementado. É crucial fornecer feedback claro, lidar com estados de carregamento e validar os dados de forma inteligente.

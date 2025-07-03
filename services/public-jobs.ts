@@ -17,7 +17,6 @@ export class PublicJobService {
         (!tenantSlug || job.slug.includes(tenantSlug))
       );
     } catch (error) {
-      console.error('Error fetching public jobs:', error);
       throw new Error('Failed to fetch public jobs');
     }
   }

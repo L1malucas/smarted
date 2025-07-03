@@ -13,8 +13,9 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Progress } from "@/components/ui/progress"
 import { toast } from "@/components/ui/use-toast"
-import type { Job, CandidateAnswer } from "@/types" // Assuming types are defined
 import { UploadCloud, FileText, ArrowRight, ArrowLeft } from "lucide-react"
+import { withActionLogging } from "@/lib/actions"
+import { Job, CandidateAnswer } from "@/types/jobs-interface"
 
 // Mock job data - in a real app, fetch this by jobSlug
 const mockJobData: Job = {
@@ -166,15 +167,34 @@ export default function ApplyPage() {
     }
   }
 
-  const handleSubmitApplication = () => {
+  const handleSubmitApplication = async () => {
     setIsLoading(true)
-    // Simulate API call
-    console.log("Submitting application:", { jobSlug, resumeFile, answers })
-    setTimeout(() => {
-      setIsLoading(false)
-      toast({ title: "Sucesso!", description: "Sua candidatura foi enviada." })
-      router.push(`/public/job/${jobSlug}?applied=true`) // Redirect to a confirmation or public job page
-    }, 1500)
+    const submitApplicationAction = withActionLogging(
+      async () => {
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        // In a real app, you would send jobSlug, resumeFile, and answers to your backend
+      },
+      {
+        userId: "candidate-anonymous", // Placeholder: replace with actual candidate ID/info if available
+        userName: "Candidato Anônimo", // Placeholder
+        actionType: "submit_application",
+        resourceType: "job_application",
+        resourceId: jobSlug,
+        details: `Application submitted for job ${jobSlug}.`,
+        successMessage: "Sua candidatura foi enviada com sucesso!",
+        errorMessage: "Não foi possível enviar sua candidatura. Por favor, tente novamente.",
+      }
+    );
+
+    try {
+      await submitApplicationAction();
+      router.push(`/public/job/${jobSlug}?applied=true`); // Redirect to a confirmation or public job page
+    } catch (error) {
+      // Error already handled by withActionLogging
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   if (isLoading && !job) {

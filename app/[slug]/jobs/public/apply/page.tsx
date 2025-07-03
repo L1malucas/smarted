@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Card } from "@/components/ui/card"
@@ -14,7 +13,8 @@ import { toast } from "@/components/ui/use-toast"
 import { ApplicationStepper } from "@/components/application-stepper"
 import { UploadCloud, ArrowLeft, CheckCircle } from "lucide-react"
 import Link from "next/link"
-import type { Job, CandidateAnswer } from "@/types"
+import { withActionLogging } from "@/lib/actions"
+import { Job, CandidateAnswer } from "@/types/jobs-interface"
 
 // Mock job data
 const mockJobData: Job = {
@@ -86,7 +86,7 @@ export default function ApplyPage() {
           router.push(`/public/${tenantSlug}/jobs`)
         }
       } catch (error) {
-        console.error("Erro ao carregar vaga:", error)
+        // Error already handled by withActionLogging
       } finally {
         setIsLoading(false)
       }
@@ -137,31 +137,32 @@ export default function ApplyPage() {
 
   const handleSubmitApplication = async () => {
     setIsSubmitting(true)
+    const submitApplicationAction = withActionLogging(
+      async () => {
+        // Simular envio da candidatura
+        await new Promise((resolve) => setTimeout(resolve, 2000))
+
+        // In a real app, you would send jobSlug, resumeFile, answers, and personalInfo to your backend
+      },
+      {
+        userId: personalInfo.email, // Use email as user ID for logging
+        userName: personalInfo.name, // Use name as user name for logging
+        actionType: "submit_application",
+        resourceType: "job_application",
+        resourceId: jobSlug,
+        details: `Application submitted for job ${jobSlug} by ${personalInfo.name} (${personalInfo.email}).`,
+        successMessage: "Sua candidatura foi enviada com sucesso!",
+        errorMessage: "Ocorreu um erro ao enviar sua candidatura. Tente novamente.",
+      }
+    );
+
     try {
-      // Simular envio da candidatura
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-
-      console.log("Submitting application:", {
-        jobSlug,
-        resumeFile,
-        answers,
-        personalInfo,
-      })
-
-      toast({
-        title: "Candidatura enviada!",
-        description: "Sua candidatura foi enviada com sucesso. Você receberá um email de confirmação em breve.",
-      })
-
-      router.push(`/public/${tenantSlug}/jobs/${jobSlug}/success`)
+      await submitApplicationAction();
+      router.push(`/public/${tenantSlug}/jobs/${jobSlug}/success`);
     } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao enviar sua candidatura. Tente novamente.",
-        variant: "destructive",
-      })
+      // Error already handled by withActionLogging
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
   }
 

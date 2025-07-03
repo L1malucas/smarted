@@ -50,7 +50,6 @@ export function useJobValidation() {
         setErrors(newErrors);
         return false;
       }
-      console.error('Validation error:', error);
       return false;
     }
   };

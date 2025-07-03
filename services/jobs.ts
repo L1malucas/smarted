@@ -84,7 +84,6 @@ export class JobService {
 
       return newJob;
     } catch (error) {
-      console.error('Error saving job:', error);
       throw error;
     }
   }
@@ -108,7 +107,6 @@ export class JobService {
 
       return updatedJob;
     } catch (error) {
-      console.error('Error updating job:', error);
       throw error;
     }
   }
@@ -154,7 +152,6 @@ export class JobService {
 
       return updatedJob;
     } catch (error) {
-      console.error('Error updating job status:', error);
       throw error;
     }
   }

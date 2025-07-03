@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Label } from "@/components/ui/label"
 import { Building2, TrendingUp, Users, BarChart3, Star, CheckCircle, UserPlus, Target } from "lucide-react"
 import { authService } from "@/services/auth"
+import { withActionLogging } from "@/lib/actions"
 import { CandidateButton } from "@/components/candidate-button"
 
 const testimonials = [
@@ -66,8 +67,23 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     startTransition(async () => {
+      const loginAction = withActionLogging(
+        async () => {
+          await authService.login(cpf);
+        },
+        {
+          userId: cpf, // Use CPF as user ID for logging
+          userName: "", // User name will be fetched after login
+          actionType: "login",
+          resourceType: "user",
+          details: `User with CPF ${cpf} attempted to log in.`, 
+          successMessage: "Login realizado com sucesso!",
+          errorMessage: "Falha no login. Verifique seu CPF.",
+        }
+      );
+
       try {
-        await authService.login(cpf)
+        await loginAction();
         if (tenantSlugFromQuery && nextPath) {
           router.push(nextPath)
         } else if (tenantSlugFromQuery) {
@@ -76,7 +92,7 @@ export default function LoginPage() {
           router.push("/smarted-tenant/dashboard")
         }
       } catch (error) {
-        console.error("Login failed:", error)
+        // Error already handled by withActionLogging
       }
     })
   }

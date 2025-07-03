@@ -12,6 +12,8 @@ import { cn } from "@/lib/utils"
 import type { SystemNotification } from "@/types"
 import { User } from "@/types/user-interface"
 import { ThemeSelector } from "./theme-selector"
+import { withActionLogging } from "@/lib/actions"
+import { authService } from "@/services/auth"
 
 interface NavbarProps {
   tenantSlug: string
@@ -72,10 +74,31 @@ export function Navbar({ tenantSlug, user }: NavbarProps) {
 
   const adminNavigation = user?.isAdmin ? { name: "Administração", href: `/${tenantSlug}/admin`, icon: Shield } : null
 
-  const handleLogout = () => {
-    console.log("Logging out...")
-    router.push('/login'); // In a real app
-  }
+  const handleLogout = async () => {
+    if (!user) return;
+
+    const logoutAction = withActionLogging(
+      async () => {
+        await authService.logout();
+      },
+      {
+        userId: user.slug,
+        userName: user.name,
+        actionType: "logout",
+        resourceType: "user",
+        details: `User ${user.name} logged out.`, 
+        successMessage: "Você foi desconectado com sucesso.",
+        errorMessage: "Erro ao desconectar.",
+      }
+    );
+
+    try {
+      await logoutAction();
+      router.push('/login');
+    } catch (error) {
+      // Error already handled by withActionLogging
+    }
+  };
 
   // Do not render Navbar on login, public, or apply pages
   if (

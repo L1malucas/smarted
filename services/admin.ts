@@ -4,7 +4,6 @@ import { AccessLog, AllowedCPF, SystemMetrics } from "@/types/admin-interface"
 export const adminService = {
   createuser: async (cpf: string, name: string, isAdmin: boolean, email: string): Promise<void> => {
     await new Promise((resolve) => setTimeout(resolve, 1000))
-    console.log("Creating user:", { cpf, name, isAdmin, email })
   },
 
   getAllowedCPFs: async (): Promise<AllowedCPF[]> => {
@@ -28,7 +27,6 @@ export const adminService = {
     }
     const updatedCPFs = [...currentCPFs, newCPF]
     localStorage.setItem('allowed_cpfs', JSON.stringify(updatedCPFs))
-    console.log("Adding allowed CPF:", { cpf, name, isAdmin, email })
   },
 
   removeAllowedCPF: async (cpf: string): Promise<void> => {
@@ -36,7 +34,6 @@ export const adminService = {
     const currentCPFs: AllowedCPF[] = await adminService.getAllowedCPFs()
     const updatedCPFs = currentCPFs.filter((user) => user.cpf !== cpf)
     localStorage.setItem('allowed_cpfs', JSON.stringify(updatedCPFs))
-    console.log("Removing allowed CPF:", cpf)
   },
 
   getAccessLogs: async (): Promise<AccessLog[]> => {

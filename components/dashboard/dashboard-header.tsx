@@ -31,9 +31,7 @@ export function DashboardHeader({ tenantSlug, period, setPeriod, data }: Dashboa
         toast({ title: "Sucesso", description: "Relatório Excel gerado com sucesso." })
       }
     } catch (error) {
-      console.log("Export error:", error);
-
-      toast({ title: "Erro", description: "Falha ao gerar o relatório.", variant: "destructive" })
+      toast({ title: "Erro", description: "Falha ao gerar o relatório." +error, variant: "destructive" })
     }
     setConfirmOpen(null)
   }

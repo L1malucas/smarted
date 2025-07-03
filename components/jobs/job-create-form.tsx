@@ -116,10 +116,9 @@ export function JobCreateForm({ tenantSlug }: JobCreateFormProps) {
         router.push(`/${tenantSlug}/jobs`);
       }
     } catch (error) {
-      console.error('Erro ao salvar vaga:', error);
       toast({
         title: "Erro ao Salvar",
-        description: error instanceof Error ? error.message : "Não foi possível salvar a vaga. Tente novamente.",
+        description:"Não foi possível salvar a vaga. Tente novamente." +error,
         variant: "destructive",
       });
     } finally {

@@ -113,16 +113,6 @@ export function ShareDialog({ title, resourceType, resourceId, resourceName, ten
   }
 
   const handleShare = () => {
-    console.log("Sharing:", {
-      resourceType,
-      resourceId,
-      resourceName,
-      isPublic,
-      expiryDays: Number.parseInt(expiryDays),
-      shareUrl,
-      isPasswordProtected,
-      password: isPasswordProtected ? password : "N/A",
-    })
 
     if (isPasswordProtected && password && shareUrl) {
       const urlParts = shareUrl.split("/")
