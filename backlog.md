@@ -45,12 +45,12 @@ Este documento detalha o backlog de tarefas técnicas e de negócio para o proje
   3.  Garantir que o padrão de implementação lide corretamente com o Hot Module Replacement (HMR) em desenvolvimento.
   4.  Definir schemas Mongoose para `Log` (em `models/Log.ts`), `User` (em `models/User.ts`) e `Job` (em `models/Job.ts`), incluindo sub-schemas para entidades aninhadas como `Competency`, `JobQuestion`, `CriteriaWeights` e `StatusChangeLog`.
 
-### 6. Implementação do Wrapper Unificado para Feedback e Logs
-- **Descrição:** Para garantir consistência e robustez, todas as Server Actions devem fornecer feedback ao usuário (via toasts) e registrar logs de auditoria de forma padronizada. A criação de um wrapper unificado para essa finalidade é a abordagem mais limpa e manutenível.
-- **Ação Necessária:**
-  1.  **Serviço de Log:** Desenvolver a função `createLog` em `services/audit.ts` para inserir registros na coleção de auditoria do MongoDB.
-  2.  **Wrapper de Ação:** Criar uma função de ordem superior em `lib/actions.ts` que receba uma Server Action e um payload de log. Esta função deve executar a ação, disparar um toast de sucesso ou erro (`sonner`) e chamar o serviço de log correspondente.
-  3.  **Padronização:** Estabelecer que toda a lógica de backend que interage com o cliente seja encapsulada por este wrapper.
+### 6. Implementação do Wrapper Unificado para Feedback e Logs (Concluída)
+- **Descrição:** Um wrapper unificado foi implementado para padronizar o feedback ao usuário (via toasts) e o registro de logs de auditoria para Server Actions.
+- **Ação Realizada:**
+  1.  O método `saveAuditLog` em `services/audit.ts` foi utilizado para registrar logs.
+  2.  O arquivo `lib/actions.ts` foi criado com a função `withActionLogging`, que encapsula Server Actions, dispara toasts de sucesso/erro e registra logs.
+  3.  A Server Action `JobService.saveJob` em `app/[slug]/jobs/create/page.tsx` foi integrada ao wrapper `withActionLogging` como exemplo.
 
 ---
 

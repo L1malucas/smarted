@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import { Job, JobStatus } from "@/types/jobs-interface";
 import { JobService } from "@/services/jobs";
-import { AuditService } from "@/services/audit";
+import { withActionLogging } from "@/lib/actions";
 import { useJobValidation } from "@/hooks/use-job-validation";
 import { ActionButtons } from "@/components/jobs/action-buttons";
 import { JobBasicInfo } from "@/components/jobs/basic-info";
@@ -23,7 +23,6 @@ export default function CreateJobPage() {
   const tenantSlug = slug as string;
   const { validateJob, getFieldError, hasFieldError, clearFieldError } = useJobValidation();
   const jobService = new JobService();
-  const auditService = new AuditService();
 
   const [formData, setFormData] = useState<Partial<Job>>({
     title: "",
@@ -103,13 +102,23 @@ export default function CreateJobPage() {
         },
       };
 
-      await jobService.saveJob(jobData);
-      setHasUnsavedChanges(false);
+      const saveJobAction = withActionLogging(
+        async (data: Omit<Job, '_id' | 'createdAt' | 'updatedAt' | 'candidatesCount'>) => {
+          return JobService.saveJob(data);
+        },
+        {
+          userId: "current-user-slug", // Replace with actual user ID
+          userName: "Usuário Atual", // Replace with actual user name
+          actionType: isDraft ? "save_draft_job" : "publish_job",
+          resourceType: "job",
+          details: isDraft ? `Vaga ${jobData.title} salva como rascunho.` : `Vaga ${jobData.title} publicada.`, 
+          successMessage: isDraft ? "A vaga foi salva como rascunho." : "A vaga foi publicada com sucesso.",
+          errorMessage: "Não foi possível salvar a vaga.",
+        }
+      );
 
-      toast({
-        title: isDraft ? "Rascunho Salvo" : "Vaga Publicada",
-        description: isDraft ? "A vaga foi salva como rascunho." : "A vaga foi publicada com sucesso.",
-      });
+      await saveJobAction(jobData);
+      setHasUnsavedChanges(false);
 
       router.push(`/${tenantSlug}/jobs`);
     } catch (error) {
