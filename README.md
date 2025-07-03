@@ -162,6 +162,7 @@ O projeto segue a estrutura padrão do Next.js App Router:
     *   Configuração de Ferramentas Automatizadas para Acessibilidade (`eslint-plugin-jsx-a11y`).
     *   Correção de Rotas Públicas Duplicadas e Inconsistentes.
     *   Eliminação de Lógica Duplicada no Hook `use-mobile`.
+    *   Auditoria e Remoção Completa de Dados Mockados.
 *   Implementar backend real com banco de dados (Supabase, Neon, MongoDB, etc.).
 *   Integrar com uma API de IA real para análise de currículos.
 *   Desenvolver o módulo completo de envio de e-mails.

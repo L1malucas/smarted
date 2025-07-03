@@ -169,7 +169,7 @@ export default function ScreeningPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas as Vagas em Triagem</SelectItem>
-                {mockJobsscrening
+                {jobs
                   .filter((j) => j.status === "triagem" || j.status === "recrutamento" || j.status === "aberta")
                   .map((job) => (
                     <SelectItem key={job._id} value={job._id}>

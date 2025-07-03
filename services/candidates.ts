@@ -10,36 +10,91 @@ export const candidatesService = {
     return files.map((file) => Math.random().toString(36).substr(2, 9))
   },
 
-  getCandidates: async (jobSlug: string): Promise<Candidate[]> => {
-    // Stub implementation
+  getCandidatesForScreening: async (tenantSlug: string, jobId?: string | null): Promise<Candidate[]> => {
     await new Promise((resolve) => setTimeout(resolve, 800))
 
-    return [
+    const allCandidates: Candidate[] = [
       {
-        _id: "1",
+        _id: "cand1",
         jobId: "1",
-        jobSlug,
-        name: "Ana Silva",
-        email: "ana.silva@email.com",
-        curriculumUrl: "/curriculos/ana-silva.pdf",
-        fileName: "curriculo-ana-silva.pdf",
+        jobSlug: "dev-frontend",
+        name: "Alice Wonderland",
+        email: "alice@example.com",
+        curriculumUrl: "#",
+        fileName: "alice_cv.pdf",
+        isReferral: false,
+        currentStage: "triagem",
+        createdAt: new Date(),
+        updatedAt: new Date(),
         analysis: {
-          experienceScore: 85,
-          skillsScore: 92,
-          certificationsScore: 78,
-          behavioralScore: 88,
-          leadershipScore: 75,
-          finalScore: 85.6,
-          comments: {
-            experience: "5+ anos em React e TypeScript",
-            skills: "Domínio avançado em React, TypeScript, Node.js",
-            certifications: "Certificações AWS e Google Cloud",
-          },
+          finalScore: 85,
+          experienceScore: 0,
+          skillsScore: 0,
+          certificationsScore: 0,
+          behavioralScore: 0,
+          leadershipScore: 0,
+          comments: { experience: "", skills: "", certifications: "" },
         },
-        createdAt: new Date("2024-01-20"),
-        updatedAt: new Date("2024-01-20"),
+        matchLevel: "alto",
+      },
+      {
+        _id: "cand2",
+        jobId: "1",
+        jobSlug: "dev-frontend",
+        name: "Bob The Builder",
+        email: "bob@example.com",
+        curriculumUrl: "#",
+        fileName: "bob_cv.pdf",
+        isReferral: true,
+        currentStage: "triagem",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        analysis: {
+          finalScore: 75,
+          experienceScore: 0,
+          skillsScore: 0,
+          certificationsScore: 0,
+          behavioralScore: 0,
+          leadershipScore: 0,
+          comments: { experience: "", skills: "", certifications: "" },
+        },
+        matchLevel: "médio",
+      },
+      {
+        _id: "cand3",
+        jobId: "2",
+        jobSlug: "ux-designer",
+        name: "Charlie Design",
+        email: "charlie@example.com",
+        curriculumUrl: "#",
+        fileName: "charlie_cv.pdf",
+        isReferral: false,
+        currentStage: "triagem",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        analysis: {
+          finalScore: 90,
+          experienceScore: 0,
+          skillsScore: 0,
+          certificationsScore: 0,
+          behavioralScore: 0,
+          leadershipScore: 0,
+          comments: { experience: "", skills: "", certifications: "" },
+        },
+        matchLevel: "alto",
       },
     ]
+
+    let filteredCandidates = allCandidates.filter(c => c.currentStage === "triagem")
+
+    if (jobId && jobId !== "all") {
+      filteredCandidates = filteredCandidates.filter(c => c.jobId === jobId)
+    }
+
+    // Simulate tenant filtering if needed, though mock data doesn't have tenant info
+    // if (tenantSlug) { /* filter by tenantSlug */ }
+
+    return filteredCandidates
   },
 
   analyzeCandidates: async (jobSlug: string): Promise<void> => {

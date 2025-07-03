@@ -3,24 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Search, Filter } from "lucide-react";
 import { JobStatus } from '@/types/jobs-interface';
 import { Button } from "@/components/ui/button";
-
-interface JobFilterProps {
-  searchTerm: string;
-  statusFilter: JobStatus | "all";
-  viewMode: "card" | "list";
-  onSearchChange: (value: string) => void;
-  onStatusChange: (value: JobStatus | "all") => void;
-  onViewModeChange: (mode: "card" | "list") => void;
-}
-
-const jobStatusOptions = [
-  { value: "all", label: "Todos os Status" },
-  { value: "draft", label: "Rascunho" },
-  { value: "aberta", label: "Aberta" },
-  { value: "pausada", label: "Pausada" },
-  { value: "fechada", label: "Fechada" },
-  { value: "cancelada", label: "Cancelada" },
-];
+import { jobStatusOptions } from "@/lib/jobs-constants";
 
 export function JobFilter({
   searchTerm,

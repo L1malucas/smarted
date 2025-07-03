@@ -22,12 +22,13 @@ Este documento detalha o backlog de tarefas técnicas e de negócio para o proje
 - **Ação Realizada:**
   1.  O arquivo `components/ui/use-mobile.tsx` foi removido, mantendo `hooks/use-mobile.tsx` como a única fonte de verdade.
 
-### 3. Auditoria e Remoção Completa de Dados Mockados
-- **Descrição:** A presença do arquivo `app/[slug]/mock.ts` indica um risco de que componentes ainda estejam utilizando dados estáticos em vez de consumir a API real através da camada de `services`. Isso é um bloqueador para a implantação em produção e pode mascarar bugs na integração com o backend.
-- **Ação Necessária:**
-  1.  Realizar uma busca global no código para identificar todos os componentes que importam de `app/[slug]/mock.ts`.
-  2.  Refatorar cada um desses componentes para que obtenham seus dados dinamicamente, utilizando as funções apropriadas dos `services`.
-  3.  Após garantir que não há mais dependências, remover o arquivo `mock.ts`.
+### 3. Auditoria e Remoção Completa de Dados Mockados (Concluída)
+- **Descrição:** Todos os componentes foram refatorados para consumir dados através da camada de `services`, eliminando a dependência direta do arquivo `app/[slug]/mock.ts`.
+- **Ação Realizada:**
+  1.  `app/[slug]/screening/page.tsx` foi atualizado para usar `candidatesService` e `JobService`.
+  2.  `services/candidates.ts` e `services/jobs.ts` foram ajustados para fornecer dados mockados internamente, eliminando a necessidade do arquivo `mock.ts`.
+  3.  `components/jobs/jobs-list-filters.tsx` foi refatorado para usar constantes centralizadas.
+  4.  O arquivo `app/[slug]/mock.ts` foi removido.
 
 ### 4. Auditoria de Segurança e Controle de Acesso Multi-Tenant
 - **Descrição:** Em uma aplicação multi-tenant, a falha mais crítica é a de permitir que dados de um tenant (empresa) sejam acessados por outro. É vital garantir que todas as queries e Server Actions validem rigorosamente se o usuário autenticado pertence ao `slug` (tenant) que está tentando acessar.

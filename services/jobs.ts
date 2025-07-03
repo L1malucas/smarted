@@ -1,32 +1,75 @@
 import { v4 as uuidv4 } from 'uuid';
 import { Job, JobStatus } from '@/types/jobs-interface';
-import { AuditService } from './audit';
 
-const STORAGE_KEY = 'jobs';
+// In a real application, this would be a database or API call
+let mockJobs: Job[] = [
+  {
+    _id: "1",
+    slug: "dev-frontend",
+    title: "Desenvolvedor Frontend Sênior",
+    description: "Buscamos um desenvolvedor frontend experiente para liderar projetos em React e TypeScript...",
+    status: "recrutamento",
+    candidatesCount: 23,
+    createdAt: new Date("2024-05-15"),
+    updatedAt: new Date("2024-05-20"),
+    createdBy: "joao-silva-abc123",
+    createdByName: "João Silva",
+    competencies: [],
+    questions: [],
+    isPCDExclusive: false,
+    isReferralJob: false,
+    criteriaWeights: { experience: 30, skills: 30, certifications: 15, behavioral: 15, leadership: 10 },
+    statusChangeLog: [
+      {
+        status: "aberta",
+        changedAt: new Date("2024-05-15"),
+        changedBy: "joao-silva-abc123",
+        changedByName: "João Silva",
+      },
+      {
+        status: "recrutamento",
+        changedAt: new Date("2024-05-20"),
+        changedBy: "joao-silva-abc123",
+        changedByName: "João Silva",
+      },
+    ],
+  },
+  {
+    _id: "2",
+    slug: "ux-designer",
+    title: "UX/UI Designer Pleno",
+    description: "Procuramos um designer com experiência em Figma e prototipagem...",
+    status: "triagem",
+    candidatesCount: 15,
+    createdAt: new Date("2024-06-01"),
+    updatedAt: new Date("2024-06-05"),
+    createdBy: "maria-santos-xyz456",
+    createdByName: "Maria Santos",
+    competencies: [],
+    questions: [],
+    isPCDExclusive: false,
+    isReferralJob: false,
+    criteriaWeights: { experience: 20, skills: 40, certifications: 10, behavioral: 20, leadership: 10 },
+    statusChangeLog: [
+      {
+        status: "aberta",
+        changedAt: new Date("2024-06-01"),
+        changedBy: "maria-santos-xyz456",
+        changedByName: "Maria Santos",
+      },
+      {
+        status: "triagem",
+        changedAt: new Date("2024-06-05"),
+        changedBy: "maria-santos-xyz456",
+        changedByName: "Maria Santos",
+      },
+    ],
+  },
+];
 
 export class JobService {
-  private auditService: AuditService;
-
-  constructor() {
-    this.auditService = new AuditService();
-  }
-
-  private getStoredJobs(): Job[] {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : [];
-  }
-
-  private saveToStorage(jobs: Job[]): void {
+  static async saveJob(job: Omit<Job, '_id' | 'createdAt' | 'updatedAt' | 'candidatesCount'>): Promise<Job> {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(jobs));
-    } catch (error) {
-      throw new Error('Failed to save jobs to local storage');
-    }
-  }
-
-  async saveJob(job: Omit<Job, '_id' | 'createdAt' | 'updatedAt' | 'candidatesCount'>): Promise<Job> {
-    try {
-      const jobs = this.getStoredJobs();
       const newJob: Job = {
         ...job,
         _id: uuidv4(),
@@ -36,18 +79,8 @@ export class JobService {
         isDraft: job.isDraft ?? true,
       };
 
-      jobs.push(newJob);
-      this.saveToStorage(jobs);
-
-      await this.auditService.saveAuditLog({
-        userId: job.createdBy,
-        userName: job.createdByName,
-        actionType: 'create',
-        resourceType: 'job',
-        resourceId: newJob._id,
-        details: `Job created: ${newJob.title}`,
-        newState: newJob,
-      });
+      mockJobs.push(newJob);
+      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API call
 
       return newJob;
     } catch (error) {
@@ -56,34 +89,22 @@ export class JobService {
     }
   }
 
-  async updateJob(jobId: string, updates: Partial<Job>, userId: string, userName: string): Promise<Job> {
+  static async updateJob(jobId: string, updates: Partial<Job>, userId: string, userName: string): Promise<Job> {
     try {
-      const jobs = this.getStoredJobs();
-      const jobIndex = jobs.findIndex(job => job._id === jobId);
+      const jobIndex = mockJobs.findIndex(job => job._id === jobId);
       if (jobIndex === -1) {
         throw new Error('Job not found');
       }
 
-      const existingJob = jobs[jobIndex];
+      const existingJob = mockJobs[jobIndex];
       const updatedJob = {
         ...existingJob,
         ...updates,
         updatedAt: new Date(),
       };
 
-      jobs[jobIndex] = updatedJob;
-      this.saveToStorage(jobs);
-
-      await this.auditService.saveAuditLog({
-        userId,
-        userName,
-        actionType: 'update',
-        resourceType: 'job',
-        resourceId: jobId,
-        details: `Job updated: ${updatedJob.title}`,
-        previousState: existingJob,
-        newState: updatedJob,
-      });
+      mockJobs[jobIndex] = updatedJob;
+      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API call
 
       return updatedJob;
     } catch (error) {
@@ -92,24 +113,25 @@ export class JobService {
     }
   }
 
-  async getAllJobs(): Promise<Job[]> {
-    return this.getStoredJobs().filter(job => !job.isDraft);
+  static async getAllJobs(tenantSlug?: string): Promise<Job[]> {
+    await new Promise((resolve) => setTimeout(resolve, 500))
+    // In a real app, you would filter by tenantSlug here
+    return mockJobs.filter(job => !job.isDraft)
   }
 
-  async getJobById(jobId: string): Promise<Job | null> {
-    const jobs = this.getStoredJobs();
-    return jobs.find(job => job._id === jobId) || null;
+  static async getJobById(jobId: string): Promise<Job | null> {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    return mockJobs.find(job => job._id === jobId) || null;
   }
 
-  async updateJobStatus(jobId: string, newStatus: JobStatus, userId: string, userName: string): Promise<Job> {
+  static async updateJobStatus(jobId: string, newStatus: JobStatus, userId: string, userName: string): Promise<Job> {
     try {
-      const jobs = this.getStoredJobs();
-      const jobIndex = jobs.findIndex(job => job._id === jobId);
+      const jobIndex = mockJobs.findIndex(job => job._id === jobId);
       if (jobIndex === -1) {
         throw new Error('Job not found');
       }
 
-      const job = jobs[jobIndex];
+      const job = mockJobs[jobIndex];
       const updatedJob = {
         ...job,
         status: newStatus,
@@ -127,19 +149,8 @@ export class JobService {
         ],
       };
 
-      jobs[jobIndex] = updatedJob;
-      this.saveToStorage(jobs);
-
-      await this.auditService.saveAuditLog({
-        userId,
-        userName,
-        actionType: 'status_change',
-        resourceType: 'job',
-        resourceId: jobId,
-        details: `Status changed to ${newStatus}`,
-        previousState: { status: job.status },
-        newState: { status: newStatus },
-      });
+      mockJobs[jobIndex] = updatedJob;
+      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API call
 
       return updatedJob;
     } catch (error) {
