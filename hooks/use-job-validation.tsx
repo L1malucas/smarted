@@ -3,15 +3,7 @@ import { z } from 'zod';
 import { Job } from '@/types/jobs-interface';
 import { jobSchema, draftJobSchema, competencySchema, questionSchema, salaryRangeSchema } from '@/lib/schemas/job.schema';
 
-export interface ValidationErrors {
-  title?: string;
-  description?: string;
-  department?: string;
-  location?: string;
-  salaryRange?: string;
-  competencies?: any;
-  questions?: any;
-}
+import { ValidationErrors } from '@/types/validation-interface';
 
 export function useJobValidation() {
   const [errors, setErrors] = useState<ValidationErrors>();

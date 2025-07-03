@@ -6,20 +6,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
 import { v4 as uuidv4 } from 'uuid';
-import { Job } from "@/types/jobs-interface";
+import { Job, Competency } from "@/types/jobs-interface";
+import { JobCreateFormProps } from "@/types/component-props";
 import { JobService } from "@/services/jobs";
 import { AuditService } from "@/services/audit";
 import { useJobValidation } from "@/hooks/use-job-validation";
 
-interface JobCreateFormProps {
-  tenantSlug: string;
-}
-
-interface Competency {
-  id: string;
-  name: string;
-  weight: 1 | 2 | 3 | 4 | 5;
-}
 
 export function JobCreateForm({ tenantSlug }: JobCreateFormProps) {
   const router = useRouter();
@@ -101,7 +93,7 @@ export function JobCreateForm({ tenantSlug }: JobCreateFormProps) {
       };
 
       // Salvar a vaga
-      const savedJob = await jobService.saveJob(jobData);
+      await JobService.saveJob(tenantSlug, jobData);
 
       setHasUnsavedChanges(false);
 
@@ -118,7 +110,7 @@ export function JobCreateForm({ tenantSlug }: JobCreateFormProps) {
     } catch (error) {
       toast({
         title: "Erro ao Salvar",
-        description:"Não foi possível salvar a vaga. Tente novamente." +error,
+        description: "Não foi possível salvar a vaga. Tente novamente." + error,
         variant: "destructive",
       });
     } finally {

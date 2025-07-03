@@ -4,15 +4,7 @@ import { useState, useEffect } from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ChevronLeft, ChevronRight, Star } from 'lucide-react'
 
-interface Testimonial {
-  id: number
-  name: string
-  role: string
-  company: string
-  content: string
-  avatar: string
-  rating: number
-}
+import { Testimonial } from "@/types/component-props"
 
 const testimonials: Testimonial[] = [
   {

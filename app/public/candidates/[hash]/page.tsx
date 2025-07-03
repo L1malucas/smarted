@@ -10,24 +10,7 @@ import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Responsi
 import { candidatesService } from "@/services/candidates"
 import { JobService } from "@/services/jobs"
 
-interface PublicCandidate {
-  _id: string
-  name: string
-  email: string
-  analysis: {
-    experienceScore: number
-    skillsScore: number
-    certificationsScore: number
-    behavioralScore: number
-    leadershipScore: number
-    finalScore: number
-    comments: {
-      experience: string
-      skills: string
-      certifications: string
-    }
-  }
-}
+import { PublicCandidate } from "@/types/candidate-interface"
 
 const radarData = [
   { subject: "Experiência", A: 78.3, fullMark: 100 },

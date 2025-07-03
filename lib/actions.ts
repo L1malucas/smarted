@@ -1,21 +1,9 @@
 import { AuditService } from "@/services/audit";
 import { toast } from "sonner";
 import { AuditLog } from "@/types/audit-interface";
+import { ActionFunction, ActionLogConfig } from "@/types/action-interface";
 
 const auditService = new AuditService();
-
-type ActionFunction<TArgs extends any[], TResult> = (...args: TArgs) => Promise<TResult>;
-
-interface ActionLogConfig {
-  userId: string;
-  userName: string;
-  actionType: AuditLog["actionType"];
-  resourceType: AuditLog["resourceType"];
-  resourceId?: string;
-  details?: string;
-  successMessage?: string;
-  errorMessage?: string;
-}
 
 export function withActionLogging<TArgs extends any[], TResult>(
   action: ActionFunction<TArgs, TResult>,

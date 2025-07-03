@@ -7,7 +7,7 @@ import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
-import { Job, JobStatus } from "@/types/jobs-interface";
+import { Job, JobStatus, Competency } from "@/types/jobs-interface";
 import { JobService } from "@/services/jobs";
 import { withActionLogging } from "@/lib/actions";
 import { useJobValidation } from "@/hooks/use-job-validation";
@@ -34,7 +34,7 @@ export default function CreateJobPage() {
       { id: crypto.randomUUID(), name: "", weight: 3 },
       { id: crypto.randomUUID(), name: "", weight: 3 },
       { id: crypto.randomUUID(), name: "", weight: 3 },
-    ],
+    ] as Competency[],
     questions: [{ id: crypto.randomUUID(), question: "", type: "text", required: false, order: 0 }],
     isPCDExclusive: false,
     isReferralJob: false,

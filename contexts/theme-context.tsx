@@ -1,17 +1,7 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
-
-type Theme = "brutalism" | "friendly" | "neo-clean"
-type ColorMode = "light" | "dark" | "system"
-
-interface ThemeContextType {
-  theme: Theme
-  colorMode: ColorMode
-  setTheme: (theme: Theme) => void
-  setColorMode: (mode: ColorMode) => void
-  availableThemes: { value: Theme; label: string; description: string }[]
-}
+import { Theme, ColorMode, ThemeContextType } from "@/types/theme-interface"
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 

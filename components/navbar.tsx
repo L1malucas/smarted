@@ -15,10 +15,7 @@ import { ThemeSelector } from "./theme-selector"
 import { withActionLogging } from "@/lib/actions"
 import { authService } from "@/services/auth"
 
-interface NavbarProps {
-  tenantSlug: string
-  user: User | null // Pass user prop
-}
+import { NavbarProps } from "@/types/component-props"
 
 /**
  * Componente de navegação principal da aplicação.

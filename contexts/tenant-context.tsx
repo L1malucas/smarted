@@ -2,13 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import { useParams } from "next/navigation"
-
-interface TenantContextType {
-  tenantSlug: string | null
-  tenantName: string | null
-  isLoading: boolean
-  setTenantData: (slug: string, name: string) => void
-}
+import { TenantContextType } from "@/types/tenant-interface"
 
 const TenantContext = createContext<TenantContextType | undefined>(undefined)
 

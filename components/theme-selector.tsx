@@ -13,11 +13,7 @@ import {
 import { Palette, Monitor, Moon, Sun } from "lucide-react"
 import { useTheme,  } from "@/contexts/theme-context"
 
-interface ThemeSelectorProps {
-  showLabel?: boolean
-  variant?: "ghost" | "outline" | "default"
-  size?: "default" | "sm" | "lg" | "icon"
-}
+import { ThemeSelectorProps } from "@/types/component-props"
 
 export function ThemeSelector({ showLabel = false, variant = "ghost", size = "default" }: ThemeSelectorProps) {
   const { theme, colorMode, setTheme, setColorMode, availableThemes } = useTheme()

@@ -7,13 +7,7 @@ import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Responsi
 import { ShareDialog } from "@/components/share-dialog"
 import type { Candidate } from "@/types"
 
-interface CandidateRankingProps {
-  candidates: Candidate[]
-  jobTitle: string
-  jobId: string
-  tenantSlug: string
-  radarData: Array<{ subject: string; A: number; fullMark: number }>
-}
+import { CandidateRankingProps } from "@/types/component-props"
 
 /**
  * Componente que exibe o ranking de candidatos para uma vaga específica.

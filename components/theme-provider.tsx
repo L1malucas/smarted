@@ -3,10 +3,7 @@
 import * as React from 'react'
 import { ThemeProvider as NextThemesProvider, type ThemeProviderProps } from 'next-themes'
 
-interface CustomThemeProviderProps extends ThemeProviderProps {
-  children: React.ReactNode;
-  selectedTheme?: string; // Adiciona a prop para o tema selecionado
-}
+import { CustomThemeProviderProps } from "@/types/component-props"
 
 export function ThemeProvider({ children, selectedTheme, ...props }: CustomThemeProviderProps) {
   // next-themes já adiciona a classe 'dark' ou 'light' ao html

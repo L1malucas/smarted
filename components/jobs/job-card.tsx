@@ -7,12 +7,7 @@ import type { Job, JobStatus } from "@/types/jobs-interface";
 import { getStatusBadge } from "@/utils/job-status-config";
 import { JobActionsMenu } from "./menu-list";
 
-interface JobCardProps {
-  job: Job;
-  tenantSlug: string;
-  onStatusChange: (jobId: string, newStatus: JobStatus) => void;
-  onPublish?: (jobId: string) => void;
-}
+import { JobCardProps } from "@/types/component-props";
 
 export function JobCard({ job, tenantSlug, onStatusChange, onPublish }: JobCardProps) {
   return (

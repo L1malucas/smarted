@@ -13,19 +13,9 @@ import Link from "next/link"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "@/components/ui/use-toast"
 
-interface UploadFile {
-  id: string
-  file: File
-  status: "pending" | "uploading" | "completed" | "error"
-  progress: number
-  error?: string
-}
-
-interface Job {
-  _id: string
-  slug: string
-  title: string
-}
+import { UploadFile } from "@/types/upload-interface"
+import { Job } from "@/types/jobs-interface"
+import { JobService } from "@/services/jobs"
 
 export default function UploadPage() {
   const router = useRouter()
@@ -38,21 +28,21 @@ export default function UploadPage() {
   const tenantSlug = params.slug as string
 
   useEffect(() => {
-    // Fetch available jobs
     const fetchJobs = async () => {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 500))
+      try {
+        const fetchedJobs = await JobService.getAllJobs(tenantSlug);
+        setJobs(fetchedJobs);
+      } catch (error) {
+        toast({
+          title: "Erro ao carregar vagas",
+          description: "Não foi possível carregar a lista de vagas para upload.",
+          variant: "destructive",
+        });
+      }
+    };
 
-      // Mock data
-      setJobs([
-        { _id: "1", slug: "desenvolvedor-frontend-senior", title: "Desenvolvedor Frontend Sênior" },
-        { _id: "2", slug: "analista-dados-junior", title: "Analista de Dados Júnior" },
-        { _id: "3", slug: "product-manager", title: "Product Manager" },
-      ])
-    }
-
-    fetchJobs()
-  }, [])
+    fetchJobs();
+  }, [tenantSlug]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault()

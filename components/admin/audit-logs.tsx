@@ -8,11 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Filter } from "lucide-react"
 import { AccessLog, AllowedCPF } from "@/types/admin-interface"
-
-interface AuditLogsProps {
-  accessLogs: AccessLog[]
-  allowedCPFs: AllowedCPF[]
-}
+import { AuditLogsProps } from "@/types/component-props"
 
 export default function AuditLogs({ accessLogs, allowedCPFs }: AuditLogsProps) {
   const [auditUserFilter, setAuditUserFilter] = useState<string>("all")

@@ -9,21 +9,7 @@ import { Check, ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { toast, } from "@/components/ui/use-toast"
 
-interface Step {
-  id: string
-  title: string
-  description: string
-  component: React.ReactNode
-  isOptional?: boolean
-}
-
-interface ApplicationStepperProps {
-  steps: Step[]
-  onComplete: () => void
-  onStepChange?: (stepIndex: number) => void
-  onValidateStep?: (stepIndex: number) => Promise<boolean> | boolean // New prop for step validation
-  className?: string
-}
+import { Step, ApplicationStepperProps } from "@/types/component-props"
 
 /**
  * Componente de navegação em etapas para processos de candidatura/aplicação

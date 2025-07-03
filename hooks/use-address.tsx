@@ -1,10 +1,7 @@
 import { useCallback } from "react";
 import debounce from "lodash/debounce";
 
-interface AddressOption {
-  value: string;
-  label: string;
-}
+import { AddressOption } from "@/types/address-interface";
 
 export function useAddressAutocomplete() {
   const loadOptions = useCallback((inputValue: string): Promise<AddressOption[]> => {

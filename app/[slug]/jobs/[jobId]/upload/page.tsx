@@ -10,14 +10,7 @@ import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, Upload, X, FileText, AlertCircle, CheckCircle } from "lucide-react"
 import Link from "next/link"
-
-interface UploadFile {
-  id: string
-  file: File
-  status: "pending" | "uploading" | "completed" | "error"
-  progress: number
-  error?: string
-}
+import { UploadFile } from "@/types/upload-interface"
 
 /**
  * @fileoverview Página de upload de currículos para uma vaga específica

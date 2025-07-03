@@ -17,14 +17,7 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { toast } from "@/components/ui/use-toast"
 
-interface ShareDialogProps {
-  title: string
-  resourceType: "job" | "candidates" | "report"
-  resourceId: string
-  resourceName: string
-  tenantSlug?: string
-  jobSlug?: string // Para links específicos de vaga
-}
+import { ShareDialogProps } from "@/types/component-props"
 
 /**
  * Componente de diálogo para compartilhamento de recursos.
