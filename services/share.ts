@@ -4,21 +4,23 @@ import { z } from 'zod';
 import { createLinkSchema, verifyLinkSchema } from '@/lib/schemas/share.schema';
 import ShareableLink from '@/models/ShareableLink';
 import Job from '@/models/Job'; // Assuming Job model is needed for resource retrieval
-import databasePromise from '@/lib/mongodb';
+import dbConnect from '@/lib/mongodb';
 import mongoose from 'mongoose';
 import { v4 as uuidv4 } from 'uuid'; // For generating unique hash
 import { withActionLogging } from '@/lib/actions'; // Updated import
 import { ActionLogConfig } from '@/types/action-interface'; // Import ActionLogConfig
 
-// Placeholder for session management. In a real app, use NextAuth.js or similar.
-// This function should return the current user's session data, including userId, tenantId, roles, and userName.
+import { getServerSession } from "next-auth";
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import bcrypt from 'bcrypt';
+
 async function getSession() {
-  // For now, returning a dummy session. Replace with actual session retrieval.
+  const session = await getServerSession(authOptions);
   return {
-    userId: "dummyUserId123",
-    tenantId: "dummyTenantId456",
-    roles: ["admin"], // or "recruiter"
-    userName: "Dummy User", // Added userName
+    userId: session?.user?.id || null,
+    tenantId: session?.user?.tenantId || null,
+    roles: session?.user?.roles || [],
+    userName: session?.user?.name || "Unknown User",
   };
 }
 
@@ -37,14 +39,14 @@ async function createShareableLinkActionInternal(payload: z.infer<typeof createL
   const validatedData = createLinkSchema.parse(payload);
 
   // Connect to database
-  const db = await databasePromise;
+  await dbConnect();
 
   // 3. Business Logic: Generate unique hash and save link details
   const hash = uuidv4(); // Generate a unique hash
   let hashedPassword = undefined;
   if (validatedData.options?.password) {
     // In a real app, hash the password using bcrypt or similar
-    hashedPassword = validatedData.options.password; // Placeholder: store plain password for now
+    hashedPassword = await bcrypt.hash(validatedData.options.password, 10);
   }
 
   const newShareableLink = new ShareableLink({
@@ -69,7 +71,7 @@ async function verifySharedLinkActionInternal(payload: z.infer<typeof verifyLink
   const { hash, password } = validatedData;
 
   // Connect to database
-  const db = await databasePromise;
+  await dbConnect();
 
   // 2. Business Logic: Find and verify the shareable link
   const shareableLink = await ShareableLink.findOne({ hash });
@@ -84,7 +86,7 @@ async function verifySharedLinkActionInternal(payload: z.infer<typeof verifyLink
   }
 
   // Check password if required
-  if (shareableLink.password && shareableLink.password !== password) {
+  if (shareableLink.password && !(await bcrypt.compare(password, shareableLink.password))) {
     // In a real app, compare hashed passwords
     return { success: false, error: 'Senha incorreta.' };
   }

@@ -2,75 +2,63 @@
 
 import { z } from 'zod';
 import { loginSchema, LoginInput } from '@/lib/schemas/auth.schema';
-import User, { IUser } from '@/models/User';
-import databasePromise from '@/lib/mongodb';
+import { signIn, signOut } from 'next-auth/react'; // Import NextAuth functions
 import { withActionLogging } from '@/lib/actions';
 import { ActionLogConfig } from '@/types/action-interface';
-
-// Placeholder for session management. In a real app, use NextAuth.js or similar.
-async function createSession(user: IUser) {
-  // Simulate session creation
-}
-
-// Updated getSession to return userName
-async function getSession() {
-  return {
-    userId: "dummyUserId123",
-    userName: "Dummy User",
-    tenantId: "dummyTenantId456",
-    roles: ["admin"], // or "recruiter"
-  };
-}
+import { authOptions } from '@/app/api/auth/[...nextauth]/route'; // Import authOptions
+import { getServerSession } from "next-auth"; // Import getServerSession
 
 async function loginActionInternal(payload: LoginInput) {
   const validatedData = loginSchema.parse(payload);
   const { cpf } = validatedData;
 
-  const db = await databasePromise;
-  const user = await User.findOne({ cpf });
+  const result = await signIn("credentials", {
+    cpf,
+    redirect: false, // Prevent NextAuth from redirecting
+  });
 
-  if (!user) {
-    return { success: false, error: 'CPF inválido ou não autorizado.' };
+  if (result?.error) {
+    return { success: false, error: result.error };
   }
 
-  await createSession(user);
-
-  return { success: true, data: { user: user.toObject() } };
+  // After successful sign-in, get the session to return user data
+  const session = await getServerSession(authOptions);
+  if (session && session.user) {
+    return { success: true, data: { user: session.user } };
+  } else {
+    return { success: false, error: 'Erro ao obter dados da sessão após o login.' };
+  }
 }
 
 async function logoutActionInternal(): Promise<{ success: boolean, error?: string }> {
+  await signOut({ redirect: false }); // Prevent NextAuth from redirecting
   return { success: true };
 }
 
 // Exported functions that wrap the internal actions with logging
 export const loginAction = async (payload: LoginInput) => {
-  const session = await getSession(); // Get session before calling the wrapped action
+  // For login, session is not available before the action, so we use a generic log config
   const logConfig: ActionLogConfig = {
-    userId: session.userId,
-    userName: session.userName,
+    userId: payload.cpf, // Use CPF as userId for logging before actual session is established
+    userName: "", // Will be populated after successful login
     actionType: "Login",
     resourceType: "User",
-    resourceId: "", // Will be populated with user ID after successful login
+    resourceId: "",
     successMessage: "Login bem-sucedido!",
-    errorMessage: "Falha no login.",
+    errorMessage: "Falha no login. Verifique seu CPF.",
   };
-  const wrappedAction = withActionLogging(loginActionInternal, logConfig);
-  const result = await wrappedAction(payload);
-  // If login is successful, update resourceId in logConfig for audit trail
-  if (result.success && result.data && result.data.user) {
-    logConfig.resourceId = result.data.user._id.toString();
-  }
+  const result = await loginActionInternal(payload);
   return result;
 };
 
 export const logoutAction = async () => {
-  const session = await getSession(); // Get session before calling the wrapped action
+  const session = await getServerSession(authOptions); // Get session before logout
   const logConfig: ActionLogConfig = {
-    userId: session.userId,
-    userName: session.userName,
+    userId: session?.user?.id || "unknown",
+    userName: session?.user?.name || "Unknown User",
     actionType: "Logout",
     resourceType: "User",
-    resourceId: session.userId, // User ID is known before logout
+    resourceId: session?.user?.id || "unknown",
     successMessage: "Logout bem-sucedido!",
     errorMessage: "Falha no logout.",
   };

@@ -1,21 +1,25 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface ILog extends Document {
-  acao: string;
-  usuarioCpf?: string;
-  role?: string;
+  userId: string;
+  userName: string;
+  actionType: string;
+  resourceType: string;
+  resourceId?: string;
+  details?: string;
+  success: boolean;
   timestamp: Date;
-  detalhes?: Record<string, any>;
-  createdAt: Date;
-  updatedAt: Date;
 }
 
 const LogSchema: Schema = new Schema({
-  acao: { type: String, required: true },
-  usuarioCpf: { type: String },
-  role: { type: String },
-  timestamp: { type: Date, required: true, default: Date.now },
-  detalhes: { type: Object },
+  userId: { type: String, required: true },
+  userName: { type: String, required: true },
+  actionType: { type: String, required: true },
+  resourceType: { type: String, required: true },
+  resourceId: { type: String },
+  details: { type: String },
+  success: { type: Boolean, required: true },
+  timestamp: { type: Date, default: Date.now },
 }, { timestamps: true });
 
 const Log = mongoose.models.Log || mongoose.model<ILog>('Log', LogSchema);

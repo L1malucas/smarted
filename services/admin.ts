@@ -4,20 +4,21 @@ import { z } from 'zod';
 import { createUserSchema, updateUserSchema, systemSettingsSchema } from '@/lib/schemas/admin.schema';
 import User from '@/models/User';
 import SystemSettings, { ISystemSettings } from '@/models/SystemSettings';
-import databasePromise from '@/lib/mongodb';
+import dbConnect from '@/lib/mongodb';
 import mongoose from 'mongoose';
 import { withActionLogging } from '@/lib/actions'; // Updated import
 import { ActionLogConfig } from '@/types/action-interface'; // Import ActionLogConfig
 
-// Placeholder for session management. In a real app, use NextAuth.js or similar.
-// This function should return the current user's session data, including userId, tenantId, roles, and userName.
+import { getServerSession } from "next-auth";
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+
 async function getSession() {
-  // For now, returning a dummy session. Replace with actual session retrieval.
+  const session = await getServerSession(authOptions);
   return {
-    userId: "superAdminUserId",
-    tenantId: "superAdminTenantId",
-    roles: ["super-admin"], // Only super-admin can manage system settings
-    userName: "Super Admin User", // Added userName
+    userId: session?.user?.id || null,
+    tenantId: session?.user?.tenantId || null,
+    roles: session?.user?.roles || [],
+    userName: session?.user?.name || "Unknown User",
   };
 }
 
@@ -37,12 +38,12 @@ async function createUserActionInternal(payload: z.infer<typeof createUserSchema
   const validatedData = createUserSchema.parse(payload);
 
   // Connect to database
-  const db = await databasePromise;
+  await dbConnect();
 
   // 3. Business Logic: Create a new user
   const newUser = new User({
     ...validatedData,
-    slug: validatedData.name.toLowerCase().replace(/\s+/g, '-') + '-' + Math.random().toString(36).substring(2, 9), // Simple slug generation
+    slug: generateSlug(validatedData.name),
     isAdmin: validatedData.roles.includes("admin") || validatedData.roles.includes("super-admin"),
     permissions: [], // Permissions will be derived from roles or managed separately
   });
@@ -71,7 +72,7 @@ async function updateUserActionInternal(userId: string, payload: z.infer<typeof 
   const validatedData = updateUserSchema.parse(payload);
 
   // Connect to database
-  const db = await databasePromise;
+  await dbConnect();
 
   // 3. Validate Tenancy and update user
   const updatedUser = await User.findOneAndUpdate(
@@ -100,7 +101,7 @@ async function getSystemSettingsActionInternal() {
   }
 
   // Connect to database
-  const db = await databasePromise;
+  await dbConnect();
 
   // 2. Business Logic: Fetch system settings
   // Assuming there's only one system settings document, or we fetch the first one.
@@ -132,7 +133,7 @@ async function updateSystemSettingsActionInternal(payload: z.infer<typeof system
   const validatedData = systemSettingsSchema.parse(payload);
 
   // Connect to database
-  const db = await databasePromise;
+  await dbConnect();
 
   // 3. Business Logic: Update system settings
   // Assuming there's only one system settings document, or we update the first one found.

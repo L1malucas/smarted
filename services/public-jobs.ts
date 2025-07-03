@@ -1,23 +1,29 @@
-import { Job } from '@/types/jobs-interface';
+'use server';
 
-const STORAGE_KEY = 'jobs';
+import Job from '@/models/Job';
+import dbConnect from '@/lib/mongodb';
+import { Job as JobType } from '@/types/jobs-interface';
 
-export class PublicJobService {
-  private getStoredJobs(): Job[] {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : [];
-  }
+export async function getPublicJobsAction(tenantSlug?: string): Promise<{ success: boolean; data?: JobType[]; error?: string }> {
+  try {
+    await dbConnect();
 
-  async getPublicJobs(tenantSlug?: string): Promise<Job[]> {
-    try {
-      const jobs = this.getStoredJobs();
-      return jobs.filter(job =>
-        job.status === 'aberta' &&
-        !job.isDraft &&
-        (!tenantSlug || job.slug.includes(tenantSlug))
-      );
-    } catch (error) {
-      throw new Error('Failed to fetch public jobs');
+    const query: any = {
+      status: 'aberta',
+      isDraft: false,
+    };
+
+    if (tenantSlug) {
+      // Assuming tenantSlug is part of the job's slug or a separate field
+      // Adjust this query based on how tenantSlug is associated with jobs
+      query.slug = { $regex: tenantSlug, $options: 'i' }; // Example: search for tenantSlug in job slug
     }
+
+    const jobs = await Job.find(query).lean();
+
+    return { success: true, data: jobs as JobType[] };
+  } catch (error) {
+    console.error('Error fetching public jobs:', error);
+    return { success: false, error: 'Failed to fetch public jobs.' };
   }
 }

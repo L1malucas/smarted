@@ -1,39 +1,48 @@
-import { MongoClient, Db } from 'mongodb';
+import mongoose from "mongoose"
+
+const MONGODB_URI = process.env.MONGODB_URI
+
+if (!MONGODB_URI) {
+  console.error("Please define the MONGODB_URI environment variable inside .env.local")
+  throw new Error("Please define the MONGODB_URI environment variable inside .env.local")
+}
+
+interface GlobalMongoose {
+  conn: mongoose.Mongoose | null;
+  promise: Promise<mongoose.Mongoose> | null;
+}
 
 declare global {
   // eslint-disable-next-line no-var
-  var _mongoClientPromise: Promise<MongoClient> | undefined;
+  var mongoose: GlobalMongoose;
 }
 
-if (!process.env.MONGODB_URI) {
-  throw new Error('Invalid/Missing environment variable: "MONGODB_URI"');
+let cached = global.mongoose
+
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null }
 }
 
-const uri = process.env.MONGODB_URI;
-const dbName = "SMARTED"; // Nome do banco de dados
-
-let client: MongoClient;
-let clientPromise: Promise<MongoClient>;
-let db: Db; // Adiciona a variável para o objeto Db
-
-if (process.env.NODE_ENV === 'development') {
-  // No modo de desenvolvimento, usa uma variável global para preservar o valor
-  // entre recarregamentos do módulo causados pelo HMR (Hot Module Replacement).
-  if (!global._mongoClientPromise) {
-    client = new MongoClient(uri);
-    global._mongoClientPromise = client.connect();
+async function dbConnect() {
+  if (cached.conn) {
+    return cached.conn
   }
-  clientPromise = global._mongoClientPromise;
-} else {
-  // Em produção, é melhor não usar uma variável global.
-  client = new MongoClient(uri);
-  clientPromise = client.connect();
+
+  if (!cached.promise) {
+    const opts = {
+      bufferCommands: false,
+      dbName: 'SMARTED',
+    }
+
+    cached.promise = mongoose.connect(MONGODB_URI as string, opts).then((mongoose) => {
+      return mongoose
+    }).catch((error) => {
+      console.error('Erro ao conectar ao MongoDB:', error);
+      throw new Error('Falha na conexão com o banco de dados.');
+    })
+  }
+  cached.conn = await cached.promise
+  return cached.conn
 }
 
-// Garante que o cliente retorne o banco de dados específico
-const databasePromise = clientPromise.then(client => {
-  db = client.db(dbName);
-  return db;
-});
-
-export default databasePromise;
+export default dbConnect

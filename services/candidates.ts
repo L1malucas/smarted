@@ -4,20 +4,21 @@ import { z } from 'zod';
 import { applySchema } from '@/lib/schemas/candidate.schema';
 import Candidate from '@/models/Candidate';
 import Job from '@/models/Job';
-import databasePromise from '@/lib/mongodb';
+import dbConnect from '@/lib/mongodb';
 import mongoose from 'mongoose';
 import { withActionLogging } from '@/lib/actions'; // Updated import
 import { ActionLogConfig } from '@/types/action-interface'; // Import ActionLogConfig
 
-// Placeholder for session management. In a real app, use NextAuth.js or similar.
-// This function should return the current user's session data, including userId, tenantId, roles, and userName.
+import { getServerSession } from "next-auth";
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+
 async function getSession() {
-  // For now, returning a dummy session. Replace with actual session retrieval.
+  const session = await getServerSession(authOptions);
   return {
-    userId: "dummyUserId123",
-    tenantId: "dummyTenantId456",
-    roles: ["admin"], // or "recruiter"
-    userName: "Dummy User", // Added userName
+    userId: session?.user?.id || null,
+    tenantId: session?.user?.tenantId || null,
+    roles: session?.user?.roles || [],
+    userName: session?.user?.name || "Unknown User",
   };
 }
 
@@ -26,7 +27,7 @@ async function applyToJobActionInternal(payload: z.infer<typeof applySchema>) {
   const validatedData = applySchema.parse(payload);
 
   // Connect to database
-  const db = await databasePromise;
+  await dbConnect();
 
   // 2. Verify job existence and get tenantId
   const job = await Job.findById(validatedData.jobId);
@@ -67,7 +68,7 @@ async function processResumeWithAIActionInternal(candidateId: string) {
   }
 
   // Connect to database
-  const db = await databasePromise;
+  await dbConnect();
 
   // 2. Validate Tenancy and fetch candidate details
   const candidate = await Candidate.findById(candidateId);
@@ -112,7 +113,7 @@ async function rankCandidatesActionInternal(jobId: string) {
   }
 
   // Connect to database
-  const db = await databasePromise;
+  await dbConnect();
 
   // 2. Validate Tenancy and fetch job details
   const job = await Job.findById(jobId);

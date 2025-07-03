@@ -3,21 +3,22 @@
 import { z } from 'zod';
 import { jobSchema, updateJobSchema } from '@/lib/schemas/job.schema';
 import Job from '@/models/Job';
-import databasePromise from '@/lib/mongodb';
+import dbConnect from '@/lib/mongodb';
 import { generateSlug } from '@/lib/utils';
 import mongoose from 'mongoose';
 import { withActionLogging } from '@/lib/actions'; // Updated import
 import { ActionLogConfig } from '@/types/action-interface'; // Import ActionLogConfig
 
-// Placeholder for session management. In a real app, use NextAuth.js or similar.
-// This function should return the current user's session data, including userId, tenantId, roles, and userName.
+import { getServerSession } from "next-auth";
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+
 async function getSession() {
-  // For now, returning a dummy session. Replace with actual session retrieval.
+  const session = await getServerSession(authOptions);
   return {
-    userId: "dummyUserId123",
-    tenantId: "dummyTenantId456",
-    roles: ["admin"], // or "recruiter"
-    userName: "Dummy User", // Added userName
+    userId: session?.user?.id || null,
+    tenantId: session?.user?.tenantId || null,
+    roles: session?.user?.roles || [],
+    userName: session?.user?.name || "Unknown User",
   };
 }
 
@@ -37,7 +38,7 @@ async function createJobActionInternal(payload: z.infer<typeof jobSchema>) {
   const validatedData = jobSchema.parse(payload);
 
   // Connect to database
-  const db = await databasePromise;
+  await dbConnect();
 
   // 3. Business Logic: Create a new job document
   const newJob = new Job({
@@ -45,7 +46,7 @@ async function createJobActionInternal(payload: z.infer<typeof jobSchema>) {
     slug: generateSlug(validatedData.title), // Generate slug from title
     tenantId: session.tenantId,
     createdBy: session.userId,
-    createdByName: session.name,
+    createdByName: session.userName,
     status: "draft", // Initial status
     isDraft: true,
     candidatesCount: 0, // Initial count
@@ -77,7 +78,7 @@ async function updateJobActionInternal(jobId: string, payload: z.infer<typeof up
   const validatedData = updateJobSchema.parse(payload);
 
   // Connect to database
-  const db = await databasePromise;
+  await dbConnect();
 
   // 3. Validate Tenancy and update job
   const updatedJob = await Job.findOneAndUpdate(
@@ -106,7 +107,7 @@ async function archiveJobActionInternal(jobId: string) {
   }
 
   // Connect to database
-  const db = await databasePromise;
+  await dbConnect();
 
   // 2. Validate Tenancy and update job status
   const archivedJob = await Job.findOneAndUpdate(
@@ -132,7 +133,7 @@ async function getJobDetailsActionInternal(jobId: string) {
   }
 
   // Connect to database
-  const db = await databasePromise;
+  await dbConnect();
 
   // 2. Validate Tenancy and fetch job details
   const job = await Job.findOne(

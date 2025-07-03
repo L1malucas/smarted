@@ -1,86 +1,57 @@
-import { AuditLog } from '@/types/audit-interface';
-import { v4 as uuidv4 } from 'uuid';
 
-const DB_NAME = 'SmartEdDB';
-const DB_VERSION = 1;
-const AUDIT_STORE = 'audit_logs';
+import Log, { ILog } from '@/models/Log';
+import dbConnect from '@/lib/mongodb';
+import { AuditLog } from '@/types/audit-interface';
 
 export class AuditService {
-  private dbPromise: Promise<IDBDatabase>;
-
   constructor() {
-    this.dbPromise = this.initDB();
+    // No need to initialize IndexedDB here
   }
 
-  private async initDB(): Promise<IDBDatabase> {
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open(DB_NAME, DB_VERSION);
-
-      request.onupgradeneeded = (event) => {
-        const db = (event.target as IDBOpenDBRequest).result;
-        if (!db.objectStoreNames.contains(AUDIT_STORE)) {
-          const auditStore = db.createObjectStore(AUDIT_STORE, { keyPath: '_id' });
-          auditStore.createIndex('timestamp', 'timestamp');
-          auditStore.createIndex('userId', 'userId');
-          auditStore.createIndex('actionType', 'actionType');
-          auditStore.createIndex('resourceType', 'resourceType');
-          auditStore.createIndex('resourceId', 'resourceId');
-        }
-      };
-
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    });
+  async saveAuditLog(log: Omit<AuditLog, '_id' | 'timestamp'>): Promise<ILog> {
+    try {
+      await dbConnect();
+      const newLog = new Log({
+        userId: log.userId,
+        userName: log.userName,
+        actionType: log.actionType,
+        resourceType: log.resourceType,
+        resourceId: log.resourceId,
+        details: log.details,
+        success: log.success,
+        // Mongoose will automatically add timestamp due to `timestamps: true` in schema
+      });
+      await newLog.save();
+      return newLog;
+    } catch (error) {
+      console.error('Erro ao salvar log de auditoria no MongoDB:', error);
+      throw new Error('Falha ao salvar log de auditoria.');
+    }
   }
 
-  async saveAuditLog(log: Omit<AuditLog, '_id' | 'timestamp'>): Promise<AuditLog> {
-    const db = await this.dbPromise;
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction([AUDIT_STORE], 'readwrite');
-      const store = transaction.objectStore(AUDIT_STORE);
-
-      const auditLog: AuditLog = {
-        ...log,
-        _id: uuidv4(),
-        timestamp: new Date(),
-      };
-
-      const request = store.add(auditLog);
-      request.onsuccess = () => resolve(auditLog);
-      request.onerror = () => reject(request.error);
-    });
+  async getAuditLogsByResource(resourceType: string, resourceId?: string): Promise<ILog[]> {
+    try {
+      await dbConnect();
+      const query: any = { resourceType };
+      if (resourceId) {
+        query.resourceId = resourceId;
+      }
+      const logs = await Log.find(query).sort({ timestamp: -1 });
+      return logs;
+    } catch (error) {
+      console.error('Erro ao buscar logs de auditoria por recurso no MongoDB:', error);
+      throw new Error('Falha ao buscar logs de auditoria.');
+    }
   }
 
-  async getAuditLogsByResource(resourceType: AuditLog['resourceType'], resourceId?: string): Promise<AuditLog[]> {
-    const db = await this.dbPromise;
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction([AUDIT_STORE], 'readonly');
-      const store = transaction.objectStore(AUDIT_STORE);
-      const request = store.getAll();
-
-      request.onsuccess = () => {
-        const logs = request.result.filter(
-          (log: AuditLog) =>
-            log.resourceType === resourceType && (!resourceId || log.resourceId === resourceId)
-        );
-        resolve(logs.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()));
-      };
-      request.onerror = () => reject(request.error);
-    });
-  }
-
-  async getAllAuditLogs(): Promise<AuditLog[]> {
-    const db = await this.dbPromise;
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction([AUDIT_STORE], 'readonly');
-      const store = transaction.objectStore(AUDIT_STORE);
-      const request = store.getAll();
-
-      request.onsuccess = () => {
-        const logs = request.result.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-        resolve(logs);
-      };
-      request.onerror = () => reject(request.error);
-    });
+  async getAllAuditLogs(): Promise<ILog[]> {
+    try {
+      await dbConnect();
+      const logs = await Log.find({}).sort({ timestamp: -1 });
+      return logs;
+    } catch (error) {
+      console.error('Erro ao buscar todos os logs de auditoria no MongoDB:', error);
+      throw new Error('Falha ao buscar todos os logs de auditoria.');
+    }
   }
 }
