@@ -109,8 +109,9 @@ O projeto segue a estrutura padrão do Next.js App Router:
 *   **Exportação de Relatórios**:
     *   Opções para exportar dados em PDF/Excel (simulado) por vaga, etapa ou geral.
 *   **Segurança e Acesso**:
-    *   Login por CPF (simulado).
-    *   Controle de permissões por perfil de usuário (simulado).
+    *   Login por CPF (agora implementado via Server Action, sem senha, com CPF pré-autorizado no banco de dados).
+    *   Controle de permissões por perfil de usuário (simulado, mas com `tenantId` no modelo `User` para multi-tenancy).
+    *   **Atenção**: O controle de limite de usuários por tenant será implementado em uma etapa futura.
 *   **Qualidade de Vida**:
     *   Tema escuro por padrão.
     *   Design responsivo.

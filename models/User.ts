@@ -5,6 +5,7 @@ export interface IUser extends Document {
   slug: string;
   name: string;
   email: string;
+  tenantId: string; // Added tenantId
   roles: string[];
   permissions: string[];
   isAdmin: boolean;
@@ -17,6 +18,7 @@ const UserSchema: Schema = new Schema({
   slug: { type: String, required: true, unique: true },
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
+  tenantId: { type: String, required: true }, // Added tenantId to schema
   roles: { type: [String], default: ['recruiter'] },
   permissions: { type: [String], default: [] },
   isAdmin: { type: Boolean, default: false },

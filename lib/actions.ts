@@ -1,6 +1,5 @@
 import { AuditService } from "@/services/audit";
 import { toast } from "sonner";
-import { AuditLog } from "@/types/audit-interface";
 import { ActionFunction, ActionLogConfig } from "@/types/action-interface";
 
 const auditService = new AuditService();

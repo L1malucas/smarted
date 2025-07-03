@@ -19,6 +19,7 @@ export interface IJob extends Document {
   isDraft: boolean;
   createdBy: string;
   createdByName: string;
+  tenantId: string; // Added tenantId
   lastStatusUpdateBy?: string;
   lastStatusUpdateByName?: string;
   statusChangeLog?: mongoose.Types.DocumentArray<typeof StatusChangeLogSchema>;

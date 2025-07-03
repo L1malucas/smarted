@@ -9,8 +9,7 @@ import Image from "next/image";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label"
 import { Building2, TrendingUp, Users, BarChart3, Star, CheckCircle, UserPlus, Target } from "lucide-react"
-import { authService } from "@/services/auth"
-import { withActionLogging } from "@/lib/actions"
+import { loginAction } from "@/services/auth"
 import { CandidateButton } from "@/components/candidate-button"
 
 const testimonials = [
@@ -67,23 +66,13 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     startTransition(async () => {
-      const loginAction = withActionLogging(
-        async () => {
-          await authService.login(cpf);
-        },
-        {
-          userId: cpf, // Use CPF as user ID for logging
-          userName: "", // User name will be fetched after login
-          actionType: "login",
-          resourceType: "user",
-          details: `User with CPF ${cpf} attempted to log in.`, 
-          successMessage: "Login realizado com sucesso!",
-          errorMessage: "Falha no login. Verifique seu CPF.",
-        }
-      );
-
       try {
-        await loginAction();
+        const result = await loginAction({ cpf });
+
+        if (!result.success) {
+          // Error is already handled by withActionLogging and toast
+          return;
+        }
         if (tenantSlugFromQuery && nextPath) {
           router.push(nextPath)
         } else if (tenantSlugFromQuery) {

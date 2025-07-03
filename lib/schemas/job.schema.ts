@@ -55,6 +55,8 @@ export const jobSchema = z.object({
   questions: z.array(questionSchema).optional(),
 });
 
+export const updateJobSchema = jobSchema.partial(); // All fields are optional for update
+
 export const draftJobSchema = z.object({
   title: z.string().max(200, 'O título da vaga deve ter no máximo 200 caracteres').optional(),
   description: z.string().max(5000, 'A descrição da vaga deve ter no máximo 5000 caracteres').optional(),
