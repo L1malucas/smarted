@@ -27,24 +27,12 @@ export default function AdminPage() {
   const [isLoadingLogs, setIsLoadingLogs] = useState(true)
   const [isLoadingMetrics, setIsLoadingMetrics] = useState(true)
 
-  const ALLOWED_CPFS_KEY = `allowed_cpfs_${tenantSlug}`
-  const ACCESS_LOGS_KEY = `access_logs_${tenantSlug}`
-
   useEffect(() => {
     const loadCPFs = async () => {
       setIsLoadingCPFs(true)
       try {
-        const storedCPFs = localStorage.getItem(ALLOWED_CPFS_KEY)
-        if (storedCPFs) {
-          setAllowedCPFs(JSON.parse(storedCPFs, (key, value) => {
-            if (key === "createdAt" || key === "updatedAt") return new Date(value)
-            return value
-          }))
-        } else {
-          const cpfs = await adminService.getAllowedCPFs()
-          setAllowedCPFs(cpfs)
-          localStorage.setItem(ALLOWED_CPFS_KEY, JSON.stringify(cpfs))
-        }
+        const cpfs = await adminService.getAllowedCPFs()
+        setAllowedCPFs(cpfs)
       } catch (error) {
         toast({
           title: "Erro ao carregar CPFs",
@@ -59,17 +47,8 @@ export default function AdminPage() {
     const loadLogs = async () => {
       setIsLoadingLogs(true)
       try {
-        const storedLogs = localStorage.getItem(ACCESS_LOGS_KEY)
-        if (storedLogs) {
-          setAccessLogs(JSON.parse(storedLogs, (key, value) => {
-            if (key === "timestamp") return new Date(value)
-            return value
-          }))
-        } else {
-          const logs = await adminService.getAccessLogs()
-          setAccessLogs(logs)
-          localStorage.setItem(ACCESS_LOGS_KEY, JSON.stringify(logs))
-        }
+        const logs = await adminService.getAccessLogs()
+        setAccessLogs(logs)
       } catch (error) {
         toast({
           title: "Erro ao carregar Logs",
@@ -104,10 +83,12 @@ export default function AdminPage() {
 
   const addCPF = async (newUser: AllowedCPF) => {
     await adminService.addAllowedCPF(newUser.cpf, newUser.name, newUser.isAdmin, newUser.email)
-    const updatedCPFs = [...allowedCPFs, newUser]
-    setAllowedCPFs(updatedCPFs)
-    localStorage.setItem(ALLOWED_CPFS_KEY, JSON.stringify(updatedCPFs))
+    // After adding, reload the list to reflect changes
+    const cpfs = await adminService.getAllowedCPFs()
+    setAllowedCPFs(cpfs)
 
+    // Log the action (handled by withActionLogging if used, otherwise direct call)
+    // For now, just update local state for display
     const newLog: AccessLog = {
       id: `${Date.now()}`,
       cpf: newUser.cpf,
@@ -116,17 +97,17 @@ export default function AdminPage() {
       timestamp: new Date(),
       success: true,
     }
-    const updatedLogs = [...accessLogs, newLog]
-    setAccessLogs(updatedLogs)
-    localStorage.setItem(ACCESS_LOGS_KEY, JSON.stringify(updatedLogs))
+    setAccessLogs((prev) => [...prev, newLog])
   }
 
   const removeCPF = async (cpf: string) => {
     await adminService.removeAllowedCPF(cpf)
-    const updatedCPFs = allowedCPFs.filter((user) => user.cpf !== cpf)
-    setAllowedCPFs(updatedCPFs)
-    localStorage.setItem(ALLOWED_CPFS_KEY, JSON.stringify(updatedCPFs))
+    // After removing, reload the list to reflect changes
+    const cpfs = await adminService.getAllowedCPFs()
+    setAllowedCPFs(cpfs)
 
+    // Log the action (handled by withActionLogging if used, otherwise direct call)
+    // For now, just update local state for display
     const user = allowedCPFs.find((u) => u.cpf === cpf)
     const newLog: AccessLog = {
       id: `${Date.now()}`,
@@ -136,9 +117,7 @@ export default function AdminPage() {
       timestamp: new Date(),
       success: true,
     }
-    const updatedLogs = [...accessLogs, newLog]
-    setAccessLogs(updatedLogs)
-    localStorage.setItem(ACCESS_LOGS_KEY, JSON.stringify(updatedLogs))
+    setAccessLogs((prev) => [...prev, newLog])
   }
 
   return (

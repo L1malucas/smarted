@@ -165,6 +165,7 @@ O projeto segue a estrutura padrão do Next.js App Router:
     *   Auditoria e Remoção Completa de Dados Mockados.
     *   Implementação do Wrapper Unificado para Feedback e Logs.
     *   Implementação Completa do Módulo de Administração.
+    *   Auditoria de Segurança e Controle de Acesso Multi-Tenant (Contrato Frontend).
 *   Implementar backend real com banco de dados (Supabase, Neon, MongoDB, etc.).
 *   Integrar com uma API de IA real para análise de currículos.
 *   Desenvolver o módulo completo de envio de e-mails.

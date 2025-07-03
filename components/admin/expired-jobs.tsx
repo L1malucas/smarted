@@ -12,43 +12,7 @@ import { toast } from "@/components/ui/use-toast"
 const expiredJobsService = {
   getExpiredJobs: async (): Promise<Job[]> => {
     await new Promise(resolve => setTimeout(resolve, 1000));
-    return [
-      {
-        _id: "job1",
-        title: "Desenvolvedor Backend (Expirada)",
-        description: "Vaga para desenvolvedor backend com Node.js e MongoDB.",
-        status: "vaga fechada",
-        createdAt: new Date("2023-01-01"),
-        updatedAt: new Date("2023-02-01"),
-        expiresAt: new Date("2023-02-01"),
-        createdBy: "admin",
-        createdByName: "Admin User",
-        candidatesCount: 5,
-        competencies: [],
-        questions: [],
-        isPCDExclusive: false,
-        isReferralJob: false,
-        slug: "dev-backend-expirada",
-        criteriaWeights: { experience: 0, skills: 0, certifications: 0, behavioral: 0, leadership: 0 },
-      },
-      {
-        _id: "job2",
-        title: "Analista de Dados (Inativa)",
-        description: "Vaga para analista de dados com Python e SQL.",
-        status: "draft",
-        createdAt: new Date("2023-03-01"),
-        updatedAt: new Date("2023-03-01"),
-        createdBy: "admin",
-        createdByName: "Admin User",
-        candidatesCount: 0,
-        competencies: [],
-        questions: [],
-        isPCDExclusive: false,
-        isReferralJob: false,
-        slug: "analista-dados-inativa",
-        criteriaWeights: { experience: 0, skills: 0, certifications: 0, behavioral: 0, leadership: 0 },
-      },
-    ];
+    return []; // No expired jobs by default
   },
   reactivateJob: async (jobId: string): Promise<void> => {
     await new Promise(resolve => setTimeout(resolve, 500));

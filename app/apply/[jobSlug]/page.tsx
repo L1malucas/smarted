@@ -16,28 +16,7 @@ import { toast } from "@/components/ui/use-toast"
 import { UploadCloud, FileText, ArrowRight, ArrowLeft } from "lucide-react"
 import { withActionLogging } from "@/lib/actions"
 import { Job, CandidateAnswer } from "@/types/jobs-interface"
-
-// Mock job data - in a real app, fetch this by jobSlug
-const mockJobData: Job = {
-  _id: "job123",
-  slug: "desenvolvedor-react-pleno",
-  title: "Desenvolvedor React Pleno",
-  description: "Estamos buscando um Desenvolvedor React Pleno...",
-  competencies: [],
-  questions: [
-    { id: "q1", text: "Qual sua pretensão salarial?", type: "open" },
-    { id: "q2", text: "Você tem experiência com TypeScript?", type: "closed", options: ["Sim", "Não", "Parcialmente"] },
-    { id: "q3", text: "Descreva um projeto desafiador que você enfrentou.", type: "open" },
-  ],
-  isPCDExclusive: false,
-  isReferralJob: false, // If true, questions step would be skipped
-  status: "aberta",
-  candidatesCount: 0,
-  createdAt: new Date(),
-  updatedAt: new Date(),
-  createdBy: "system",
-  criteriaWeights: { experience: 0, skills: 0, certifications: 0, behavioral: 0, leadership: 0 },
-}
+import { JobService } from "@/services/jobs"
 
 /**
  * Componente de página para o formulário de candidatura a uma vaga.
@@ -95,22 +74,31 @@ export default function ApplyPage() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Simulate fetching job data
-    setIsLoading(true)
-    setTimeout(() => {
-      // In a real app, fetch job by jobSlug
-      // For now, use mockJobData and check if it matches the slug (loosely)
-      if (jobSlug === mockJobData.slug) {
-        setJob(mockJobData)
-        if (mockJobData.questions) {
-          setAnswers(mockJobData.questions.map((q) => ({ questionId: q.id, answer: q.type === "closed" ? [] : "" })))
+    const fetchJob = async () => {
+      setIsLoading(true)
+      try {
+        const fetchedJob = await JobService.getJobById(tenantSlug, jobSlug); // Assuming jobSlug can be used as jobId
+        if (fetchedJob) {
+          setJob(fetchedJob)
+          if (fetchedJob.questions) {
+            setAnswers(fetchedJob.questions.map((q) => ({ questionId: q.id, answer: q.type === "closed" ? [] : "" })))
+          }
+        } else {
+          toast({ title: "Erro", description: "Vaga não encontrada.", variant: "destructive" })
+          router.push("/") // Redirect if job not found
         }
-      } else {
-        toast({ title: "Erro", description: "Vaga não encontrada.", variant: "destructive" })
-        router.push("/") // Redirect if job not found
+      } catch (error) {
+        toast({
+          title: "Erro ao carregar vaga",
+          description: "Não foi possível carregar os detalhes da vaga.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false)
       }
-      setIsLoading(false)
-    }, 500)
+    }
+
+    fetchJob()
   }, [jobSlug, router])
 
   const totalSteps = job?.isReferralJob ? 1 : (job?.questions?.length || 0) > 0 ? 2 : 1

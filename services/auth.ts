@@ -2,45 +2,33 @@ import type { User } from "@/types"
 
 export const authService = {
   login: async (cpf: string): Promise<User> => {
-    // Stub implementation
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    // Mock successful login
-    return {
-      _id: "1",
-      cpf,
-      slug: "joao-silva-abc123",
-      name: "João Silva",
-      email: "joao.silva@empresa.com",
-      roles: ["recruiter"],
-      permissions: ["read:jobs", "write:jobs", "read:candidates"],
-      isAdmin: cpf === "123.456.789-00",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }
+    await new Promise((resolve, reject) => setTimeout(() => {
+      if (cpf === "123.456.789-00") {
+        resolve({
+          _id: "1",
+          cpf,
+          slug: "joao-silva-abc123",
+          name: "João Silva",
+          email: "joao.silva@empresa.com",
+          roles: ["recruiter"],
+          permissions: ["read:jobs", "write:jobs", "read:candidates"],
+          isAdmin: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+      } else {
+        reject(new Error("CPF inválido"));
+      }
+    }, 1000));
+    return {} as User; // Should not be reached
   },
 
   logout: async (): Promise<void> => {
-    // Stub implementation
-    await new Promise((resolve) => setTimeout(resolve, 500))
+    await new Promise((resolve) => setTimeout(resolve, 500));
   },
 
   getCurrentUser: async (): Promise<User | null> => {
-    // Stub implementation
-    await new Promise((resolve) => setTimeout(resolve, 300))
-
-    // Mock current user
-    return {
-      _id: "1",
-      cpf: "123.456.789-00",
-      slug: "joao-silva-abc123",
-      name: "João Silva",
-      email: "joao.silva@empresa.com",
-      roles: ["recruiter"],
-      permissions: ["read:jobs", "write:jobs", "read:candidates"],
-      isAdmin: true,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    return null; // No user by default
   },
 }

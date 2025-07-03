@@ -13,38 +13,15 @@ interface SystemSettingsProps {
   systemMetrics: SystemMetrics | null
 }
 
-// Mock service for system settings
-const systemSettingsService = {
-  getSettings: async () => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    const storedSettings = localStorage.getItem("system_settings");
-    return storedSettings ? JSON.parse(storedSettings) : { companyName: "SMARTED TECH SOLUTIONS", defaultJobLimit: 10 };
-  },
-  saveSettings: async (settings: { companyName: string; defaultJobLimit: number }) => {
-    await new Promise(resolve => setTimeout(resolve, 800));
-    localStorage.setItem("system_settings", JSON.stringify(settings));
-    return settings;
-  },
-};
-
 export default function SystemSettings({ systemMetrics }: SystemSettingsProps) {
-  const [companyName, setCompanyName] = useState("");
+  const [companyName, setCompanyName] = useState("SMARTED TECH SOLUTIONS");
   const [defaultJobLimit, setDefaultJobLimit] = useState<number>(10);
   const [isSaving, setIsSaving] = useState(false);
-
-  useEffect(() => {
-    const loadSettings = async () => {
-      const settings = await systemSettingsService.getSettings();
-      setCompanyName(settings.companyName);
-      setDefaultJobLimit(settings.defaultJobLimit);
-    };
-    loadSettings();
-  }, []);
 
   const handleSaveSettings = async () => {
     setIsSaving(true);
     try {
-      await systemSettingsService.saveSettings({ companyName, defaultJobLimit });
+      await new Promise(resolve => setTimeout(resolve, 800)); // Simulate API call
       toast({
         title: "Configurações Salvas",
         description: "As configurações do sistema foram atualizadas com sucesso.",

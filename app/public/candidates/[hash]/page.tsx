@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge"
 import { Star } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer } from "recharts"
+import { candidatesService } from "@/services/candidates"
+import { JobService } from "@/services/jobs"
 
 interface PublicCandidate {
   _id: string
@@ -108,58 +110,20 @@ export default function PublicCandidatesPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // In a real implementation, this would fetch the candidates data from the API
-    // using the hash parameter to identify the shared resource
     const fetchCandidates = async () => {
       try {
         setLoading(true)
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 1500))
+        // In a real implementation, this would fetch the candidates data from the API
+        // using the hash parameter to identify the shared resource
+        await new Promise((resolve) => setTimeout(resolve, 1500)) // Simulate API call
 
-        // Mock data
-        setJobTitle("Desenvolvedor Frontend Sênior")
-        setCandidates([
-          {
-            _id: "1",
-            name: "Ana Silva",
-            email: "ana.silva@email.com",
-            analysis: {
-              experienceScore: 85,
-              skillsScore: 92,
-              certificationsScore: 78,
-              behavioralScore: 88,
-              leadershipScore: 75,
-              finalScore: 85.6,
-              comments: {
-                experience: "5+ anos em React e TypeScript, experiência sólida em projetos complexos",
-                skills: "Domínio avançado em React, TypeScript, Node.js e ferramentas modernas",
-                certifications: "Certificações AWS e Google Cloud, cursos especializados em frontend",
-              },
-            },
-          },
-          {
-            _id: "2",
-            name: "Carlos Santos",
-            email: "carlos.santos@email.com",
-            analysis: {
-              experienceScore: 78,
-              skillsScore: 85,
-              certificationsScore: 82,
-              behavioralScore: 79,
-              leadershipScore: 88,
-              finalScore: 82.4,
-              comments: {
-                experience: "4 anos de experiência, projetos variados em diferentes tecnologias",
-                skills: "Bom conhecimento em React, Vue.js e Angular, versatilidade técnica",
-                certifications: "Certificações Microsoft e Scrum Master, formação continuada",
-              },
-            },
-          },
-        ])
+        // For now, return empty data
+        setJobTitle("N/A")
+        setCandidates([])
         setError(null)
       } catch (err) {
         setError(
-          "Não foi possível carregar os dados dos candidatos. O link pode ter expirado ou o recurso não existe mais." +err,
+          "Não foi possível carregar os dados dos candidatos. O link pode ter expirado ou o recurso não existe mais.",
         )
       } finally {
         setLoading(false)
@@ -168,6 +132,22 @@ export default function PublicCandidatesPage() {
 
     fetchCandidates()
   }, [params.hash])
+
+  const defaultRadarData = [
+    { subject: "Experiência", A: 0, fullMark: 100 },
+    { subject: "Habilidades", A: 0, fullMark: 100 },
+    { subject: "Certificações", A: 0, fullMark: 100 },
+    { subject: "Comportamental", A: 0, fullMark: 100 },
+    { subject: "Liderança", A: 0, fullMark: 100 },
+  ];
+
+  const currentRadarData = candidates.length > 0 ? [
+    { subject: "Experiência", A: candidates.reduce((sum, c) => sum + (c.analysis?.experienceScore || 0), 0) / candidates.length, fullMark: 100 },
+    { subject: "Habilidades", A: candidates.reduce((sum, c) => sum + (c.analysis?.skillsScore || 0), 0) / candidates.length, fullMark: 100 },
+    { subject: "Certificações", A: candidates.reduce((sum, c) => sum + (c.analysis?.certificationsScore || 0), 0) / candidates.length, fullMark: 100 },
+    { subject: "Comportamental", A: candidates.reduce((sum, c) => sum + (c.analysis?.behavioralScore || 0), 0) / candidates.length, fullMark: 100 },
+    { subject: "Liderança", A: candidates.reduce((sum, c) => sum + (c.analysis?.leadershipScore || 0), 0) / candidates.length, fullMark: 100 },
+  ] : defaultRadarData;
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return "text-green-500"
@@ -213,7 +193,7 @@ export default function PublicCandidatesPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Ranking de Candidatos</h1>
-        <p className="text-muted-foreground">Vaga: {jobTitle}</p>
+        <p className="text-muted-foreground">Vaga: {jobTitle || "N/A"}</p>
         <div className="flex items-center gap-2 mt-2">
           <span className="text-sm text-muted-foreground">
             Compartilhado publicamente • Visualização somente leitura
@@ -229,7 +209,7 @@ export default function PublicCandidatesPage() {
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
-            <RadarChart data={radarData}>
+            <RadarChart data={currentRadarData}>
               <PolarGrid />
               <PolarAngleAxis dataKey="subject" />
               <PolarRadiusAxis angle={90} domain={[0, 100]} />
@@ -243,79 +223,83 @@ export default function PublicCandidatesPage() {
       <div className="space-y-4">
         <h2 className="text-xl font-semibold">Candidatos Ranqueados</h2>
 
-        {candidates.map((candidate, index) => (
-          <Card key={candidate._id} className="hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center w-8 h-8 bg-blue-900/20 text-blue-500 rounded-full font-bold">
-                    {index + 1}
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold">{candidate.name}</h3>
-                    <p className="text-sm text-muted-foreground">{candidate.email}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="text-right">
-                    <div className={`text-2xl font-bold ${getScoreColor(candidate.analysis.finalScore)}`}>
-                      {candidate.analysis.finalScore.toFixed(1)}
+        {candidates.length === 0 ? (
+          <p className="text-muted-foreground text-center py-8">Nenhum candidato encontrado para esta vaga.</p>
+        ) : (
+          candidates.map((candidate, index) => (
+            <Card key={candidate._id} className="hover:shadow-md transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-8 h-8 bg-blue-900/20 text-blue-500 rounded-full font-bold">
+                      {index + 1}
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Star className="h-3 w-3 fill-current text-yellow-500" />
-                      {getScoreBadge(candidate.analysis.finalScore)}
+                    <div>
+                      <h3 className="text-lg font-semibold">{candidate.name}</h3>
+                      <p className="text-sm text-muted-foreground">{candidate.email}</p>
                     </div>
                   </div>
+                  <div className="flex items-center gap-2">
+                    <div className="text-right">
+                      <div className={`text-2xl font-bold ${getScoreColor(candidate.analysis.finalScore)}`}>
+                        {candidate.analysis.finalScore.toFixed(1)}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Star className="h-3 w-3 fill-current text-yellow-500" />
+                        {getScoreBadge(candidate.analysis.finalScore)}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
-                <div className="text-center">
-                  <div className={`text-lg font-semibold ${getScoreColor(candidate.analysis.experienceScore)}`}>
-                    {candidate.analysis.experienceScore}
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
+                  <div className="text-center">
+                    <div className={`text-lg font-semibold ${getScoreColor(candidate.analysis.experienceScore)}`}>
+                      {candidate.analysis.experienceScore}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Experiência</div>
                   </div>
-                  <div className="text-xs text-muted-foreground">Experiência</div>
-                </div>
-                <div className="text-center">
-                  <div className={`text-lg font-semibold ${getScoreColor(candidate.analysis.skillsScore)}`}>
-                    {candidate.analysis.skillsScore}
+                  <div className="text-center">
+                    <div className={`text-lg font-semibold ${getScoreColor(candidate.analysis.skillsScore)}`}>
+                      {candidate.analysis.skillsScore}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Habilidades</div>
                   </div>
-                  <div className="text-xs text-muted-foreground">Habilidades</div>
-                </div>
-                <div className="text-center">
-                  <div className={`text-lg font-semibold ${getScoreColor(candidate.analysis.certificationsScore)}`}>
-                    {candidate.analysis.certificationsScore}
+                  <div className="text-center">
+                    <div className={`text-lg font-semibold ${getScoreColor(candidate.analysis.certificationsScore)}`}>
+                      {candidate.analysis.certificationsScore}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Certificações</div>
                   </div>
-                  <div className="text-xs text-muted-foreground">Certificações</div>
-                </div>
-                <div className="text-center">
-                  <div className={`text-lg font-semibold ${getScoreColor(candidate.analysis.behavioralScore)}`}>
-                    {candidate.analysis.behavioralScore}
+                  <div className="text-center">
+                    <div className={`text-lg font-semibold ${getScoreColor(candidate.analysis.behavioralScore)}`}>
+                      {candidate.analysis.behavioralScore}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Comportamental</div>
                   </div>
-                  <div className="text-xs text-muted-foreground">Comportamental</div>
-                </div>
-                <div className="text-center">
-                  <div className={`text-lg font-semibold ${getScoreColor(candidate.analysis.leadershipScore)}`}>
-                    {candidate.analysis.leadershipScore}
+                  <div className="text-center">
+                    <div className={`text-lg font-semibold ${getScoreColor(candidate.analysis.leadershipScore)}`}>
+                      {candidate.analysis.leadershipScore}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Liderança</div>
                   </div>
-                  <div className="text-xs text-muted-foreground">Liderança</div>
                 </div>
-              </div>
 
-              <div className="space-y-2 mb-4">
-                <div className="text-sm">
-                  <strong>Experiência:</strong> {candidate.analysis.comments.experience}
+                <div className="space-y-2 mb-4">
+                  <div className="text-sm">
+                    <strong>Experiência:</strong> {candidate.analysis.comments.experience}
+                  </div>
+                  <div className="text-sm">
+                    <strong>Habilidades:</strong> {candidate.analysis.comments.skills}
+                  </div>
+                  <div className="text-sm">
+                    <strong>Certificações:</strong> {candidate.analysis.comments.certifications}
+                  </div>
                 </div>
-                <div className="text-sm">
-                  <strong>Habilidades:</strong> {candidate.analysis.comments.skills}
-                </div>
-                <div className="text-sm">
-                  <strong>Certificações:</strong> {candidate.analysis.comments.certifications}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
 
       <div className="text-center text-sm text-muted-foreground">

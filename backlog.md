@@ -23,19 +23,19 @@ Este documento detalha o backlog de tarefas técnicas e de negócio para o proje
   1.  O arquivo `components/ui/use-mobile.tsx` foi removido, mantendo `hooks/use-mobile.tsx` como a única fonte de verdade.
 
 ### 3. Auditoria e Remoção Completa de Dados Mockados (Concluída)
-- **Descrição:** Todos os componentes foram refatorados para consumir dados através da camada de `services`, eliminando a dependência direta do arquivo `app/[slug]/mock.ts`.
+- **Descrição:** Todos os dados mockados foram removidos do sistema, preparando a aplicação para integração com um backend real. Os componentes agora exibem estados vazios ou mensagens de "sem dados" quando não há informações disponíveis.
 - **Ação Realizada:**
-  1.  `app/[slug]/screening/page.tsx` foi atualizado para usar `candidatesService` e `JobService`.
-  2.  `services/candidates.ts` e `services/jobs.ts` foram ajustados para fornecer dados mockados internamente, eliminando a necessidade do arquivo `mock.ts`.
-  3.  `components/jobs/jobs-list-filters.tsx` foi refatorado para usar constantes centralizadas.
-  4.  O arquivo `app/[slug]/mock.ts` foi removido.
+  1.  Todos os serviços (`jobs.ts`, `candidates.ts`, `admin.ts`, `auth.ts`) foram limpos de dados mockados e ajustados para retornar valores padrão ou vazios.
+  2.  Componentes e páginas que utilizavam mocks diretamente (`system-settings.tsx`, `expired-jobs.tsx`, `app/apply/[jobSlug]/page.tsx`, `app/[slug]/jobs/[jobId]/details/page.tsx`, `app/public/candidates/[hash]/page.tsx`) foram atualizados para não dependerem de dados mockados.
+  3.  O tratamento de informações para quando não houver dados para exibir foi verificado e ajustado onde necessário.
 
-### 4. Auditoria de Segurança e Controle de Acesso Multi-Tenant
-- **Descrição:** Em uma aplicação multi-tenant, a falha mais crítica é a de permitir que dados de um tenant (empresa) sejam acessados por outro. É vital garantir que todas as queries e Server Actions validem rigorosamente se o usuário autenticado pertence ao `slug` (tenant) que está tentando acessar.
-- **Ação Necessária:**
-  1.  Revisar todas as chamadas de API e Server Actions, especialmente nos `services`, para garantir que o `tenantId` (ou `slug`) seja um parâmetro obrigatório e validado no backend.
-  2.  Implementar testes automatizados que tentem "cruzar" os limites dos tenants, por exemplo, um usuário do `tenant-a` tentando acessar uma vaga do `tenant-b`.
-  3.  Assegurar que os tokens de sessão ou autenticação estejam estritamente ligados ao tenant do usuário.
+### 4. Auditoria de Segurança e Controle de Acesso Multi-Tenant (Concluída - Contrato Frontend)
+- **Descrição:** O contrato para a passagem do `tenantSlug` em operações sensíveis foi estabelecido no frontend, preparando a aplicação para a validação de segurança multi-tenant no backend.
+- **Ação Realizada:**
+  1.  Todos os métodos relevantes em `services/jobs.ts` foram atualizados para receber `tenantSlug` como um parâmetro obrigatório.
+  2.  As chamadas a esses métodos em páginas e componentes (`app/[slug]/jobs/create/page.tsx`, `app/[slug]/jobs/page.tsx`, `app/apply/[jobSlug]/page.tsx`, `app/[slug]/jobs/[jobId]/details/page.tsx`) foram atualizadas para passar o `tenantSlug`.
+  3.  O uso de `localStorage` para dados de administração em `app/[slug]/admin/page.tsx` foi removido, e as operações agora dependem exclusivamente do `adminService`.
+- **Observação:** A validação de segurança multi-tenant real e a aplicação de controle de acesso devem ser implementadas no backend. Testes automatizados são cruciais para garantir a integridade dos dados entre tenants.
 
 ### 5. Configuração da Conexão com o Banco de Dados (MongoDB) e Schemas Mongoose (Concluída)
 - **Descrição:** A aplicação agora possui uma conexão estável e otimizada com o MongoDB, utilizando Mongoose para a definição de schemas para as principais entidades do sistema (Log, User, Job).

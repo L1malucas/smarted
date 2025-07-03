@@ -61,18 +61,18 @@ export default function JobsPage() {
   const jobService = new JobService();
 
   useEffect(() => {
-    JobService.getAllJobs().then(setJobs).catch((error) => {
+    JobService.getAllJobs(tenantSlug).then(setJobs).catch((error) => {
       toast({
         title: "Erro",
         description: "Falha ao carregar vagas" + error,
         variant: "destructive",
       });
     });
-  }, []);
+  }, [tenantSlug]);
 
   const handleStatusChange = async (jobId: string, newStatus: JobStatus) => {
     try {
-      const updatedJob = await JobService.updateJobStatus(jobId, newStatus, "current-user-slug", "Usuário Atual");
+      const updatedJob = await JobService.updateJobStatus(tenantSlug, jobId, newStatus, "current-user-slug", "Usuário Atual");
       setJobs((prevJobs) =>
         prevJobs.map((job) => (job._id === jobId ? updatedJob : job))
       );

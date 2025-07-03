@@ -5,6 +5,8 @@ import { useParams } from "next/navigation"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { Job, Candidate } from "@/types/jobs-interface"
 import { JobDetails } from "@/components/jobs/job-details"
+import { JobService } from "@/services/jobs"
+import { candidatesService } from "@/services/candidates"
 import { toast } from "@/hooks/use-toast"
 
 // Mock data para o gráfico radar
@@ -153,14 +155,16 @@ export default function JobDetailsPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Simular carregamento de dados
     const fetchData = async () => {
       setLoading(true)
       try {
-        // Em uma implementação real, você faria chamadas de API aqui
-        await new Promise((resolve) => setTimeout(resolve, 1000)) // Simular delay de rede
-        setJob(mockJob)
-        setCandidates(mockCandidates)
+        const fetchedJob = await JobService.getJobById(jobId)
+        setJob(fetchedJob)
+
+        // Fetch candidates for this job
+        const fetchedCandidates = await candidatesService.getCandidatesForScreening(tenantSlug, jobId)
+        setCandidates(fetchedCandidates)
+
       } catch (error) {
         toast({
           title: "Erro ao carregar dados",
@@ -173,7 +177,25 @@ export default function JobDetailsPage() {
     }
 
     fetchData()
-  }, [jobId])
+  }, [jobId, tenantSlug])
+
+  // Default radar data if no candidates or analysis
+  const defaultRadarData = [
+    { subject: "Experiência", A: 0, fullMark: 100 },
+    { subject: "Habilidades", A: 0, fullMark: 100 },
+    { subject: "Certificações", A: 0, fullMark: 100 },
+    { subject: "Comportamental", A: 0, fullMark: 100 },
+    { subject: "Liderança", A: 0, fullMark: 100 },
+  ];
+
+  // Calculate radar data based on candidates (if any)
+  const currentRadarData = candidates.length > 0 ? [
+    { subject: "Experiência", A: candidates.reduce((sum, c) => sum + (c.analysis?.experienceScore || 0), 0) / candidates.length, fullMark: 100 },
+    { subject: "Habilidades", A: candidates.reduce((sum, c) => sum + (c.analysis?.skillsScore || 0), 0) / candidates.length, fullMark: 100 },
+    { subject: "Certificações", A: candidates.reduce((sum, c) => sum + (c.analysis?.certificationsScore || 0), 0) / candidates.length, fullMark: 100 },
+    { subject: "Comportamental", A: candidates.reduce((sum, c) => sum + (c.analysis?.behavioralScore || 0), 0) / candidates.length, fullMark: 100 },
+    { subject: "Liderança", A: candidates.reduce((sum, c) => sum + (c.analysis?.leadershipScore || 0), 0) / candidates.length, fullMark: 100 },
+  ] : defaultRadarData;
 
   if (loading) {
     return (
@@ -195,5 +217,5 @@ export default function JobDetailsPage() {
     return <div className="text-center py-12">Vaga não encontrada.</div>
   }
 
-  return <JobDetails job={job} candidates={candidates} tenantSlug={tenantSlug} radarData={radarData} />
+  return <JobDetails job={job} candidates={candidates} tenantSlug={tenantSlug} radarData={currentRadarData} />
 }

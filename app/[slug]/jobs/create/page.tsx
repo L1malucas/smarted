@@ -104,7 +104,7 @@ export default function CreateJobPage() {
 
       const saveJobAction = withActionLogging(
         async (data: Omit<Job, '_id' | 'createdAt' | 'updatedAt' | 'candidatesCount'>) => {
-          return JobService.saveJob(data);
+          return JobService.saveJob(tenantSlug, data);
         },
         {
           userId: "current-user-slug", // Replace with actual user ID
