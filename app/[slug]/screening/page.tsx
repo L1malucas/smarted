@@ -12,7 +12,9 @@ import { ArrowUpDown, Search, Filter, Eye, CheckCircle, XCircle, Download } from
 import type { Candidate, Job } from "@/types" // Assuming types are defined
 import Link from "next/link"
 import { ShareDialog } from "@/components/share-dialog"
-import { mockCandidatesscrening, mockJobsscrening } from "../mock"
+import { candidatesService } from "@/services/candidates"
+import { JobService } from "@/services/jobs"
+import { toast } from "@/components/ui/use-toast"
 
 /**
  * @description Página de triagem de candidatos que permite visualizar, filtrar e gerenciar candidatos em processo seletivo
@@ -59,25 +61,38 @@ export default function ScreeningPage() {
   const searchParams = useSearchParams()
   const [selectedJobId, setSelectedJobId] = useState<string | null>(searchParams.get("jobId"))
   const [candidates, setCandidates] = useState<Candidate[]>([])
+  const [jobs, setJobs] = useState<Job[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [sortBy, setSortBy] = useState<keyof Candidate | "finalScore">("createdAt")
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc")
+  const [isLoading, setIsLoading] = useState(true)
 
   const params = useParams()
   const tenantSlug = params.slug as string
 
   useEffect(() => {
-    if (selectedJobId) {
-      // Filter mockCandidates by selectedJobId and ensure they are in 'triagem' stage
-      const jobCandidates = mockCandidatesscrening.filter((c) => c.jobId === selectedJobId && c.currentStage === "triagem")
-      setCandidates(jobCandidates)
-    } else {
-      // Show all candidates in 'triagem' stage if no job is selected
-      setCandidates(mockCandidatesscrening.filter((c) => c.currentStage === "triagem"))
+    const fetchData = async () => {
+      setIsLoading(true)
+      try {
+        const fetchedCandidates = await candidatesService.getCandidatesForScreening(tenantSlug, selectedJobId)
+        setCandidates(fetchedCandidates)
+        const fetchedJobs = await JobService.getAllJobs(tenantSlug)
+        setJobs(fetchedJobs)
+      } catch (error) {
+        console.error("Failed to fetch data for screening page:", error)
+        toast({
+          title: "Erro ao carregar dados",
+          description: "Não foi possível carregar os candidatos ou vagas para triagem.",
+          variant: "destructive",
+        })
+      } finally {
+        setIsLoading(false)
+      }
     }
-  }, [selectedJobId])
+    fetchData()
+  }, [tenantSlug, selectedJobId])
 
-  const selectedJob = mockJobsscrening.find((job) => job._id === selectedJobId)
+  const selectedJob = jobs.find((job) => job._id === selectedJobId)
 
   const filteredAndSortedCandidates = candidates
     .filter(

@@ -41,7 +41,7 @@ export function CandidateButton() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    router.push("/public/job")
+    router.push("/public")
     console.log(`Redirecionando para a página /public/job"`);
   }
 

@@ -8,20 +8,19 @@ Este documento detalha o backlog de tarefas técnicas e de negócio para o proje
 
 *Tarefas que abordam bugs críticos, inconsistências arquiteturais ou falhas de segurança. Devem ser tratadas com prioridade máxima para evitar problemas em produção e garantir a integridade do sistema.*
 
-### 1. Correção de Rotas Públicas Duplicadas e Inconsistentes
-- **Descrição:** Atualmente, existem duas rotas para a listagem de vagas públicas: `app/[slug]/jobs/public/page.tsx` e `app/public/job/page.tsx`. Essa duplicidade gera confusão no fluxo de navegação do candidato, dificulta a manutenção e pode levar a comportamentos inesperados. A arquitetura multi-tenant do sistema, baseada no `[slug]`, é o padrão a ser seguido.
-- **Ação Necessária:**
-  1.  Analisar e definir qual das duas rotas é a canônica (provavelmente a que contém o `[slug]`).
-  2.  Migrar qualquer lógica ou componente exclusivo da rota incorreta para a rota canônica.
-  3.  Remover completamente a rota redundante (`app/public/job/page.tsx`) e seus componentes associados.
-  4.  Garantir que todos os links internos apontem para a rota unificada.
+### 1. Correção de Rotas Públicas Duplicadas e Inconsistentes (Concluída)
+- **Descrição:** As rotas para listagem de vagas públicas foram unificadas e organizadas para seguir a arquitetura multi-tenant, eliminando duplicidade e garantindo clareza no fluxo de navegação.
+- **Ação Realizada:**
+  1.  O conteúdo da antiga `app/public/job/page.tsx` foi movido para `app/public/page.tsx`, que agora serve como a listagem global de vagas de todos os tenants.
+  2.  A rota `app/[slug]/public/jobs/page.tsx` foi confirmada/configurada como a listagem de vagas públicas para um tenant específico.
+  3.  O arquivo `app/public/job/page.tsx` foi removido.
+  4.  Um placeholder para `app/public/job/[hash]/page.tsx` foi criado para o compartilhamento de vagas específicas.
+  5.  Links internos (`components/candidate-button.tsx`) foram atualizados para apontar para as novas rotas.
 
-### 2. Eliminação de Lógica Duplicada no Hook `use-mobile`
-- **Descrição:** O projeto contém duas implementações idênticas do hook `use-mobile` nos arquivos `hooks/use-mobile.tsx` e `components/ui/use-mobile.tsx`. Esta é uma violação direta do princípio DRY (Don't Repeat Yourself), aumentando o risco de inconsistências e o esforço de manutenção.
-- **Ação Necessária:**
-  1.  Eleger uma única fonte de verdade para o hook, preferencialmente em `/hooks/use-mobile.tsx`.
-  2.  Remover o arquivo duplicado em `/components/ui/use-mobile.tsx`.
-  3.  Atualizar todas as importações nos componentes que utilizavam o hook removido para que apontem para a localização centralizada.
+### 2. Eliminação de Lógica Duplicada no Hook `use-mobile` (Concluída)
+- **Descrição:** O projeto continha duas implementações idênticas do hook `use-mobile`. Esta duplicidade foi eliminada.
+- **Ação Realizada:**
+  1.  O arquivo `components/ui/use-mobile.tsx` foi removido, mantendo `hooks/use-mobile.tsx` como a única fonte de verdade.
 
 ### 3. Auditoria e Remoção Completa de Dados Mockados
 - **Descrição:** A presença do arquivo `app/[slug]/mock.ts` indica um risco de que componentes ainda estejam utilizando dados estáticos em vez de consumir a API real através da camada de `services`. Isso é um bloqueador para a implantação em produção e pode mascarar bugs na integração com o backend.

@@ -160,6 +160,8 @@ O projeto segue a estrutura padrão do Next.js App Router:
     *   Implementação de Estados de Carregamento (Loading) Globais e Locais.
     *   Centralização dos Esquemas de Validação com Zod.
     *   Configuração de Ferramentas Automatizadas para Acessibilidade (`eslint-plugin-jsx-a11y`).
+    *   Correção de Rotas Públicas Duplicadas e Inconsistentes.
+    *   Eliminação de Lógica Duplicada no Hook `use-mobile`.
 *   Implementar backend real com banco de dados (Supabase, Neon, MongoDB, etc.).
 *   Integrar com uma API de IA real para análise de currículos.
 *   Desenvolver o módulo completo de envio de e-mails.
