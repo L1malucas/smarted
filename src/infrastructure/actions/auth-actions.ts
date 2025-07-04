@@ -11,9 +11,10 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { getUsersCollection } from '@/infrastructure/persistence/db';
 import { validateCPF } from '@/shared/lib/validations';
-import { generateToken, generateRefreshToken, verifyRefreshToken } from '@/infrastructure/auth/auth';
+import { generateToken, generateRefreshToken, verifyRefreshToken, UserPayload } from '@/infrastructure/auth/auth';
 import { withActionLogging } from '@/shared/lib/actions';
 import { ActionLogConfig } from '@/shared/types/types/action-interface';
+import { verifyToken } from '@/infrastructure/auth/auth';
 
 const COOKIE_OPTIONS = {
   httpOnly: true,
@@ -22,19 +23,16 @@ const COOKIE_OPTIONS = {
   path: '/',
 };
 
+async function getSessionUser(): Promise<UserPayload | null> {
+  const accessToken = (await cookies()).get('accessToken')?.value;
+  if (!accessToken) return null;
+  return verifyToken(accessToken);
+}
 
 export async function loginAction(cpf: string) {
-  // In a real app, get the session here using NextAuth's getServerSession or similar
-  // For now, we'll mock a session for logging purposes
-  const session = {
-    userId: "anonymous",
-    userName: "Sistema",
-    tenantId: "default-tenant", // Placeholder
-  };
-
   const logConfig: ActionLogConfig = {
-    userId: session.userId ?? "",
-    userName: session.userName,
+    userId: "", // Will be populated after user is found
+    userName: "", // Will be populated after user is found
     actionType: "Login de Usuário",
     resourceType: "Autenticação",
     resourceId: cpf, // Using CPF as resourceId for login attempts
@@ -56,6 +54,10 @@ export async function loginAction(cpf: string) {
     if (!user) {
       throw new Error('CPF não encontrado.');
     }
+
+    // Update logConfig with actual user data
+    logConfig.userId = user._id.toString();
+    logConfig.userName = user.name;
 
     const userPayload = {
       userId: user._id.toString(),
@@ -99,19 +101,14 @@ export async function loginAction(cpf: string) {
  * @returns {void} Redireciona o usuário após o logout.
  */
 export async function logoutAction() {
-  // In a real app, get the session here
-  const session = {
-    userId: "anonymous",
-    userName: "Sistema",
-    tenantId: "default-tenant", // Placeholder
-  };
+  const sessionUser = await getSessionUser();
 
   const logConfig: ActionLogConfig = {
-    userId: session.userId ?? "",
-    userName: session.userName,
+    userId: sessionUser?.userId ?? "anonymous",
+    userName: sessionUser?.name ?? "Sistema",
     actionType: "Logout de Usuário",
     resourceType: "Autenticação",
-    resourceId: session.userId ?? "",
+    resourceId: sessionUser?.userId ?? "",
     success: false
   };
 
@@ -133,19 +130,15 @@ export async function logoutAction() {
  * o novo access token (se bem-sucedido) ou uma mensagem de erro.
  */
 export async function refreshTokenAction() {
-  // In a real app, get the session here
-  const session = {
-    userId: "anonymous",
-    userName: "Sistema",
-    tenantId: "default-tenant", // Placeholder
-  };
+  const refreshToken = (await cookies()).get('refreshToken')?.value;
+  const decoded = refreshToken ? await verifyRefreshToken(refreshToken) : null;
 
   const logConfig: ActionLogConfig = {
-    userId: session.userId ?? "",
-    userName: session.userName,
+    userId: decoded?.userId ?? "anonymous",
+    userName: decoded?.name ?? "Sistema",
     actionType: "Atualização de Token",
     resourceType: "Autenticação",
-    resourceId: session.userId ?? "",
+    resourceId: decoded?.userId ?? "",
     success: false
   };
 

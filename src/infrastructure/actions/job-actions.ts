@@ -36,8 +36,6 @@ export const getAllJobsAction = async (tenantSlug: string) => {
     actionType: "Listar Vagas",
     resourceType: "Job",
     resourceId: tenantSlug,
-    successMessage: "Vagas listadas com sucesso!",
-    errorMessage: "Erro ao listar vagas.",
     success: false
   };
   return await withActionLogging(getAllJobsActionInternal, logConfig)(tenantSlug);
@@ -68,8 +66,6 @@ export const updateJobStatusAction = async (tenantSlug: string, jobId: string, n
     resourceType: "Job",
     resourceId: jobId,
     details: `Status da vaga ${jobId} atualizado para ${newStatus}.`,
-    successMessage: "Status da vaga atualizado com sucesso!",
-    errorMessage: "Erro ao atualizar status da vaga.",
     success: false
   };
   return await withActionLogging(updateJobStatusActionInternal, logConfig)(tenantSlug, jobId, newStatus, userId, userName);
@@ -89,8 +85,6 @@ export const getJobDetailsAction = async (jobId: string) => {
     actionType: "Obter Detalhes da Vaga",
     resourceType: "Job",
     resourceId: jobId,
-    successMessage: "Detalhes da vaga obtidos com sucesso!",
-    errorMessage: "Erro ao obter detalhes da vaga.",
     success: false
   };
   return await withActionLogging(getJobDetailsActionInternal, logConfig)(jobId);
@@ -110,8 +104,6 @@ export const getCandidatesForJobAction = async (jobId: string) => {
     actionType: "Obter Candidatos da Vaga",
     resourceType: "Candidate",
     resourceId: jobId,
-    successMessage: "Candidatos da vaga obtidos com sucesso!",
-    errorMessage: "Erro ao obter candidatos da vaga.",
     success: false
   };
   return await withActionLogging(getCandidatesForJobActionInternal, logConfig)(jobId);
@@ -131,8 +123,6 @@ export const getJobBySlugAction = async (jobSlug: string) => {
     actionType: "Obter Vaga por Slug",
     resourceType: "Job",
     resourceId: jobSlug,
-    successMessage: "Vaga obtida por slug com sucesso!",
-    errorMessage: "Erro ao obter vaga por slug.",
     success: false
   };
   return await withActionLogging(getJobBySlugActionInternal, logConfig)(jobSlug);
@@ -153,8 +143,6 @@ export const submitApplicationAction = async (jobSlug: string, resumeFile: File,
     actionType: "Submeter Candidatura",
     resourceType: "JobApplication",
     resourceId: jobSlug,
-    successMessage: "Candidatura submetida com sucesso!",
-    errorMessage: "Erro ao submeter candidatura.",
     success: false
   };
   return await withActionLogging(submitApplicationActionInternal, logConfig)(jobSlug, resumeFile, answers);
@@ -178,8 +166,6 @@ export const uploadResumeAction = async (jobId: string, file: File) => {
     resourceType: "Resume",
     resourceId: jobId,
     details: `Upload do currículo ${file.name} para a vaga ${jobId}.`,
-    successMessage: "Currículo enviado com sucesso!",
-    errorMessage: "Erro ao enviar currículo.",
     success: false
   };
   return await withActionLogging(uploadResumeActionInternal, logConfig)(jobId, file);
@@ -203,8 +189,6 @@ export const uploadResumeAction = async (jobId: string, file: File) => {
     resourceType: "Resume",
     resourceId: jobId,
     details: `Upload do currículo ${file.name} para a vaga ${jobId}.`,
-    successMessage: "Currículo enviado com sucesso!",
-    errorMessage: "Erro ao enviar currículo.",
     success: false
   };
   return await withActionLogging(uploadResumeActionInternal, logConfig)(jobId, file);

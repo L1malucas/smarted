@@ -12,7 +12,7 @@ import { SignJWT, jwtVerify } from 'jose';
 /**
  * Interface que define o payload do usuário a ser incluído nos tokens JWT.
  */
-interface UserPayload {
+export interface UserPayload {
   userId: string;
   cpf: string;
   email: string;
