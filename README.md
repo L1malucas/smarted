@@ -18,31 +18,59 @@ O sistema permite que recrutadores gerenciem vagas, processem candidaturas, aval
 
 ## Estrutura do Projeto
 
-O projeto segue a estrutura padrão do Next.js App Router:
+O projeto segue uma estrutura de pastas organizada em camadas, alinhada com os princípios de Clean Architecture/DDD, adaptada para o Next.js App Router. Isso promove a separação de responsabilidades, modularidade e facilita a manutenção e escalabilidade.
 
-*   `app/`: Contém todas as rotas, layouts e páginas da aplicação.
-    *   `app/api/`: Para rotas de API (atualmente simuladas).
-    *   `app/(authenticated)/`: Agrupa rotas que requerem autenticação.
-        *   `dashboard/`: Página principal com métricas.
-        *   `jobs/`: Gerenciamento de vagas (listar, criar, editar).
-            *   `[slug]/details/`: Detalhes da vaga.
-            *   `[slug]/candidates/`: Ranking de candidatos para uma vaga (substituído/integrado com Avaliação).
-        *   `screening/`: Nova página para triagem de candidatos.
-        *   `evaluation/`: Nova página para avaliação detalhada de candidatos.
-        *   `contact/`: Nova página para gerenciar o contato com candidatos.
-        *   `admin/`: Painel administrativo.
-    *   `app/login/`: Página de login.
-    *   `app/public/`: Layout e páginas para visualização pública de recursos compartilhados.
-    *   `app/apply/[jobSlug]/`: Fluxo de candidatura para uma vaga específica.
-    *   `app/not-found.tsx`: Página 404 personalizada para rotas não encontradas.
-*   `components/`: Componentes React reutilizáveis.
-    *   `ui/`: Componentes do shadcn/ui (geralmente não modificados diretamente).
-    *   `navbar.tsx`: Componente da barra de navegação principal.
-    *   `share-dialog.tsx`: Modal para compartilhamento de links.
-*   `services/`: Contém a lógica de "backend" simulada para autenticação, vagas, candidatos, etc.
-*   `types/`: Definições de tipos TypeScript para a aplicação.
-*   `public/`: Arquivos estáticos, como imagens (ex: `logo.png`).
-*   `lib/`: Utilitários, como `cn` para classnames.
+```
+.
+├── src/                     # Raiz do código-fonte da aplicação
+│   ├── app/                 # Camada de Apresentação (Next.js Routing)
+│   │   ├── [slug]/          # Rotas dinâmicas por tenant (ex: /tenant-id/dashboard)
+│   │   ├── api/             # Rotas de API do Next.js (parte da Infraestrutura/Web)
+│   │   ├── login/           # Página de login
+│   │   ├── public/          # Páginas públicas (ex: vagas abertas)
+│   │   ├── globals.css      # Estilos globais
+│   │   ├── layout.tsx       # Layout raiz (HTML, body, provedores globais)
+│   │   └── page.tsx         # Página raiz (ex: redirecionamento inicial)
+│   │
+│   ├── domain/              # Camada de Domínio (Core da Lógica de Negócio)
+│   │   ├── models/          # Entidades de domínio (interfaces/tipos puros, regras de negócio)
+│   │   ├── repositories/    # Interfaces dos repositórios (contratos para acesso a dados)
+│   │   └── services/        # Serviços de domínio (lógica de negócio pura)
+│   │
+│   ├── application/         # Camada de Aplicação (Casos de Uso)
+│   │   ├── services/        # Serviços de aplicação (orquestram o domínio, chamam infraestrutura)
+│   │   ├── schemas/         # Schemas de validação (Zod)
+│   │   └── dtos/            # Data Transfer Objects
+│   │
+│   ├── infrastructure/      # Camada de Infraestrutura (Implementações Concretas)
+│   │   ├── actions/         # Next.js Server Actions (ponte entre Apresentação e Aplicação)
+│   │   ├── auth/            # Implementação de autenticação
+│   │   ├── logging/         # Implementação de logging/auditoria
+│   │   ├── persistence/     # Implementações de repositórios e conexão com DB
+│   │   └── utils/           # Utilitários com dependências de infraestrutura
+│   │
+│   ├── shared/              # Utilitários, helpers e tipos comuns
+│   │   ├── components/      # Componentes de UI reutilizáveis
+│   │   ├── hooks/           # Hooks React reutilizáveis
+│   │   ├── lib/             # Bibliotecas de propósito geral (ex: withActionLogging)
+│   │   ├── types/           # Tipos gerais
+│   │   └── assets/          # Arquivos estáticos (ex: templates PDF)
+│   │
+│   └── ... (outros arquivos de configuração de nível superior)
+```
+
+### Visão Geral das Camadas:
+
+*   **`app/` (Apresentação):** Contém o código específico do Next.js para roteamento e UI. As páginas e layouts são responsáveis por orquestrar os componentes e chamar as Server Actions.
+*   **`domain/` (Domínio):** O coração da aplicação. Contém as entidades, regras de negócio e contratos (interfaces de repositórios) que são independentes de qualquer tecnologia ou framework.
+*   **`application/` (Aplicação):** Define os casos de uso da aplicação. Orquestra as entidades do domínio e interage com a infraestrutura através das interfaces definidas no domínio. Contém os schemas de validação e DTOs.
+*   **`infrastructure/` (Infraestrutura):** Contém as implementações concretas de tudo que é externo ao domínio e à aplicação, como acesso a banco de dados, autenticação, logging, e as Server Actions que atuam como adaptadores para a camada de apresentação.
+*   **`shared/` (Compartilhado):** Contém código que é utilizado por múltiplas camadas e não pertence a nenhuma camada específica, como componentes de UI genéricos, hooks, tipos globais e utilitários.
+
+A estrutura do projeto e a visão geral das camadas no `README.md` já estão atualizadas e refletem a nova organização. Não há necessidade de fazer alterações.
+
+A refatoração da estrutura do projeto está completa.
+
 
 ## Funcionalidades Principais
 

@@ -7,7 +7,7 @@
  */
 
 import { NextResponse, type NextRequest } from "next/server";
-import { verifyToken } from "./lib/auth";
+import { verifyToken } from "./src/infrastructure/auth/auth";
 
 const PUBLIC_PATHS = ["/login", "/public"];
 
