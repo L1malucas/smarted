@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState } from "react"
 import { LoadingContextType } from "@/types/loading-interface"
+import CustomLoading from "@/components/loading"
 
 const LoadingContext = createContext<LoadingContextType>({
   isLoading: false,

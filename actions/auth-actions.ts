@@ -143,8 +143,6 @@ export async function loginAction(cpf: string) {
     ) {
       throw error;
     }
-    // console.error('Login error:', error);
-    throw new Error('Erro ao tentar fazer login. Tente novamente.');
   }
 }
 

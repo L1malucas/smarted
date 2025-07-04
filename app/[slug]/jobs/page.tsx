@@ -40,53 +40,67 @@
 
 "use client"
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useTransition } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
-import { JobService } from "@/services/jobs";
 import { Job, JobStatus } from "@/types/jobs-interface";
 import { JobFilter } from "@/components/jobs/jobs-list-filters";
 import { JobView } from "@/components/jobs/jobs-view";
+import { getAllJobsAction, updateJobStatusAction } from "@/actions/job-actions";
 
 export default function JobsPage() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<JobStatus | "all">("all");
   const [viewMode, setViewMode] = useState<"card" | "list">("card");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isPending, startTransition] = useTransition();
+
   const params = useParams();
   const tenantSlug = params.slug as string;
-  const jobService = new JobService();
 
   useEffect(() => {
-    JobService.getAllJobs(tenantSlug).then(setJobs).catch((error) => {
-      toast({
-        title: "Erro",
-        description: "Falha ao carregar vagas" + error,
-        variant: "destructive",
+    const fetchJobs = async () => {
+      setIsLoading(true);
+      startTransition(async () => {
+        const result = await getAllJobsAction(tenantSlug);
+        if (result.success) {
+          setJobs(result.data || []);
+        } else {
+          toast({
+            title: "Erro",
+            description: result.error || "Falha ao carregar vagas.",
+            variant: "destructive",
+          });
+        }
+        setIsLoading(false);
       });
-    });
+    };
+    fetchJobs();
   }, [tenantSlug]);
 
   const handleStatusChange = async (jobId: string, newStatus: JobStatus) => {
-    try {
-      const updatedJob = await JobService.updateJobStatus(tenantSlug, jobId, newStatus, "current-user-slug", "Usuário Atual");
-      setJobs((prevJobs) =>
-        prevJobs.map((job) => (job._id === jobId ? updatedJob : job))
-      );
-      toast({
-        title: "Status da Vaga Atualizado",
-        description: `Vaga "${updatedJob.title}" movida para ${newStatus}.`,
-      });
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Falha ao atualizar status da vaga" + error,
-        variant: "destructive",
-      });
-    }
+    startTransition(async () => {
+      const result = await updateJobStatusAction(tenantSlug, jobId, newStatus, "current-user-id", "Current User"); // Replace with actual user ID/Name
+      if (result.success) {
+        setJobs((prevJobs) =>
+          prevJobs.map((job) => (job._id === jobId ? result.data || job : job))
+        );
+        toast({
+          title: "Status da Vaga Atualizado",
+          description: `Vaga "${result.data?.title || jobId}" movida para ${newStatus}.`,
+        });
+      } else {
+        toast({
+          title: "Erro",
+          description: result.error || "Falha ao atualizar status da vaga.",
+          variant: "destructive",
+        });
+      }
+    });
   };
 
   const filteredJobs = jobs.filter((job) => {
@@ -122,14 +136,20 @@ export default function JobsPage() {
         onViewModeChange={setViewMode}
       />
 
-      <JobView
-        jobs={filteredJobs}
-        tenantSlug={tenantSlug}
-        viewMode={viewMode}
-        onStatusChange={handleStatusChange}
-      />
+      {isLoading ? (
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      ) : (
+        <JobView
+          jobs={filteredJobs}
+          tenantSlug={tenantSlug}
+          viewMode={viewMode}
+          onStatusChange={handleStatusChange}
+        />
+      )}
 
-      {filteredJobs.length === 0 && (
+      {!isLoading && filteredJobs.length === 0 && (
         <div className="text-center py-12 col-span-full">
           <p className="text-muted-foreground">Nenhuma vaga encontrada com os filtros atuais.</p>
           {searchTerm && (

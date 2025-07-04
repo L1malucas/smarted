@@ -1,23 +1,53 @@
 // components/dashboard/MetricsCards.tsx
-import type React from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Users, Briefcase, Target, PhoneForwarded, AlertTriangle } from "lucide-react"
-import { MetricsData } from "@/types/dashboard-interface"
+"use client";
+
+import React, { useState, useEffect, useTransition } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Users, Briefcase, Target, PhoneForwarded, AlertTriangle, Loader2 } from "lucide-react";
+import { getDashboardMetrics } from "@/actions/dashboard-actions";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface MetricsCardsProps {
-  data: {
-    totalVagasCriadas: number;
-    totalCandidatos: number;
-    totalContatos: number;
-    totalMatches: number;
-    totalAcoesPendentes: number;
-  };
+  tenantSlug: string;
+  period: "7d" | "30d" | "90d";
 }
 
-export function MetricsCards({ data }: MetricsCardsProps) {
-  const { totalVagasCriadas, totalCandidatos, totalContatos, totalMatches, totalAcoesPendentes } = data || {};
+export function MetricsCards({ tenantSlug, period }: MetricsCardsProps) {
+  const [metrics, setMetrics] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    const fetchMetrics = async () => {
+      setIsLoading(true);
+      startTransition(async () => {
+        const result = await getDashboardMetrics(tenantSlug);
+        if (result.success) {
+          setMetrics(result.data);
+        } else {
+          setMetrics(null); // Handle error case
+        }
+        setIsLoading(false);
+      });
+    };
+    fetchMetrics();
+  }, [tenantSlug, period]);
 
   const displayValue = (value: number | undefined) => value || 0;
+
+  if (isLoading || !metrics) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+        <Skeleton className="h-[120px] w-full" />
+        <Skeleton className="h-[120px] w-full" />
+        <Skeleton className="h-[120px] w-full" />
+        <Skeleton className="h-[120px] w-full" />
+        <Skeleton className="h-[120px] w-full" />
+      </div>
+    );
+  }
+
+  const { totalVagasCriadas, totalCandidatos, totalContatos, totalMatches, totalAcoesPendentes } = metrics;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">

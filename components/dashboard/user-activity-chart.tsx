@@ -1,14 +1,52 @@
 // components/dashboard/UserActivityChart.tsx
-import type React from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts"
-import { UserActivityData } from "@/types/dashboard-interface"
+"use client";
+
+import React, { useState, useEffect, useTransition } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
+import { getUserActivityData } from "@/actions/dashboard-actions";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface UserActivityChartProps {
-  data: UserActivityData[]
+  tenantSlug: string;
+  period: "7d" | "30d" | "90d";
 }
 
-export function UserActivityChart({ data }: UserActivityChartProps) {
+export function UserActivityChart({ tenantSlug, period }: UserActivityChartProps) {
+  const [activityData, setActivityData] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    const fetchActivityData = async () => {
+      setIsLoading(true);
+      startTransition(async () => {
+        const result = await getUserActivityData(tenantSlug, period);
+        if (result.success) {
+          setActivityData(result.data);
+        } else {
+          setActivityData([]); // Handle error case
+        }
+        setIsLoading(false);
+      });
+    };
+    fetchActivityData();
+  }, [tenantSlug, period]);
+
+  if (isLoading || activityData.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Atividade do Usuário (Semanal)</CardTitle>
+          <CardDescription>Logins e ações realizadas no sistema</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-[300px] w-full" />
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>

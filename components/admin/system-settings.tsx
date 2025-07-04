@@ -1,41 +1,96 @@
 // components/admin/SystemSettings.tsx
-import type React from "react"
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button"
-import { Loader2 } from "lucide-react"
-import { toast } from "@/components/ui/use-toast"
-import { SystemMetrics } from "@/types/admin-interface"
+"use client";
 
-interface SystemSettingsProps {
-  systemMetrics: SystemMetrics | null
-}
+import React, { useState, useEffect, useTransition } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
+import { getSystemSettingsAction, updateSystemSettingsAction } from "@/services/admin"; // Assuming these are now Server Actions
+import { ISystemSettings } from "@/models/SystemSettings";
 
-export default function SystemSettings({ systemMetrics }: SystemSettingsProps) {
-  const [companyName, setCompanyName] = useState("SMARTED TECH SOLUTIONS");
-  const [defaultJobLimit, setDefaultJobLimit] = useState<number>(10);
+export default function SystemSettings() {
+  const [companyName, setCompanyName] = useState("");
+  const [defaultJobLimit, setDefaultJobLimit] = useState<number>(0);
+  const [systemMetrics, setSystemMetrics] = useState<any>(null); // To store fetched metrics
+  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      setIsLoading(true);
+      startTransition(async () => {
+        const result = await getSystemSettingsAction();
+        if (result.success && result.data) {
+          setCompanyName(result.data.settings.companyName || "");
+          setDefaultJobLimit(result.data.settings.defaultJobLimit || 0);
+          setSystemMetrics(result.data.settings.systemMetrics || null); // Assuming metrics are part of settings
+        } else {
+          toast({
+            title: "Erro",
+            description: "Não foi possível carregar as configurações do sistema.",
+            variant: "destructive",
+          });
+        }
+        setIsLoading(false);
+      });
+    };
+    fetchSettings();
+  }, []);
 
   const handleSaveSettings = async () => {
     setIsSaving(true);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 800)); // Simulate API call
-      toast({
-        title: "Configurações Salvas",
-        description: "As configurações do sistema foram atualizadas com sucesso.",
-      });
-    } catch (error) {
-      toast({
-        title: "Erro ao Salvar",
-        description: "Não foi possível salvar as configurações do sistema.",
-        variant: "destructive",
-      });
-    } finally {
+    startTransition(async () => {
+      const settingsToSave = {
+        companyName,
+        defaultJobLimit,
+      };
+      const result = await updateSystemSettingsAction(settingsToSave);
+      if (result.success) {
+        toast({
+          title: "Configurações Salvas",
+          description: "As configurações do sistema foram atualizadas com sucesso.",
+        });
+      } else {
+        toast({
+          title: "Erro ao Salvar",
+          description: result.error || "Não foi possível salvar as configurações do sistema.",
+          variant: "destructive",
+        });
+      }
       setIsSaving(false);
-    }
+    });
   };
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Configurações Gerais do Sistema</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-40" />
+          </div>
+          <div className="mt-8 space-y-2 border-t pt-4">
+            <Skeleton className="h-6 w-48" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>

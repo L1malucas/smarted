@@ -8,6 +8,8 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import { Job, JobStatus, Competency } from "@/types/jobs-interface";
+import { JobService } from "@/services/jobs";
+import { auditService } from "@/services/audit";
 import { withActionLogging } from "@/lib/actions";
 import { useJobValidation } from "@/hooks/use-job-validation";
 import { ActionButtons } from "@/components/jobs/action-buttons";

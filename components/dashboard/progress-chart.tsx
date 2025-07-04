@@ -1,14 +1,54 @@
 // components/dashboard/ProgressChart.tsx
-import type React from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts"
-import { MetricsData } from "@/types/dashboard-interface"
+"use client";
+
+import React, { useState, useEffect, useTransition } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
+import { getDashboardMetrics } from "@/actions/dashboard-actions";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ProgressChartProps {
-  data: MetricsData[]
+  tenantSlug: string;
+  period: "7d" | "30d" | "90d";
 }
 
-export function ProgressChart({ data }: ProgressChartProps) {
+export function ProgressChart({ tenantSlug, period }: ProgressChartProps) {
+  const [metrics, setMetrics] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    const fetchMetrics = async () => {
+      setIsLoading(true);
+      startTransition(async () => {
+        const result = await getDashboardMetrics(tenantSlug);
+        if (result.success) {
+          // ProgressChart expects an array of data, so we need to adapt the single metrics object
+          // For now, we'll create a dummy array or use a more detailed metrics action if available
+          setMetrics([result.data]); // Assuming getDashboardMetrics returns a single object
+        } else {
+          setMetrics(null); // Handle error case
+        }
+        setIsLoading(false);
+      });
+    };
+    fetchMetrics();
+  }, [tenantSlug, period]);
+
+  if (isLoading || !metrics) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Progresso Mensal</CardTitle>
+          <CardDescription>Vagas, Candidatos e Contatos por mês</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-[300px] w-full" />
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
