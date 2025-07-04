@@ -12,10 +12,48 @@ import { redirect } from 'next/navigation';
 import { getUsersCollection } from '../lib/db';
 import { sanitizeInput, validateCPF } from '../lib/validations';
 import { generateToken, generateRefreshToken, verifyRefreshToken } from '../lib/auth';
+import { withActionLogging } from '@/lib/actions';
+import { ActionLogConfig } from '@/types/action-interface';
+import { saveAuditLog } from '@/services/audit';
+import { verifyToken } from '@/lib/auth';
+
+async function getSession() {
+  const accessToken = (await cookies()).get('accessToken')?.value;
+  if (!accessToken) {
+    return {
+      userId: null,
+      userName: "Sistema",
+    };
+  }
+  try {
+    const decoded = await verifyToken(accessToken);
+    if (decoded) {
+      return {
+        userId: decoded.userId,
+        userName: decoded.name || "Unknown User",
+      };
+    }
+  } catch (error) {
+    // Log this error internally, as it's a session issue before a user action
+    await saveAuditLog({
+      userId: "",
+      userName: "Sistema",
+      actionType: "Erro de Sessão",
+      resourceType: "Autenticação",
+      resourceId: "",
+      details: `Erro ao obter sessão em auth-actions: ${error instanceof Error ? error.message : String(error)}`,
+      success: false,
+    });
+  }
+  return {
+    userId: null,
+    userName: "Sistema",
+  };
+}
 
 /**
  * Opções padrão para a configuração de cookies de autenticação.
- * Garante que os cookies sejam seguros, acessíveis apenas via HTTP (httpOnly),
+ * Garante que os cookies sejam seguros, acessível apenas via HTTP (httpOnly),
  * e restritos ao mesmo site (sameSite: 'strict').
  * @constant
  * @type {object}
@@ -42,22 +80,33 @@ const COOKIE_OPTIONS = {
  * ou redireciona o usuário em caso de sucesso.
  */
 export async function loginAction(cpf: string) {
+  const session = await getSession();
+  const logConfig: ActionLogConfig = {
+    userId: session.userId ?? "",
+    userName: session.userName,
+    actionType: "Login de Usuário",
+    resourceType: "Autenticação",
+    resourceId: cpf, // Using CPF as resourceId for login attempts
+    successMessage: "Login realizado com sucesso!",
+    errorMessage: "Falha no login.",
+    success: false
+  };
 
-  if (!cpf) {
-    return { error: 'CPF é obrigatório.' };
-  }
+  const loginActionInternal = async (cpf: string) => {
+    if (!cpf) {
+      throw new Error('CPF é obrigatório.');
+    }
 
-  if (!validateCPF(cpf)) {
-    return { error: 'CPF inválido.' };
-  }
+    if (!validateCPF(cpf)) {
+      throw new Error('CPF inválido.');
+    }
 
-  try {
     const usersCollection = await getUsersCollection();
     const user = await usersCollection.findOne({ cpf });
-    console.log('User object from DB:', user); // Debug line
+    // console.log('User object from DB:', user); // Debug line
 
     if (!user) {
-      return { error: 'CPF não encontrado.' };
+      throw new Error('CPF não encontrado.');
     }
 
     // For simplicity, assuming user is authenticated if found by CPF.
@@ -83,6 +132,10 @@ export async function loginAction(cpf: string) {
     // Redirect to the tenant-specific dashboard
     const tenantSlug = user.tenantId || 'default';
     redirect(`/${tenantSlug}/dashboard`);
+  };
+
+  try {
+    return await withActionLogging(loginActionInternal, logConfig)(cpf);
   } catch (error) {
     if (
       error instanceof Error &&
@@ -90,8 +143,8 @@ export async function loginAction(cpf: string) {
     ) {
       throw error;
     }
-    console.error('Login error:', error);
-    return { error: 'Erro ao tentar fazer login. Tente novamente.' };
+    // console.error('Login error:', error);
+    throw new Error('Erro ao tentar fazer login. Tente novamente.');
   }
 }
 
@@ -102,9 +155,25 @@ export async function loginAction(cpf: string) {
  * @returns {void} Redireciona o usuário após o logout.
  */
 export async function logoutAction() {
-  (await cookies()).delete('accessToken');
-  (await cookies()).delete('refreshToken');
-  redirect('/login');
+  const session = await getSession();
+  const logConfig: ActionLogConfig = {
+    userId: session.userId ?? "",
+    userName: session.userName,
+    actionType: "Logout de Usuário",
+    resourceType: "Autenticação",
+    resourceId: session.userId ?? "",
+    successMessage: "Logout realizado com sucesso!",
+    errorMessage: "Falha no logout.",
+    success: false
+  };
+
+  const logoutActionInternal = async () => {
+    (await cookies()).delete('accessToken');
+    (await cookies()).delete('refreshToken');
+    redirect('/login');
+  };
+
+  return await withActionLogging(logoutActionInternal, logConfig)();
 }
 
 /**
@@ -116,33 +185,49 @@ export async function logoutAction() {
  * o novo access token (se bem-sucedido) ou uma mensagem de erro.
  */
 export async function refreshTokenAction() {
-  const refreshToken = (await cookies()).get('refreshToken')?.value;
-
-  if (!refreshToken) {
-    return { error: 'No refresh token found.' };
-  }
-
-  const decoded = await verifyRefreshToken(refreshToken);
-
-  if (!decoded) {
-    (await cookies()).delete('accessToken');
-    (await cookies()).delete('refreshToken');
-    return { error: 'Invalid refresh token.' };
-  }
-
-  const userPayload = {
-    userId: decoded.userId,
-    cpf: decoded.cpf,
-    email: decoded.email,
-    name: decoded.name,
-    roles: decoded.roles,
-    permissions: decoded.permissions,
-    isAdmin: decoded.isAdmin,
-    tenantId: decoded.tenantId,
+  const session = await getSession();
+  const logConfig: ActionLogConfig = {
+    userId: session.userId ?? "",
+    userName: session.userName,
+    actionType: "Atualização de Token",
+    resourceType: "Autenticação",
+    resourceId: session.userId ?? "",
+    successMessage: "Token de acesso atualizado com sucesso!",
+    errorMessage: "Falha na atualização do token.",
+    success: false
   };
 
-  const newAccessToken = generateToken(userPayload);
-  (await cookies()).set('accessToken', newAccessToken, { ...COOKIE_OPTIONS, maxAge: 15 * 60 });
+  const refreshTokenActionInternal = async () => {
+    const refreshToken = (await cookies()).get('refreshToken')?.value;
 
-  return { success: true, newAccessToken };
+    if (!refreshToken) {
+      throw new Error('No refresh token found.');
+    }
+
+    const decoded = await verifyRefreshToken(refreshToken);
+
+    if (!decoded) {
+      (await cookies()).delete('accessToken');
+      (await cookies()).delete('refreshToken');
+      throw new Error('Invalid refresh token.');
+    }
+
+    const userPayload = {
+      userId: decoded.userId,
+      cpf: decoded.cpf,
+      email: decoded.email,
+      name: decoded.name,
+      roles: decoded.roles,
+      permissions: decoded.permissions,
+      isAdmin: decoded.isAdmin,
+      tenantId: decoded.tenantId,
+    };
+
+    const newAccessToken = generateToken(userPayload);
+    (await cookies()).set('accessToken', newAccessToken, { ...COOKIE_OPTIONS, maxAge: 15 * 60 });
+
+    return { success: true, newAccessToken };
+  };
+
+  return await withActionLogging(refreshTokenActionInternal, logConfig)();
 }

@@ -7,7 +7,8 @@
 
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-import { SignJWT, jwtVerify } from 'jose';
+import {  jwtVerify } from 'jose';
+import { saveAuditLog } from '@/services/audit';
 
 /**
  * Interface que define a estrutura do payload do usuário a ser incluído nos tokens JWT.
@@ -39,7 +40,18 @@ interface UserPayload {
  * @type {string}
  */
 const JWT_SECRET = process.env.JWT_SECRET as string;
-console.log('Auth Lib: JWT_SECRET loaded:', JWT_SECRET ? 'YES' : 'NO');
+// console.log('Auth Lib: JWT_SECRET loaded:', JWT_SECRET ? 'YES' : 'NO');
+if (!JWT_SECRET) {
+  saveAuditLog({
+    userId: "",
+    userName: "Sistema",
+    actionType: "Configuração de Segurança",
+    resourceType: "JWT_SECRET",
+    resourceId: "",
+    details: "JWT_SECRET não carregado. Verifique as variáveis de ambiente.",
+    success: false,
+  });
+}
 
 /**
  * Chave secreta para assinar e verificar tokens de refresh JWT.
@@ -48,7 +60,18 @@ console.log('Auth Lib: JWT_SECRET loaded:', JWT_SECRET ? 'YES' : 'NO');
  * @type {string}
  */
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET as string;
-console.log('Auth Lib: JWT_REFRESH_SECRET loaded:', JWT_REFRESH_SECRET ? 'YES' : 'NO');
+// console.log('Auth Lib: JWT_REFRESH_SECRET loaded:', JWT_REFRESH_SECRET ? 'YES' : 'NO');
+if (!JWT_REFRESH_SECRET) {
+  saveAuditLog({
+    userId: "",
+    userName: "Sistema",
+    actionType: "Configuração de Segurança",
+    resourceType: "JWT_REFRESH_SECRET",
+    resourceId: "",
+    details: "JWT_REFRESH_SECRET não carregado. Verifique as variáveis de ambiente.",
+    success: false,
+  });
+}
 
 /**
  * Tempo de expiração para tokens de acesso JWT.
@@ -93,11 +116,20 @@ const encodedJwtRefreshSecret = new TextEncoder().encode(JWT_REFRESH_SECRET);
  * @returns {string} O token de acesso JWT gerado.
  */
 export function generateToken(payload: UserPayload): string {
-  console.log('Auth Lib: Generating token with payload:', payload);
-  console.log('Auth Lib: JWT_SECRET used for signing:', JWT_SECRET);
-  console.log('Auth Lib: JWT_EXPIRES_IN used for signing:', JWT_EXPIRES_IN);
+  // console.log('Auth Lib: Generating token with payload:', payload);
+  // console.log('Auth Lib: JWT_SECRET used for signing:', JWT_SECRET);
+  // console.log('Auth Lib: JWT_EXPIRES_IN used for signing:', JWT_EXPIRES_IN);
   const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN } as jwt.SignOptions);
-  console.log('Auth Lib: Generated token:', token);
+  // console.log('Auth Lib: Generated token:', token);
+  saveAuditLog({
+    userId: payload.userId,
+    userName: payload.name,
+    actionType: "Geração de Token",
+    resourceType: "Autenticação",
+    resourceId: payload.userId,
+    details: "Token de acesso JWT gerado com sucesso.",
+    success: true,
+  });
   return token;
 }
 
@@ -109,7 +141,17 @@ export function generateToken(payload: UserPayload): string {
  * @returns {string} O token de refresh JWT gerado.
  */
 export function generateRefreshToken(payload: UserPayload): string {
-  return jwt.sign(payload, JWT_REFRESH_SECRET, { expiresIn: JWT_REFRESH_EXPIRES_IN } as jwt.SignOptions);
+  const token = jwt.sign(payload, JWT_REFRESH_SECRET, { expiresIn: JWT_REFRESH_EXPIRES_IN } as jwt.SignOptions);
+  saveAuditLog({
+    userId: payload.userId,
+    userName: payload.name,
+    actionType: "Geração de Refresh Token",
+    resourceType: "Autenticação",
+    resourceId: payload.userId,
+    details: "Refresh Token JWT gerado com sucesso.",
+    success: true,
+  });
+  return token;
 }
 
 /**
@@ -122,12 +164,29 @@ export function generateRefreshToken(payload: UserPayload): string {
  */
 export async function verifyToken(token: string): Promise<UserPayload | null> {
   try {
-    console.log('Auth Lib: Verifying token:', token);
+    // console.log('Auth Lib: Verifying token:', token);
     const { payload } = await jwtVerify(token, encodedJwtSecret);
-    console.log('Auth Lib: Token verified, payload:', payload);
+    // console.log('Auth Lib: Token verified, payload:', payload);
+    saveAuditLog({
+      userId: (payload as unknown as UserPayload).userId,
+      userName: (payload as unknown as UserPayload).name,
+      actionType: "Verificação de Token",
+      resourceType: "Autenticação",
+      resourceId: (payload as unknown as UserPayload).userId,
+      details: "Token de acesso JWT verificado com sucesso.",
+      success: true,
+    });
     return payload as unknown as UserPayload;
   } catch (error) {
-    console.error('Auth Lib: Token verification failed:', error);
+    saveAuditLog({
+      userId: "", // User ID might not be available if token is invalid
+      userName: "Sistema",
+      actionType: "Verificação de Token",
+      resourceType: "Autenticação",
+      resourceId: "",
+      details: `Falha na verificação do token de acesso JWT: ${error instanceof Error ? error.message : String(error)}`,
+      success: false,
+    });
     return null;
   }
 }
@@ -143,9 +202,26 @@ export async function verifyToken(token: string): Promise<UserPayload | null> {
 export async function verifyRefreshToken(token: string): Promise<UserPayload | null> {
   try {
     const { payload } = await jwtVerify(token, encodedJwtRefreshSecret);
+    saveAuditLog({
+      userId: (payload as unknown as UserPayload).userId,
+      userName: (payload as unknown as UserPayload).name,
+      actionType: "Verificação de Refresh Token",
+      resourceType: "Autenticação",
+      resourceId: (payload as unknown as UserPayload).userId,
+      details: "Refresh Token JWT verificado com sucesso.",
+      success: true,
+    });
     return payload as unknown as UserPayload;
   } catch (error) {
-    console.error('Auth Lib: Refresh Token verification failed:', error);
+    saveAuditLog({
+      userId: "", // User ID might not be available if token is invalid
+      userName: "Sistema",
+      actionType: "Verificação de Refresh Token",
+      resourceType: "Autenticação",
+      resourceId: "",
+      details: `Falha na verificação do Refresh Token JWT: ${error instanceof Error ? error.message : String(error)}`,
+      success: false,
+    });
     return null;
   }
 }

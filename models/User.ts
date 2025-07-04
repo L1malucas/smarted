@@ -12,5 +12,8 @@ export interface IUser {
   isAdmin: boolean;
   createdAt: Date;
   updatedAt: Date;
+  status: 'active' | 'inactive';
+  createdBy?: string; // userId of the creator
+  updatedBy?: string; // userId of the last updater
 }
 

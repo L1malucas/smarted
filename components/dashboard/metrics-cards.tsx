@@ -5,15 +5,19 @@ import { Users, Briefcase, Target, PhoneForwarded, AlertTriangle } from "lucide-
 import { MetricsData } from "@/types/dashboard-interface"
 
 interface MetricsCardsProps {
-  data: MetricsData[]
+  data: {
+    totalVagasCriadas: number;
+    totalCandidatos: number;
+    totalContatos: number;
+    totalMatches: number;
+    totalAcoesPendentes: number;
+  };
 }
 
 export function MetricsCards({ data }: MetricsCardsProps) {
-  const totalVagasCriadas = data.reduce((sum, item) => sum + item.vagasCriadas, 0)
-  const totalCandidatos = data.reduce((sum, item) => sum + item.candidatosCadastrados, 0)
-  const totalContatos = data.reduce((sum, item) => sum + item.contatosRealizados, 0)
-  const totalMatches = data.reduce((sum, item) => sum + item.matches, 0)
-  const totalAcoesPendentes = data.reduce((sum, item) => sum + item.acoesPendentes, 0)
+  const { totalVagasCriadas, totalCandidatos, totalContatos, totalMatches, totalAcoesPendentes } = data || {};
+
+  const displayValue = (value: number | undefined) => value || 0;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
@@ -23,7 +27,7 @@ export function MetricsCards({ data }: MetricsCardsProps) {
           <Briefcase className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{totalVagasCriadas}</div>
+          <div className="text-2xl font-bold">{displayValue(totalVagasCriadas)}</div>
           <p className="text-xs text-muted-foreground">Total de vagas abertas</p>
         </CardContent>
       </Card>
@@ -33,7 +37,7 @@ export function MetricsCards({ data }: MetricsCardsProps) {
           <Users className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{totalCandidatos}</div>
+          <div className="text-2xl font-bold">{displayValue(totalCandidatos)}</div>
           <p className="text-xs text-muted-foreground">Total de inscritos</p>
         </CardContent>
       </Card>
@@ -43,7 +47,7 @@ export function MetricsCards({ data }: MetricsCardsProps) {
           <PhoneForwarded className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{totalContatos}</div>
+          <div className="text-2xl font-bold">{displayValue(totalContatos)}</div>
           <p className="text-xs text-muted-foreground">Interações realizadas</p>
         </CardContent>
       </Card>
@@ -53,7 +57,7 @@ export function MetricsCards({ data }: MetricsCardsProps) {
           <Target className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{totalMatches}</div>
+          <div className="text-2xl font-bold">{displayValue(totalMatches)}</div>
           <p className="text-xs text-muted-foreground">Compatibilidades encontradas</p>
         </CardContent>
       </Card>
@@ -63,7 +67,7 @@ export function MetricsCards({ data }: MetricsCardsProps) {
           <AlertTriangle className="h-4 w-4 text-yellow-500" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-yellow-600">{totalAcoesPendentes}</div>
+          <div className="text-2xl font-bold text-yellow-600">{displayValue(totalAcoesPendentes)}</div>
           <p className="text-xs text-muted-foreground">Vagas/candidatos requerendo atenção</p>
         </CardContent>
       </Card>

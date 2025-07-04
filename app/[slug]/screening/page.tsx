@@ -15,6 +15,7 @@ import { ShareDialog } from "@/components/share-dialog"
 import { candidatesService } from "@/services/candidates"
 import { JobService } from "@/services/jobs"
 import { toast } from "@/components/ui/use-toast"
+import { auditService } from "@/services/audit";
 
 /**
  * @description Página de triagem de candidatos que permite visualizar, filtrar e gerenciar candidatos em processo seletivo
@@ -79,7 +80,15 @@ export default function ScreeningPage() {
         const fetchedJobs = await JobService.getAllJobs(tenantSlug)
         setJobs(fetchedJobs)
       } catch (error) {
-        console.error("Failed to fetch data for screening page:", error)
+        await auditService.saveLog({
+          userId: "", // User ID from session would be better here
+          userName: "Sistema",
+          actionType: "Carregamento de Dados",
+          resourceType: "Triagem",
+          resourceId: tenantSlug,
+          details: `Falha ao buscar dados para a página de triagem: ${error instanceof Error ? error.message : String(error)}`,
+          success: false,
+        });
         toast({
           title: "Erro ao carregar dados",
           description: "Não foi possível carregar os candidatos ou vagas para triagem.",

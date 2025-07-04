@@ -11,4 +11,5 @@ export interface ActionLogConfig {
   details?: string;
   successMessage?: string;
   errorMessage?: string;
+  success: boolean;
 }

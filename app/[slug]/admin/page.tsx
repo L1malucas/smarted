@@ -6,119 +6,70 @@ import { useState, useEffect } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Settings, CalendarX, UserCog, History, LifeBuoy } from "lucide-react"
 import { useParams } from "next/navigation"
-import { AccessLog, AllowedCPF, SystemMetrics } from "@/types/admin-interface"
-import { adminService } from "@/services/admin"
-import UserManagement from "@/components/admin/user-management"
-import AuditLogs from "@/components/admin/audit-logs"
-import ExpiredJobs from "@/components/admin/expired-jobs"
-import Support from "@/components/admin/support"
-import SystemSettings from "@/components/admin/system-settings"
-import { Skeleton } from "@/components/ui/skeleton"
-import { toast } from "@/hooks/use-toast"
+import { AccessLog, AllowedCPF, SystemMetrics } from "@/types/admin-interface";
+import { getSystemSettingsAction } from "@/services/admin"; // Keep this for now
+import UserManagement from "@/components/admin/user-management";
+import AuditLogs from "@/components/admin/audit-logs";
+import ExpiredJobs from "@/components/admin/expired-jobs";
+import Support from "@/components/admin/support";
+import SystemSettings from "@/components/admin/system-settings";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "@/hooks/use-toast";
+import { getAllowedCPFs } from "@/actions/admin-actions";
 
 export default function AdminPage() {
-  const params = useParams()
-  const tenantSlug = params.slug as string
+  const params = useParams();
+  const tenantSlug = params.slug as string;
 
-  const [allowedCPFs, setAllowedCPFs] = useState<AllowedCPF[]>([])
-  const [accessLogs, setAccessLogs] = useState<AccessLog[]>([])
-  const [systemMetrics, setSystemMetrics] = useState<SystemMetrics | null>(null)
-  const [isLoadingCPFs, setIsLoadingCPFs] = useState(true)
-  const [isLoadingLogs, setIsLoadingLogs] = useState(true)
-  const [isLoadingMetrics, setIsLoadingMetrics] = useState(true)
+  const [allowedCPFs, setAllowedCPFs] = useState<AllowedCPF[]>([]);
+  const [systemMetrics, setSystemMetrics] = useState<SystemMetrics | null>(null);
+  const [isLoadingCPFs, setIsLoadingCPFs] = useState(true);
+  const [isLoadingMetrics, setIsLoadingMetrics] = useState(true);
 
   useEffect(() => {
     const loadCPFs = async () => {
-      setIsLoadingCPFs(true)
+      setIsLoadingCPFs(true);
       try {
-        const cpfs = await adminService.getAllowedCPFs()
-        setAllowedCPFs(cpfs)
+        const cpfs = await getAllowedCPFs();
+        setAllowedCPFs(cpfs);
       } catch (error) {
         toast({
           title: "Erro ao carregar CPFs",
           description: "Não foi possível carregar a lista de CPFs autorizados." + error,
           variant: "destructive",
-        })
+        });
       } finally {
-        setIsLoadingCPFs(false)
+        setIsLoadingCPFs(false);
       }
-    }
-
-    const loadLogs = async () => {
-      setIsLoadingLogs(true)
-      try {
-        const logs = await adminService.getAccessLogs()
-        setAccessLogs(logs)
-      } catch (error) {
-        toast({
-          title: "Erro ao carregar Logs",
-          description: "Não foi possível carregar os logs de acesso." + error,
-          variant: "destructive",
-        })
-      } finally {
-        setIsLoadingLogs(false)
-      }
-    }
+    };
 
     const loadMetrics = async () => {
-      setIsLoadingMetrics(true)
+      setIsLoadingMetrics(true);
       try {
-        const metrics = await adminService.getSystemMetrics()
-        setSystemMetrics(metrics)
+        const result = await getSystemSettingsAction();
+        if (result.success) {
+          setSystemMetrics(result.data.settings);
+        } else {
+          toast({
+            title: "Erro ao carregar Métricas",
+            description: "Não foi possível carregar as métricas do sistema." + result.error,
+            variant: "destructive",
+          });
+        }
       } catch (error) {
         toast({
           title: "Erro ao carregar Métricas",
           description: "Não foi possível carregar as métricas do sistema." + error,
           variant: "destructive",
-        })
+        });
       } finally {
-        setIsLoadingMetrics(false)
+        setIsLoadingMetrics(false);
       }
-    }
+    };
 
-    loadCPFs()
-    loadLogs()
-    loadMetrics()
-  }, [tenantSlug])
-
-  const addCPF = async (newUser: AllowedCPF) => {
-    await adminService.addAllowedCPF(newUser.cpf, newUser.name, newUser.isAdmin, newUser.email)
-    // After adding, reload the list to reflect changes
-    const cpfs = await adminService.getAllowedCPFs()
-    setAllowedCPFs(cpfs)
-
-    // Log the action (handled by withActionLogging if used, otherwise direct call)
-    // For now, just update local state for display
-    const newLog: AccessLog = {
-      id: `${Date.now()}`,
-      cpf: newUser.cpf,
-      name: newUser.name,
-      action: "User Added",
-      timestamp: new Date(),
-      success: true,
-    }
-    setAccessLogs((prev) => [...prev, newLog])
-  }
-
-  const removeCPF = async (cpf: string) => {
-    await adminService.removeAllowedCPF(cpf)
-    // After removing, reload the list to reflect changes
-    const cpfs = await adminService.getAllowedCPFs()
-    setAllowedCPFs(cpfs)
-
-    // Log the action (handled by withActionLogging if used, otherwise direct call)
-    // For now, just update local state for display
-    const user = allowedCPFs.find((u) => u.cpf === cpf)
-    const newLog: AccessLog = {
-      id: `${Date.now()}`,
-      cpf,
-      name: user?.name || "Unknown",
-      action: "User Removed",
-      timestamp: new Date(),
-      success: true,
-    }
-    setAccessLogs((prev) => [...prev, newLog])
-  }
+    loadCPFs();
+    loadMetrics();
+  }, [tenantSlug]);
 
   return (
     <div className="space-y-6">
@@ -154,24 +105,13 @@ export default function AdminPage() {
         </TabsList>
 
         <TabsContent value="users" className="space-y-6">
-          {isLoadingCPFs ? (
-            <div className="space-y-4">
-              <Skeleton className="h-[150px] w-full" />
-              <Skeleton className="h-[200px] w-full" />
-            </div>
-          ) : (
-            <UserManagement allowedCPFs={allowedCPFs} addCPF={addCPF} removeCPF={removeCPF} />
-          )}
+          <UserManagement />
         </TabsContent>
         <TabsContent value="expired_jobs" className="space-y-6">
           <ExpiredJobs />
         </TabsContent>
         <TabsContent value="audit_logs" className="space-y-6">
-          {isLoadingLogs ? (
-            <Skeleton className="h-[300px] w-full" />
-          ) : (
-            <AuditLogs accessLogs={accessLogs} allowedCPFs={allowedCPFs} />
-          )}
+          <AuditLogs />
         </TabsContent>
         <TabsContent value="support" className="space-y-6">
           <Support />

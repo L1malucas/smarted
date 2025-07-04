@@ -8,7 +8,6 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import { Job, JobStatus, Competency } from "@/types/jobs-interface";
-import { JobService } from "@/services/jobs";
 import { withActionLogging } from "@/lib/actions";
 import { useJobValidation } from "@/hooks/use-job-validation";
 import { ActionButtons } from "@/components/jobs/action-buttons";
@@ -61,18 +60,28 @@ export default function CreateJobPage() {
 
   const handleSubmit = async (status: JobStatus) => {
     const isDraft = status === "draft";
-    const isValid = validateJob(formData, isDraft);
+    const logConfig = {
+      userId: "current-user-slug", // Replace with actual user ID
+      userName: "Usuário Atual", // Replace with actual user name
+      actionType: isDraft ? "Salvar Rascunho de Vaga" : "Publicar Vaga",
+      resourceType: "Vaga",
+      resourceId: formData._id?.toString() || "", // Will be populated after creation
+      successMessage: isDraft ? "A vaga foi salva como rascunho." : "A vaga foi publicada com sucesso.",
+      errorMessage: "Não foi possível salvar a vaga.",
+    };
 
-    if (!isValid) {
-      toast({
-        title: "Erro de Validação",
-        description: "Por favor, corrija os erros no formulário antes de salvar.",
-        variant: "destructive",
-      });
-      return;
-    }
+    const handleSubmitInternal = async (status: JobStatus) => {
+      const isValid = validateJob(formData, isDraft);
 
-    try {
+      if (!isValid) {
+        toast({
+          title: "Erro de Validação",
+          description: "Por favor, corrija os erros no formulário antes de salvar.",
+          variant: "destructive",
+        });
+        throw new Error("Erro de validação no formulário.");
+      }
+
       const jobData: Omit<Job, '_id' | 'createdAt' | 'updatedAt' | 'candidatesCount'> = {
         ...formData,
         title: formData.title || "",
@@ -102,33 +111,19 @@ export default function CreateJobPage() {
         },
       };
 
-      const saveJobAction = withActionLogging(
-        async (data: Omit<Job, '_id' | 'createdAt' | 'updatedAt' | 'candidatesCount'>) => {
-          return JobService.saveJob(tenantSlug, data);
-        },
-        {
-          userId: "current-user-slug", // Replace with actual user ID
-          userName: "Usuário Atual", // Replace with actual user name
-          actionType: isDraft ? "save_draft_job" : "publish_job",
-          resourceType: "job",
-          details: isDraft ? `Vaga ${jobData.title} salva como rascunho.` : `Vaga ${jobData.title} publicada.`, 
-          successMessage: isDraft ? "A vaga foi salva como rascunho." : "A vaga foi publicada com sucesso.",
-          errorMessage: "Não foi possível salvar a vaga.",
-        }
-      );
-
-      await saveJobAction(jobData);
+      const result = await JobService.saveJob(tenantSlug, jobData);
       setHasUnsavedChanges(false);
 
       router.push(`/${tenantSlug}/jobs`);
-    } catch (error) {
-      console.error("Error saving job:", error);
-      toast({
-        title: "Erro ao Salvar",
-        description: "Não foi possível salvar a vaga.",
-        variant: "destructive",
-      });
+      return { success: true, data: result };
+    };
+
+    const wrappedSubmit = withActionLogging(handleSubmitInternal, logConfig);
+    const result = await wrappedSubmit(status);
+    if (result.success && result.data && result.data._id) {
+      logConfig.resourceId = result.data._id.toString();
     }
+    return result;
   };
 
   const handleBack = async () => {

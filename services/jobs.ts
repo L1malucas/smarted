@@ -9,9 +9,6 @@ import { ObjectId } from 'mongodb';
 import { withActionLogging } from '@/lib/actions'; // Updated import
 import { ActionLogConfig } from '@/types/action-interface'; // Import ActionLogConfig
 
-import { getServerSession } from "next-auth";
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-
 async function getSession() {
   const session = await getServerSession(authOptions);
   return {

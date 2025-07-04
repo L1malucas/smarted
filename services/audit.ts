@@ -18,7 +18,6 @@ export async function saveAuditLog(log: Omit<AuditLog, '_id' | 'timestamp'>): Pr
     const result = await logsCollection.insertOne(newLog);
     return { ...newLog, _id: result.insertedId };
   } catch (error) {
-    console.error('Erro ao salvar log de auditoria no MongoDB:', error);
     throw new Error('Falha ao salvar log de auditoria.');
   }
 }
@@ -33,7 +32,6 @@ export async function getAuditLogsByResource(resourceType: string, resourceId?: 
     const logs = await logsCollection.find(query).sort({ timestamp: -1 }).toArray() as ILog[];
     return logs;
   } catch (error) {
-    console.error('Erro ao buscar logs de auditoria por recurso no MongoDB:', error);
     throw new Error('Falha ao buscar logs de auditoria.');
   }
 }
@@ -44,7 +42,6 @@ export async function getAllAuditLogs(): Promise<ILog[]> {
     const logs = await logsCollection.find({}).sort({ timestamp: -1 }).toArray() as ILog[];
     return logs;
   } catch (error) {
-    console.error('Erro ao buscar todos os logs de auditoria no MongoDB:', error);
     throw new Error('Falha ao buscar todos os logs de auditoria.');
   }
 }

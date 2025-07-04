@@ -8,5 +8,8 @@ export interface User {
   permissions: string[]
   isAdmin: boolean
   createdAt: Date
-  updatedAt: Date
+  updatedAt: Date;
+  status: 'active' | 'inactive';
+  createdBy?: string;
+  updatedBy?: string;
 }

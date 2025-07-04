@@ -4,13 +4,21 @@
 import { useState, useEffect } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useParams } from "next/navigation"
-import { dashboardService } from "@/services/dashboard"
+import { getDashboardMetrics } from "@/actions/dashboard-actions";
+// const userActivityData = await dashboardService.getUserActivity(slug, "7d");
 import { DashboardData } from "@/types/dashboard-interface"
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { MetricsCards } from "@/components/dashboard/metrics-cards"
 import { ProgressChart } from "@/components/dashboard/progress-chart"
 import { UserActivityChart } from "@/components/dashboard/user-activity-chart"
 import { Skeleton } from "@/components/ui/skeleton"
+import notFound from "@/app/not-found";
+
+interface DashboardPageProps {
+  params: {
+    slug: string;
+  };
+}
 
 export default function DashboardPage() {
   const params = useParams()
@@ -19,22 +27,6 @@ export default function DashboardPage() {
   const [data, setData] = useState<DashboardData>({ metrics: [], userActivity: [] })
   const [isLoading, setIsLoading] = useState(true)
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true)
-      try {
-        const metrics = await dashboardService.getMetrics(tenantSlug, period)
-        const userActivity = await dashboardService.getUserActivity(tenantSlug, period)
-        setData({ metrics, userActivity })
-      } catch (error) {
-        console.error("Failed to fetch dashboard data:", error)
-        // Optionally, handle error display to the user
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    fetchData()
-  }, [tenantSlug, period])
 
   return (
     <div className="space-y-6">

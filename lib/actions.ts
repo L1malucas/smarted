@@ -1,6 +1,6 @@
 import { toast } from "sonner";
 import { ActionFunction, ActionLogConfig } from "@/types/action-interface";
-import { saveAuditLogAction } from "@/actions/audit-actions"; // Import the new Server Action
+import { saveAuditLogAction } from "@/actions/audit-actions";
 
 export function withActionLogging<TArgs extends any[], TResult>(
   action: ActionFunction<TArgs, TResult>,
@@ -16,7 +16,7 @@ export function withActionLogging<TArgs extends any[], TResult>(
         actionType: logConfig.actionType,
         resourceType: logConfig.resourceType,
         resourceId: logConfig.resourceId,
-        details: logConfig.details || `Action ${logConfig.actionType} on ${logConfig.resourceType} successful.`, 
+        details: logConfig.details || `Action ${logConfig.actionType} on ${logConfig.resourceType} successful.`,
         success: true,
       });
 
@@ -32,7 +32,7 @@ export function withActionLogging<TArgs extends any[], TResult>(
         actionType: logConfig.actionType,
         resourceType: logConfig.resourceType,
         resourceId: logConfig.resourceId,
-        details: logConfig.details || `Action ${logConfig.actionType} on ${logConfig.resourceType} failed: ${error.message || "Unknown error"}`, 
+        details: logConfig.details || `Action ${logConfig.actionType} on ${logConfig.resourceType} failed: ${error.message || "Unknown error"}`,
         success: false,
       });
 
@@ -40,7 +40,7 @@ export function withActionLogging<TArgs extends any[], TResult>(
         description: error.message || "Por favor, tente novamente.",
       });
 
-      throw error; // Re-throw the error so the caller can handle it if needed
+      throw error;
     }
   };
 }

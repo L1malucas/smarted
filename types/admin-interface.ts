@@ -8,12 +8,15 @@ export interface AllowedCPF {
 }
 
 export interface AccessLog {
-  id: string
-  cpf: string
-  name: string
-  action: string
-  timestamp: Date
-  success: boolean
+  id: string;
+  userId: string;
+  userName: string;
+  actionType: string;
+  resourceType: string;
+  resourceId: string;
+  details?: string;
+  success: boolean;
+  timestamp: Date;
 }
 
 export interface SystemMetrics {

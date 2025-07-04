@@ -12,13 +12,14 @@ async function loginActionInternal(cpf: string) {
 // Exported functions that wrap the internal actions with logging
 export const loginAction = async (cpf: string) => {
   const logConfig: ActionLogConfig = {
-    userId: cpf, 
-    userName: "", 
+    userId: cpf,
+    userName: "",
     actionType: "Login",
     resourceType: "User",
     resourceId: "",
     successMessage: "Login bem-sucedido!",
     errorMessage: "Falha no login. Verifique seu CPF.",
+    success: false
   };
   const result = await loginActionInternal(cpf);
   return result;

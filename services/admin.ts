@@ -8,6 +8,7 @@ import { getUsersCollection, getSystemSettingsCollection } from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 import { withActionLogging } from '@/lib/actions'; // Updated import
 import { ActionLogConfig } from '@/types/action-interface'; // Import ActionLogConfig
+import { auditService } from '@/services/audit';
 import { generateSlug } from '@/lib/utils';
 
 import { cookies } from 'next/headers';
@@ -34,7 +35,15 @@ async function getSession() {
       };
     }
   } catch (error) {
-    console.error("Error getting session in admin service:", error);
+    await auditService.saveLog({
+      userId: "", // No user ID available yet
+      userName: "Sistema",
+      actionType: "Erro de Sessão",
+      resourceType: "Autenticação",
+      resourceId: "",
+      details: `Erro ao obter sessão no serviço de admin: ${error instanceof Error ? error.message : String(error)}`,
+      success: false,
+    });
   }
   return {
     userId: null,

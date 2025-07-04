@@ -7,6 +7,8 @@ import { LoadingProvider } from "@/contexts/loading-context"
 
 import { cookies } from 'next/headers';
 import { verifyToken } from '@/lib/auth';
+import { auditService } from '@/services/audit';
+
 async function getTenantData(slug: string, currentUser: any) {
   if (currentUser && currentUser.tenantId === slug) {
     return { id: currentUser.tenantId, name: `Tenant ${currentUser.tenantId}` };
@@ -63,7 +65,15 @@ export default async function TenantAppLayout({
         currentUser = decoded;
       }
     } catch (error) {
-      console.error('Error verifying token in TenantAppLayout:', error);
+      await auditService.saveLog({
+        userId: currentUser?.userId || "",
+        userName: currentUser?.name || "Sistema",
+        actionType: "Verificação de Token",
+        resourceType: "Autenticação",
+        resourceId: currentUser?.userId || "",
+        details: `Erro ao verificar token no TenantAppLayout: ${error instanceof Error ? error.message : String(error)}`,
+        success: false,
+      });
     }
   }
   const tenant = await getTenantData(params.slug, currentUser);

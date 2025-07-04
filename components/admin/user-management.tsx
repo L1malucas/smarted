@@ -1,196 +1,261 @@
-// components/admin/UserManagement.tsx
-import type React from "react"
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
-import { Switch } from "@/components/ui/switch"
-import { Plus, Trash2, Loader2 } from "lucide-react"
-import { AllowedCPF } from "@/types/admin-interface"
-import { toast } from "@/components/ui/use-toast"
-import { z } from "zod"
 
-const newUserSchema = z.object({
-  cpf: z.string().regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, "CPF inválido"),
-  name: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
-  email: z.string().email("Email inválido"),
-  isAdmin: z.boolean(),
-});
+"use client";
 
-interface UserManagementProps {
-  allowedCPFs: AllowedCPF[]
-  addCPF: (newUser: AllowedCPF) => Promise<void>
-  removeCPF: (cpf: string) => Promise<void>
-}
+import React, { useState, useEffect, useTransition } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { PlusCircle, Edit, Trash2, Loader2 } from "lucide-react";
+import { addUser, getTenantUsers, updateUser, deactivateUser } from "@/actions/admin-actions";
+import { IUser } from "@/models/User";
+import { useToast } from "@/hooks/use-toast";
+import { MultiSelect } from "@/components/ui/multi-select";
 
-export default function UserManagement({ allowedCPFs, addCPF, removeCPF }: UserManagementProps) {
-  const [newCPF, setNewCPF] = useState("")
-  const [newName, setNewName] = useState("")
-  const [newEmail, setNewEmail] = useState("")
-  const [newIsAdmin, setNewIsAdmin] = useState(false)
-  const [isAddingUser, setIsAddingUser] = useState(false)
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+const AVAILABLE_ROLES = [
+  { label: "Administrador", value: "admin" },
+  { label: "Recrutador", value: "recruiter" },
+  { label: "Candidato", value: "candidate" },
+  { label: "Super Admin", value: "super-admin" },
+];
 
-  const formatCPF = (value: string) => {
-    const numbers = value.replace(/\D/g, "")
-    return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")
-  }
+export default function UserManagement() {
+  const [users, setUsers] = useState<IUser[]>([]);
+  const [isPending, startTransition] = useTransition();
+  const [isFetching, setIsFetching] = useState(true);
+  const [selectedUser, setSelectedUser] = useState<IUser | null>(null);
+  const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
+  const [isEditUserDialogOpen, setIsEditUserDialogOpen] = useState(false);
+  const [newRoles, setNewRoles] = useState<string[]>([]);
+  const [editRoles, setEditRoles] = useState<string[]>([]);
 
-  const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatCPF(e.target.value)
-    if (formatted.length <= 14) {
-      setNewCPF(formatted)
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  useEffect(() => {
+    if (selectedUser) {
+      setEditRoles(selectedUser.roles);
+    } else {
+      setEditRoles([]);
     }
-  }
+  }, [selectedUser]);
 
-  const handleAddCPF = async () => {
-    setValidationErrors({});
-    try {
-      const newUser: AllowedCPF = newUserSchema.parse({
-        cpf: newCPF,
-        name: newName,
-        email: newEmail,
-        isAdmin: newIsAdmin,
-      }) as AllowedCPF;
-
-      setIsAddingUser(true);
-      await addCPF({
-        ...newUser,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-      toast({
-        title: "Usuário Adicionado",
-        description: `O usuário ${newName} (${newCPF}) foi adicionado com sucesso.`, 
-      });
-      setNewCPF("");
-      setNewName("");
-      setNewEmail("");
-      setNewIsAdmin(false);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        const errors: Record<string, string> = {};
-        error.errors.forEach((err) => {
-          errors[err.path[0]] = err.message;
-        });
-        setValidationErrors(errors);
-        toast({
-          title: "Erro de Validação",
-          description: "Por favor, corrija os erros no formulário.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Erro",
-          description: "Não foi possível adicionar o usuário.",
-          variant: "destructive",
-        });
-      }
-    } finally {
-      setIsAddingUser(false);
-    }
+  const fetchUsers = () => {
+    setIsFetching(true);
+    startTransition(async () => {
+      const tenantUsers = await getTenantUsers();
+      setUsers(tenantUsers);
+      setIsFetching(false);
+    });
   };
 
-  const handleRemoveCPF = async (cpf: string, name: string) => {
-    try {
-      await removeCPF(cpf);
-      toast({
-        title: "Usuário Removido",
-        description: `O usuário ${name} (${cpf}) foi removido com sucesso.`, 
-      });
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Não foi possível remover o usuário.",
-        variant: "destructive",
-      });
-    }
+  const handleAddUser = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const newUser = {
+      name: formData.get("name") as string,
+      email: formData.get("email") as string,
+      cpf: formData.get("cpf") as string,
+      isAdmin: formData.get("isAdmin") === "on",
+      roles: newRoles,
+      permissions: [], // Add permissions field if needed
+    };
+
+    startTransition(async () => {
+      const result = await addUser(newUser as any);
+      if (result.success) {
+        toast({ title: "Sucesso", description: "Usuário adicionado com sucesso." });
+        fetchUsers();
+        setIsAddUserDialogOpen(false);
+        setNewRoles([]); // Clear selected roles after adding
+      } else {
+        toast({ title: "Erro", description: result.error, variant: "destructive" });
+      }
+    });
+  };
+
+  const handleUpdateUser = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!selectedUser?._id) return;
+
+    const formData = new FormData(event.currentTarget);
+    const updates = {
+      name: formData.get("name") as string,
+      email: formData.get("email") as string,
+      cpf: formData.get("cpf") as string,
+      isAdmin: formData.get("isAdmin") === "on",
+      roles: editRoles,
+    };
+
+    startTransition(async () => {
+      const result = await updateUser(selectedUser._id.toString(), updates);
+      if (result.success) {
+        toast({ title: "Sucesso", description: "Usuário atualizado com sucesso." });
+        fetchUsers();
+        setIsEditUserDialogOpen(false);
+        setSelectedUser(null);
+        setEditRoles([]); // Clear selected roles after updating
+      } else {
+        toast({ title: "Erro", description: result.error, variant: "destructive" });
+      }
+    });
+  };
+
+  const handleDeactivateUser = (userId: string) => {
+    startTransition(async () => {
+      const result = await deactivateUser(userId);
+      if (result.success) {
+        toast({ title: "Sucesso", description: "Usuário desativado com sucesso." });
+        fetchUsers();
+      } else {
+        toast({ title: "Erro", description: result.error, variant: "destructive" });
+      }
+    });
   };
 
   return (
-    <>
-      <Card>
-        <CardHeader>
-          <CardTitle>Adicionar Novo Usuário</CardTitle>
-          <CardDescription>Autorize novos usuários a acessar o sistema e defina permissões.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
-            <div className="space-y-1">
-              <Label htmlFor="cpf">CPF</Label>
-              <Input id="cpf" placeholder="000.000.000-00" value={newCPF} onChange={handleCPFChange} />
-              {validationErrors.cpf && <p className="text-red-500 text-xs mt-1">{validationErrors.cpf}</p>}
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="name">Nome Completo</Label>
-              <Input
-                id="name"
-                placeholder="Nome do usuário"
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-              />
-              {validationErrors.name && <p className="text-red-500 text-xs mt-1">{validationErrors.name}</p>}
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="email@exemplo.com"
-                value={newEmail}
-                onChange={(e) => setNewEmail(e.target.value)}
-              />
-              {validationErrors.email && <p className="text-red-500 text-xs mt-1">{validationErrors.email}</p>}
-            </div>
-            <div className="flex items-center space-x-2 pt-2">
-              <Switch id="admin" checked={newIsAdmin} onCheckedChange={setNewIsAdmin} />
-              <Label htmlFor="admin">Permissão de Administrador</Label>
-            </div>
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle>Gerenciamento de Usuários</CardTitle>
+          <CardDescription>Adicione, edite e gerencie usuários para o seu tenant.</CardDescription>
+        </div>
+        <Dialog open={isAddUserDialogOpen} onOpenChange={setIsAddUserDialogOpen}>
+          <DialogTrigger asChild>
+            <Button><PlusCircle className="mr-2 h-4 w-4" /> Adicionar Usuário</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Adicionar Novo Usuário</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleAddUser} className="space-y-4">
+              {/* Campos do formulário para novo usuário */}
+              <div className="space-y-2">
+                <Label htmlFor="name">Nome Completo</Label>
+                <Input id="name" name="name" required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" name="email" type="email" required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="cpf">CPF</Label>
+                <Input id="cpf" name="cpf" required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="roles">Cargos</Label>
+                <MultiSelect
+                  options={AVAILABLE_ROLES}
+                  selected={newRoles}
+                  onSelectedChange={setNewRoles}
+                  placeholder="Selecione os cargos"
+                />
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch id="isAdmin" name="isAdmin" />
+                <Label htmlFor="isAdmin">Administrador</Label>
+              </div>
+              <DialogFooter>
+                <DialogClose asChild><Button variant="ghost">Cancelar</Button></DialogClose>
+                <Button type="submit" disabled={isPending}>{isPending ? "Adicionando..." : "Adicionar Usuário"}</Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </CardHeader>
+      <CardContent>
+        {isFetching ? (
+          <div className="flex justify-center items-center h-64">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
-          <Button onClick={handleAddCPF} disabled={isAddingUser}>
-            {isAddingUser ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
-            {isAddingUser ? "Adicionando..." : "Adicionar Usuário"}
-          </Button>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>Usuários Autorizados ({allowedCPFs.length})</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {allowedCPFs.map((user) => (
-            <div key={user.cpf} className="flex items-center justify-between p-3 border rounded-lg">
-              <div>
-                <div className="font-medium">
-                  <span>{user.name}{" "}</span>
-                  {user.isAdmin && (
-                    <Badge variant="destructive" className="ml-2">
-                      Admin
-                    </Badge>
-                  )}
-                </div>
-                <p className="text-sm text-muted-foreground">{user.cpf}</p>
-                <p className="text-sm text-muted-foreground">{user.email}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <p className="text-xs text-muted-foreground">
-                  Criado em: {new Date(user.createdAt).toLocaleDateString("pt-BR")}
-                </p>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-red-500 hover:text-red-700"
-                  onClick={() => handleRemoveCPF(user.cpf, user.name)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-    </>
-  )
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nome</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Cargos</TableHead>
+                <TableHead>Criado Em</TableHead>
+                <TableHead>Atualizado Em</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {users.map((user) => (
+                <TableRow key={user._id.toString()}>
+                  <TableCell>{user.name}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>
+                    <Badge variant={user.status === 'active' ? "default" : "destructive"}>{user.status === 'active' ? "Ativo" : "Inativo"}</Badge>
+                  </TableCell>
+                  <TableCell>{user.roles.join(", ")}</TableCell>
+                  <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
+                  <TableCell>{new Date(user.updatedAt).toLocaleDateString()}</TableCell>
+                  <TableCell className="text-right">
+                    <Dialog open={isEditUserDialogOpen && selectedUser?._id === user._id} onOpenChange={(isOpen) => {
+                      if (!isOpen) setSelectedUser(null);
+                      setIsEditUserDialogOpen(isOpen);
+                    }}>
+                      <DialogTrigger asChild>
+                        <Button variant="ghost" size="icon" onClick={() => setSelectedUser(user)}><Edit className="h-4 w-4" /></Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Editar Usuário</DialogTitle>
+                        </DialogHeader>
+                        <form onSubmit={handleUpdateUser} className="space-y-4">
+                          {/* Campos do formulário para edição de usuário */}
+                          <div className="space-y-2">
+                            <Label htmlFor="edit-name">Nome Completo</Label>
+                            <Input id="edit-name" name="name" defaultValue={selectedUser?.name} required />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="edit-email">Email</Label>
+                            <Input id="edit-email" name="email" type="email" defaultValue={selectedUser?.email} required />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="edit-cpf">CPF</Label>
+                            <Input id="edit-cpf" name="cpf" defaultValue={selectedUser?.cpf} required />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="edit-roles">Cargos</Label>
+                            <MultiSelect
+                              options={AVAILABLE_ROLES}
+                              selected={editRoles}
+                              onSelectedChange={setEditRoles}
+                              placeholder="Selecione os cargos"
+                            />
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Switch id="edit-isAdmin" name="isAdmin" defaultChecked={selectedUser?.isAdmin} />
+                            <Label htmlFor="edit-isAdmin">Administrador</Label>
+                          </div>
+                          <DialogFooter>
+                            <DialogClose asChild><Button variant="ghost">Cancelar</Button></DialogClose>
+                            <Button type="submit" disabled={isPending}>{isPending ? "Atualizando..." : "Atualizar Usuário"}</Button>
+                          </DialogFooter>
+                        </form>
+                      </DialogContent>
+                    </Dialog>
+                    <Button variant="ghost" size="icon" onClick={() => handleDeactivateUser(user._id.toString())} disabled={isPending}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+    </Card>
+  );
 }
+

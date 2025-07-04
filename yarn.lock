@@ -4111,6 +4111,6 @@ yaml@^2.3.4:
   integrity sha512-4lLa/EcQCB0cJkyts+FpIRx5G/llPxfP6VQU5KByHEhLxY3IJCH0f0Hy1MHI8sClTvsIb8qwRJ6R/ZdlDJ/leQ==
 
 zod@^3.25.61:
-  version "3.25.71"
-  resolved "https://registry.yarnpkg.com/zod/-/zod-3.25.71.tgz#f87a19c06b061426564607726c05a4d3b9ac3fa9"
-  integrity sha512-BsBc/NPk7h8WsUWYWYL+BajcJPY8YhjelaWu2NMLuzgraKAz4Lb4/6K11g9jpuDetjMiqhZ6YaexFLOC0Ogi3Q==
+  version "3.25.73"
+  resolved "https://registry.yarnpkg.com/zod/-/zod-3.25.73.tgz#d68b1331cab13488f79c14f4f78832a00cdad0bb"
+  integrity sha512-fuIKbQAWQl22Ba5d1quwEETQYjqnpKVyZIWAhbnnHgnDd3a+z4YgEfkI5SZ2xMELnLAXo/Flk2uXgysZNf0uaA==
