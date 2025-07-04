@@ -1,17 +1,15 @@
-
 import type React from "react"
 import { Navbar } from "@/components/navbar"
-import { authService } from "@/services/auth" // Mock auth service
 import { redirect } from "next/navigation"
 import { TenantProvider } from "@/contexts/tenant-context"
 import { LoadingProvider } from "@/contexts/loading-context"
 
-// Helper to get tenant data, in a real app this might involve validation
-async function getTenantData(slug: string) {
-  // For now, just return the slug if it looks reasonable.
-  // In a real app, you'd validate this slug against a database of tenants.
-  if (slug && slug.length > 3) {
-    return { id: slug, name: `Tenant ${slug}` } // Mock tenant data
+
+import { cookies } from 'next/headers';
+import { verifyToken } from '@/lib/auth';
+async function getTenantData(slug: string, currentUser: any) {
+  if (currentUser && currentUser.tenantId === slug) {
+    return { id: currentUser.tenantId, name: `Tenant ${currentUser.tenantId}` };
   }
   return null
 }
@@ -55,8 +53,20 @@ export default async function TenantAppLayout({
 }) {
   // Resolve the params Promise
   const params = await paramsPromise
-  const tenant = await getTenantData(params.slug)
-  const currentUser = await authService.getCurrentUser() // Mock current user
+  const accessToken = (await cookies()).get('accessToken')?.value;
+  let currentUser = null;
+
+  if (accessToken) {
+    try {
+      const decoded = await verifyToken(accessToken);
+      if (decoded) {
+        currentUser = decoded;
+      }
+    } catch (error) {
+      console.error('Error verifying token in TenantAppLayout:', error);
+    }
+  }
+  const tenant = await getTenantData(params.slug, currentUser);
 
   if (!tenant) {
     // If tenant slug is invalid, redirect to a generic error or login

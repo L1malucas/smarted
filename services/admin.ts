@@ -2,23 +2,45 @@
 
 import { z } from 'zod';
 import { createUserSchema, updateUserSchema, systemSettingsSchema } from '@/lib/schemas/admin.schema';
-import User from '@/models/User';
-import SystemSettings, { ISystemSettings } from '@/models/SystemSettings';
-import dbConnect from '@/lib/mongodb';
-import mongoose from 'mongoose';
+import { IUser } from '@/models/User';
+import { ISystemSettings } from '@/models/SystemSettings';
+import { getUsersCollection, getSystemSettingsCollection } from '@/lib/mongodb';
+import { ObjectId } from 'mongodb';
 import { withActionLogging } from '@/lib/actions'; // Updated import
 import { ActionLogConfig } from '@/types/action-interface'; // Import ActionLogConfig
+import { generateSlug } from '@/lib/utils';
 
-import { getServerSession } from "next-auth";
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { cookies } from 'next/headers';
+import { verifyToken } from '@/lib/auth';
 
 async function getSession() {
-  const session = await getServerSession(authOptions);
+  const accessToken = (await cookies()).get('accessToken')?.value;
+  if (!accessToken) {
+    return {
+      userId: null,
+      tenantId: null,
+      roles: [],
+      userName: "Unknown User",
+    };
+  }
+  try {
+    const decoded = await verifyToken(accessToken);
+    if (decoded) {
+      return {
+        userId: decoded.userId,
+        tenantId: decoded.tenantId,
+        roles: decoded.roles,
+        userName: decoded.name || "Unknown User",
+      };
+    }
+  } catch (error) {
+    console.error("Error getting session in admin service:", error);
+  }
   return {
-    userId: session?.user?.id || null,
-    tenantId: session?.user?.tenantId || null,
-    roles: session?.user?.roles || [],
-    userName: session?.user?.name || "Unknown User",
+    userId: null,
+    tenantId: null,
+    roles: [],
+    userName: "Unknown User",
   };
 }
 
@@ -37,20 +59,21 @@ async function createUserActionInternal(payload: z.infer<typeof createUserSchema
   // 2. Validate payload using Zod schema
   const validatedData = createUserSchema.parse(payload);
 
-  // Connect to database
-  await dbConnect();
+  const usersCollection = await getUsersCollection();
 
   // 3. Business Logic: Create a new user
-  const newUser = new User({
+  const newUser: IUser = {
     ...validatedData,
     slug: generateSlug(validatedData.name),
     isAdmin: validatedData.roles.includes("admin") || validatedData.roles.includes("super-admin"),
     permissions: [], // Permissions will be derived from roles or managed separately
-  });
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
 
-  await newUser.save();
+  const result = await usersCollection.insertOne(newUser);
 
-  return { success: true, data: { userId: newUser._id.toString() } };
+  return { success: true, data: { userId: result.insertedId.toString() } };
 }
 
 async function updateUserActionInternal(userId: string, payload: z.infer<typeof updateUserSchema>) {
@@ -71,21 +94,19 @@ async function updateUserActionInternal(userId: string, payload: z.infer<typeof 
   // 2. Validate payload using Zod schema
   const validatedData = updateUserSchema.parse(payload);
 
-  // Connect to database
-  await dbConnect();
+  const usersCollection = await getUsersCollection();
 
   // 3. Validate Tenancy and update user
-  const updatedUser = await User.findOneAndUpdate(
-    { _id: new mongoose.Types.ObjectId(userId), tenantId: session.tenantId },
-    { $set: validatedData },
-    { new: true }
+  const result = await usersCollection.updateOne(
+    { _id: new ObjectId(userId), tenantId: session.tenantId },
+    { $set: { ...validatedData, updatedAt: new Date() } }
   );
 
-  if (!updatedUser) {
+  if (result.matchedCount === 0) {
     return { success: false, error: 'Usuário não encontrado ou você não tem permissão para atualizá-lo.' };
   }
 
-  return { success: true, data: { userId: updatedUser._id.toString() } };
+  return { success: true, data: { userId: userId } };
 }
 
 async function getSystemSettingsActionInternal() {
@@ -100,21 +121,23 @@ async function getSystemSettingsActionInternal() {
     return { success: false, error: 'Você não tem permissão para visualizar as configurações do sistema.' };
   }
 
-  // Connect to database
-  await dbConnect();
+  const systemSettingsCollection = await getSystemSettingsCollection();
 
   // 2. Business Logic: Fetch system settings
   // Assuming there's only one system settings document, or we fetch the first one.
-  const settings = await SystemSettings.findOne();
+  let settings = await systemSettingsCollection.findOne({}) as ISystemSettings;
 
   if (!settings) {
     // If no settings exist, return default or create one
-    const defaultSettings = new SystemSettings();
-    await defaultSettings.save();
-    return { success: true, data: { settings: defaultSettings.toObject() } };
+    const defaultSettings: ISystemSettings = {
+      maxUsersPerTenant: 3,
+      // Add other default system-wide settings here
+    };
+    const result = await systemSettingsCollection.insertOne(defaultSettings);
+    settings = { ...defaultSettings, _id: result.insertedId };
   }
 
-  return { success: true, data: { settings: settings.toObject() } };
+  return { success: true, data: { settings: settings } };
 }
 
 async function updateSystemSettingsActionInternal(payload: z.infer<typeof systemSettingsSchema>) {
@@ -132,28 +155,29 @@ async function updateSystemSettingsActionInternal(payload: z.infer<typeof system
   // 2. Validate payload using Zod schema
   const validatedData = systemSettingsSchema.parse(payload);
 
-  // Connect to database
-  await dbConnect();
+  const systemSettingsCollection = await getSystemSettingsCollection();
 
   // 3. Business Logic: Update system settings
   // Assuming there's only one system settings document, or we update the first one found.
-  const updatedSettings = await SystemSettings.findOneAndUpdate(
+  const result = await systemSettingsCollection.updateOne(
     {}, // Find any document (assuming singleton)
-    { $set: validatedData },
-    { new: true, upsert: true } // Create if not exists
+    { $set: { ...validatedData } },
+    { upsert: true } // Create if not exists
   );
 
-  if (!updatedSettings) {
+  if (result.matchedCount === 0 && result.upsertedCount === 0) {
     return { success: false, error: 'Não foi possível atualizar as configurações do sistema.' };
   }
 
-  return { success: true, data: { settings: updatedSettings.toObject() } };
+  const updatedSettings = await systemSettingsCollection.findOne({}) as ISystemSettings;
+
+  return { success: true, data: { settings: updatedSettings } };
 }
 
 export const createUserAction = async (payload: z.infer<typeof createUserSchema>) => {
   const session = await getSession();
   const logConfig: ActionLogConfig = {
-    userId: session.userId,
+    userId: session.userId ?? "",
     userName: session.userName,
     actionType: "Criar Usuário",
     resourceType: "User",
@@ -172,7 +196,7 @@ export const createUserAction = async (payload: z.infer<typeof createUserSchema>
 export const updateUserAction = async (userId: string, payload: z.infer<typeof updateUserSchema>) => {
   const session = await getSession();
   const logConfig: ActionLogConfig = {
-    userId: session.userId,
+    userId: session.userId ?? "",
     userName: session.userName,
     actionType: "Atualizar Usuário",
     resourceType: "User",
@@ -187,7 +211,7 @@ export const updateUserAction = async (userId: string, payload: z.infer<typeof u
 export const getSystemSettingsAction = async () => {
   const session = await getSession();
   const logConfig: ActionLogConfig = {
-    userId: session.userId,
+    userId: session.userId ?? "",
     userName: session.userName,
     actionType: "Obter Configurações do Sistema",
     resourceType: "SystemSettings",
@@ -202,7 +226,7 @@ export const getSystemSettingsAction = async () => {
 export const updateSystemSettingsAction = async (payload: z.infer<typeof systemSettingsSchema>) => {
   const session = await getSession();
   const logConfig: ActionLogConfig = {
-    userId: session.userId,
+    userId: session.userId ?? "",
     userName: session.userName,
     actionType: "Atualizar Configurações do Sistema",
     resourceType: "SystemSettings",

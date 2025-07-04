@@ -1,6 +1,7 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import { ObjectId } from 'mongodb';
 
-export interface IUser extends Document {
+export interface IUser {
+  _id?: ObjectId; // MongoDB's default ID
   cpf: string;
   slug: string;
   name: string;
@@ -13,17 +14,3 @@ export interface IUser extends Document {
   updatedAt: Date;
 }
 
-const UserSchema: Schema = new Schema({
-  cpf: { type: String, required: true, unique: true },
-  slug: { type: String, required: true, unique: true },
-  name: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  tenantId: { type: String, required: true }, // Added tenantId to schema
-  roles: { type: [String], default: ['recruiter'] },
-  permissions: { type: [String], default: [] },
-  isAdmin: { type: Boolean, default: false },
-}, { timestamps: true });
-
-const User = mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
-
-export default User;

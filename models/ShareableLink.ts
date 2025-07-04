@@ -1,22 +1,11 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import { ObjectId } from 'mongodb';
 
-export interface IShareableLink extends Document {
+export interface IShareableLink {
+  _id?: ObjectId; // MongoDB's default ID
   hash: string;
   type: 'job' | 'report' | 'dashboard';
-  resourceId: mongoose.Types.ObjectId;
+  resourceId: ObjectId;
   password?: string;
   expirationDate?: Date;
   createdAt: Date;
 }
-
-const ShareableLinkSchema: Schema = new Schema({
-  hash: { type: String, required: true, unique: true },
-  type: { type: String, required: true, enum: ['job', 'report', 'dashboard'] },
-  resourceId: { type: mongoose.Schema.Types.ObjectId, required: true },
-  password: { type: String },
-  expirationDate: { type: Date },
-}, { timestamps: true });
-
-const ShareableLink = mongoose.models.ShareableLink || mongoose.model<IShareableLink>('ShareableLink', ShareableLinkSchema);
-
-export default ShareableLink;

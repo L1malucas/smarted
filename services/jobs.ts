@@ -2,10 +2,10 @@
 
 import { z } from 'zod';
 import { jobSchema, updateJobSchema } from '@/lib/schemas/job.schema';
-import Job from '@/models/Job';
-import dbConnect from '@/lib/mongodb';
+import { IJob } from '@/models/Job';
+import { getJobsCollection } from '@/lib/mongodb';
 import { generateSlug } from '@/lib/utils';
-import mongoose from 'mongoose';
+import { ObjectId } from 'mongodb';
 import { withActionLogging } from '@/lib/actions'; // Updated import
 import { ActionLogConfig } from '@/types/action-interface'; // Import ActionLogConfig
 
@@ -37,11 +37,10 @@ async function createJobActionInternal(payload: z.infer<typeof jobSchema>) {
   // 2. Validate payload using Zod schema
   const validatedData = jobSchema.parse(payload);
 
-  // Connect to database
-  await dbConnect();
+  const jobsCollection = await getJobsCollection();
 
   // 3. Business Logic: Create a new job document
-  const newJob = new Job({
+  const newJob: IJob = {
     ...validatedData,
     slug: generateSlug(validatedData.title), // Generate slug from title
     tenantId: session.tenantId,
@@ -51,15 +50,19 @@ async function createJobActionInternal(payload: z.infer<typeof jobSchema>) {
     isDraft: true,
     candidatesCount: 0, // Initial count
     criteriaWeights: { // Default criteria weights, adjust as needed
-      competencies: 0.5,
-      questions: 0.3,
-      experience: 0.2,
+      experience: 0, // Assuming 0 as default, adjust based on actual needs
+      skills: 0,
+      certifications: 0,
+      behavioral: 0,
+      leadership: 0,
     },
-  });
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
 
-  await newJob.save();
+  const result = await jobsCollection.insertOne(newJob);
 
-  return { success: true, data: { jobId: newJob._id.toString() } };
+  return { success: true, data: { jobId: result.insertedId.toString() } };
 }
 
 async function updateJobActionInternal(jobId: string, payload: z.infer<typeof updateJobSchema>) {
@@ -77,21 +80,19 @@ async function updateJobActionInternal(jobId: string, payload: z.infer<typeof up
   // 2. Validate payload using Zod schema
   const validatedData = updateJobSchema.parse(payload);
 
-  // Connect to database
-  await dbConnect();
+  const jobsCollection = await getJobsCollection();
 
   // 3. Validate Tenancy and update job
-  const updatedJob = await Job.findOneAndUpdate(
-    { _id: new mongoose.Types.ObjectId(jobId), tenantId: session.tenantId },
-    { $set: validatedData },
-    { new: true }
+  const result = await jobsCollection.updateOne(
+    { _id: new ObjectId(jobId), tenantId: session.tenantId },
+    { $set: { ...validatedData, updatedAt: new Date() } }
   );
 
-  if (!updatedJob) {
+  if (result.matchedCount === 0) {
     return { success: false, error: 'Vaga não encontrada ou você não tem permissão para atualizá-la.' };
   }
 
-  return { success: true, data: { jobId: updatedJob._id.toString() } };
+  return { success: true, data: { jobId: jobId } };
 }
 
 async function archiveJobActionInternal(jobId: string) {
@@ -106,17 +107,15 @@ async function archiveJobActionInternal(jobId: string) {
     return { success: false, error: 'Você não tem permissão para arquivar vagas.' };
   }
 
-  // Connect to database
-  await dbConnect();
+  const jobsCollection = await getJobsCollection();
 
   // 2. Validate Tenancy and update job status
-  const archivedJob = await Job.findOneAndUpdate(
-    { _id: new mongoose.Types.ObjectId(jobId), tenantId: session.tenantId },
-    { $set: { status: "fechada" } }, // Assuming "fechada" means archived/closed
-    { new: true }
+  const result = await jobsCollection.updateOne(
+    { _id: new ObjectId(jobId), tenantId: session.tenantId },
+    { $set: { status: "fechada", updatedAt: new Date() } } // Assuming "fechada" means archived/closed
   );
 
-  if (!archivedJob) {
+  if (result.matchedCount === 0) {
     return { success: false, error: 'Vaga não encontrada ou você não tem permissão para arquivá-la.' };
   }
 
@@ -132,19 +131,18 @@ async function getJobDetailsActionInternal(jobId: string) {
     return { success: false, error: 'Usuário não autenticado ou sessão inválida.' };
   }
 
-  // Connect to database
-  await dbConnect();
+  const jobsCollection = await getJobsCollection();
 
   // 2. Validate Tenancy and fetch job details
-  const job = await Job.findOne(
-    { _id: new mongoose.Types.ObjectId(jobId), tenantId: session.tenantId }
-  );
+  const job = await jobsCollection.findOne(
+    { _id: new ObjectId(jobId), tenantId: session.tenantId }
+  ) as IJob;
 
   if (!job) {
     return { success: false, error: 'Vaga não encontrada ou você não tem permissão para visualizá-la.' };
   }
 
-  return { success: true, data: { job: job.toObject() } };
+  return { success: true, data: { job: job } };
 }
 
 export const createJobAction = async (payload: z.infer<typeof jobSchema>) => {

@@ -1,6 +1,7 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import { ObjectId } from 'mongodb';
 
-export interface ILog extends Document {
+export interface ILog {
+  _id?: ObjectId; // MongoDB's default ID
   userId: string;
   userName: string;
   actionType: string;
@@ -10,18 +11,3 @@ export interface ILog extends Document {
   success: boolean;
   timestamp: Date;
 }
-
-const LogSchema: Schema = new Schema({
-  userId: { type: String, required: true },
-  userName: { type: String, required: true },
-  actionType: { type: String, required: true },
-  resourceType: { type: String, required: true },
-  resourceId: { type: String },
-  details: { type: String },
-  success: { type: Boolean, required: true },
-  timestamp: { type: Date, default: Date.now },
-}, { timestamps: true });
-
-const Log = mongoose.models.Log || mongoose.model<ILog>('Log', LogSchema);
-
-export default Log;

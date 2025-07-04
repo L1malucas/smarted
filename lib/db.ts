@@ -1,11 +1,11 @@
 /**
- * @file `mongodb.ts` é responsável pela configuração e conexão com o banco de dados MongoDB.
+ * @file `db.ts` é responsável pela configuração e conexão com o banco de dados MongoDB.
  * Ele gerencia a instância do cliente MongoDB, garantindo uma única conexão
  * para toda a aplicação e fornecendo funções para acessar o banco de dados e coleções específicas.
  * @module Database
  */
 
-import { MongoClient, ServerApiVersion, Db, Collection } from 'mongodb';
+import { MongoClient, ServerApiVersion, Db } from 'mongodb';
 
 /**
  * URI de conexão com o MongoDB, obtida da variável de ambiente `MONGODB_URI`.
@@ -85,16 +85,34 @@ export async function getDb(): Promise<Db> {
  * Retorna a coleção 'users' do banco de dados MongoDB.
  * @returns {Promise<Collection>} Uma promessa que resolve para a coleção 'users'.
  */
-export async function getUsersCollection(): Promise<Collection> {
+export async function getUsersCollection() {
   const db = await getDb();
   return db.collection('users');
+}
+
+/**
+ * Retorna a coleção 'logs' do banco de dados MongoDB.
+ * @returns {Promise<Collection>} Uma promessa que resolve para a coleção 'logs'.
+ */
+export async function getLogsCollection() {
+  const db = await getDb();
+  return db.collection('logs');
+}
+
+/**
+ * Retorna a coleção 'systemSettings' do banco de dados MongoDB.
+ * @returns {Promise<Collection>} Uma promessa que resolve para a coleção 'systemSettings'.
+ */
+export async function getSystemSettingsCollection() {
+  const db = await getDb();
+  return db.collection('systemSettings');
 }
 
 /**
  * Retorna a coleção 'jobs' do banco de dados MongoDB.
  * @returns {Promise<Collection>} Uma promessa que resolve para a coleção 'jobs'.
  */
-export async function getJobsCollection(): Promise<Collection> {
+export async function getJobsCollection() {
   const db = await getDb();
   return db.collection('jobs');
 }
@@ -103,34 +121,25 @@ export async function getJobsCollection(): Promise<Collection> {
  * Retorna a coleção 'candidates' do banco de dados MongoDB.
  * @returns {Promise<Collection>} Uma promessa que resolve para a coleção 'candidates'.
  */
-export async function getCandidatesCollection(): Promise<Collection> {
+export async function getCandidatesCollection() {
   const db = await getDb();
   return db.collection('candidates');
 }
 
 /**
- * Retorna a coleção 'shareablelinks' do banco de dados MongoDB.
- * @returns {Promise<Collection>} Uma promessa que resolve para a coleção 'shareablelinks'.
+ * Retorna a coleção 'shareableLinks' do banco de dados MongoDB.
+ * @returns {Promise<Collection>} Uma promessa que resolve para a coleção 'shareableLinks'.
  */
-export async function getShareableLinksCollection(): Promise<Collection> {
+export async function getShareableLinksCollection() {
   const db = await getDb();
-  return db.collection('shareablelinks');
+  return db.collection('shareableLinks');
 }
 
 /**
- * Retorna a coleção 'logs' do banco de dados MongoDB.
- * @returns {Promise<Collection>} Uma promessa que resolve para a coleção 'logs'.
+ * Retorna a coleção 'statusChangeLogs' do banco de dados MongoDB.
+ * @returns {Promise<Collection>} Uma promessa que resolve para a coleção 'statusChangeLogs'.
  */
-export async function getLogsCollection(): Promise<Collection> {
+export async function getStatusChangeLogsCollection() {
   const db = await getDb();
-  return db.collection('logs');
-}
-
-/**
- * Retorna a coleção 'systemsettings' do banco de dados MongoDB.
- * @returns {Promise<Collection>} Uma promessa que resolve para a coleção 'systemsettings'.
- */
-export async function getSystemSettingsCollection(): Promise<Collection> {
-  const db = await getDb();
-  return db.collection('systemsettings');
+  return db.collection('statusChangeLogs');
 }

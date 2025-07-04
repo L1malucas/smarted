@@ -2,10 +2,10 @@
 
 import { z } from 'zod';
 import { createLinkSchema, verifyLinkSchema } from '@/lib/schemas/share.schema';
-import ShareableLink from '@/models/ShareableLink';
-import Job from '@/models/Job'; // Assuming Job model is needed for resource retrieval
-import dbConnect from '@/lib/mongodb';
-import mongoose from 'mongoose';
+import { IShareableLink } from '@/models/ShareableLink';
+import { IJob } from '@/models/Job';
+import { getShareableLinksCollection, getJobsCollection } from '@/lib/mongodb';
+import { ObjectId } from 'mongodb';
 import { v4 as uuidv4 } from 'uuid'; // For generating unique hash
 import { withActionLogging } from '@/lib/actions'; // Updated import
 import { ActionLogConfig } from '@/types/action-interface'; // Import ActionLogConfig
@@ -38,9 +38,6 @@ async function createShareableLinkActionInternal(payload: z.infer<typeof createL
   // 2. Validate payload using Zod schema
   const validatedData = createLinkSchema.parse(payload);
 
-  // Connect to database
-  await dbConnect();
-
   // 3. Business Logic: Generate unique hash and save link details
   const hash = uuidv4(); // Generate a unique hash
   let hashedPassword = undefined;
@@ -49,15 +46,18 @@ async function createShareableLinkActionInternal(payload: z.infer<typeof createL
     hashedPassword = await bcrypt.hash(validatedData.options.password, 10);
   }
 
-  const newShareableLink = new ShareableLink({
+  const shareableLinksCollection = await getShareableLinksCollection();
+
+  const newShareableLink: IShareableLink = {
     hash,
     type: validatedData.type,
-    resourceId: new mongoose.Types.ObjectId(validatedData.resourceId),
+    resourceId: new ObjectId(validatedData.resourceId),
     password: hashedPassword,
     expirationDate: validatedData.options?.expirationDate ? new Date(validatedData.options.expirationDate) : undefined,
-  });
+    createdAt: new Date(),
+  };
 
-  await newShareableLink.save();
+  await shareableLinksCollection.insertOne(newShareableLink);
 
   // Construct the full shareable URL (adjust base URL as needed)
   const shareableUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/share/${hash}`;
@@ -70,11 +70,10 @@ async function verifySharedLinkActionInternal(payload: z.infer<typeof verifyLink
   const validatedData = verifyLinkSchema.parse(payload);
   const { hash, password } = validatedData;
 
-  // Connect to database
-  await dbConnect();
+  const shareableLinksCollection = await getShareableLinksCollection();
 
   // 2. Business Logic: Find and verify the shareable link
-  const shareableLink = await ShareableLink.findOne({ hash });
+  const shareableLink = await shareableLinksCollection.findOne({ hash }) as IShareableLink;
 
   if (!shareableLink) {
     return { success: false, error: 'Link inválido ou não encontrado.' };
@@ -95,7 +94,8 @@ async function verifySharedLinkActionInternal(payload: z.infer<typeof verifyLink
   let resource: any = null;
   switch (shareableLink.type) {
     case 'job':
-      resource = await Job.findById(shareableLink.resourceId);
+      const jobsCollection = await getJobsCollection();
+      resource = await jobsCollection.findOne({ _id: shareableLink.resourceId }) as IJob;
       break;
     // Add cases for other resource types (report, dashboard) as needed
     default:
@@ -106,7 +106,7 @@ async function verifySharedLinkActionInternal(payload: z.infer<typeof verifyLink
     return { success: false, error: 'Recurso associado não encontrado.' };
   }
 
-  return { success: true, data: { resource: resource.toObject(), type: shareableLink.type } };
+  return { success: true, data: { resource: resource, type: shareableLink.type } };
 }
 
 export const createShareableLinkAction = async (payload: z.infer<typeof createLinkSchema>) => {

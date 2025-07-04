@@ -2,23 +2,44 @@
 
 import { z } from 'zod';
 import { applySchema } from '@/lib/schemas/candidate.schema';
-import Candidate from '@/models/Candidate';
-import Job from '@/models/Job';
-import dbConnect from '@/lib/mongodb';
-import mongoose from 'mongoose';
+import { ICandidate } from '@/models/Candidate';
+import { IJob } from '@/models/Job';
+import { getCandidatesCollection, getJobsCollection } from '@/lib/mongodb';
+import { ObjectId } from 'mongodb';
 import { withActionLogging } from '@/lib/actions'; // Updated import
 import { ActionLogConfig } from '@/types/action-interface'; // Import ActionLogConfig
 
-import { getServerSession } from "next-auth";
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { cookies } from 'next/headers';
+import { verifyToken } from '@/lib/auth';
 
 async function getSession() {
-  const session = await getServerSession(authOptions);
+  const accessToken = (await cookies()).get('accessToken')?.value;
+  if (!accessToken) {
+    return {
+      userId: null,
+      tenantId: null,
+      roles: [],
+      userName: "Unknown User",
+    };
+  }
+  try {
+    const decoded = await verifyToken(accessToken);
+    if (decoded) {
+      return {
+        userId: decoded.userId,
+        tenantId: decoded.tenantId,
+        roles: decoded.roles,
+        userName: decoded.name || "Unknown User",
+      };
+    }
+  } catch (error) {
+    console.error("Error getting session in candidates service:", error);
+  }
   return {
-    userId: session?.user?.id || null,
-    tenantId: session?.user?.tenantId || null,
-    roles: session?.user?.roles || [],
-    userName: session?.user?.name || "Unknown User",
+    userId: null,
+    tenantId: null,
+    roles: [],
+    userName: "Unknown User",
   };
 }
 
@@ -26,33 +47,35 @@ async function applyToJobActionInternal(payload: z.infer<typeof applySchema>) {
   // 1. Validate payload using Zod schema
   const validatedData = applySchema.parse(payload);
 
-  // Connect to database
-  await dbConnect();
+  const jobsCollection = await getJobsCollection();
+  const candidatesCollection = await getCandidatesCollection();
 
   // 2. Verify job existence and get tenantId
-  const job = await Job.findById(validatedData.jobId);
+  const job = await jobsCollection.findOne({ _id: new ObjectId(validatedData.jobId) }) as IJob;
   if (!job) {
     return { success: false, error: 'Vaga não encontrada.' };
   }
 
   // 3. Business Logic: Create a new candidate record
-  const newCandidate = new Candidate({
-    jobId: new mongoose.Types.ObjectId(validatedData.jobId),
+  const newCandidate: ICandidate = {
+    jobId: new ObjectId(validatedData.jobId),
     tenantId: job.tenantId, // Associate candidate with job's tenant
     name: validatedData.name,
     email: validatedData.email,
     phone: validatedData.phone,
     resumeUrl: validatedData.resumeUrl, // Placeholder for actual file upload
-    answers: validatedData.answers,
+    answers: validatedData.answers ? validatedData.answers.map(answer => ({ ...answer, questionId: new ObjectId(answer.questionId) })) : [],
     status: "applied", // Initial status
-  });
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
 
-  await newCandidate.save();
+  const result = await candidatesCollection.insertOne(newCandidate);
 
   // Optionally, increment candidatesCount in the Job model
-  await Job.findByIdAndUpdate(job._id, { $inc: { candidatesCount: 1 } });
+  await jobsCollection.updateOne({ _id: job._id }, { $inc: { candidatesCount: 1 } });
 
-  return { success: true, data: { candidateId: newCandidate._id.toString() } };
+  return { success: true, data: { candidateId: result.insertedId.toString() } };
 }
 
 async function processResumeWithAIActionInternal(candidateId: string) {
@@ -67,11 +90,10 @@ async function processResumeWithAIActionInternal(candidateId: string) {
     return { success: false, error: 'Você não tem permissão para iniciar a análise de IA.' };
   }
 
-  // Connect to database
-  await dbConnect();
+  const candidatesCollection = await getCandidatesCollection();
 
   // 2. Validate Tenancy and fetch candidate details
-  const candidate = await Candidate.findById(candidateId);
+  const candidate = await candidatesCollection.findOne({ _id: new ObjectId(candidateId) }) as ICandidate;
 
   if (!candidate) {
     return { success: false, error: 'Candidato não encontrado.' };
@@ -88,14 +110,12 @@ async function processResumeWithAIActionInternal(candidateId: string) {
 
   // Simulate AI results
   const simulatedMatchScore = Math.floor(Math.random() * 100) + 1; // Random score between 1 and 100
-  // const simulatedExtractedSkills = ["JavaScript", "React", "Node.js"]; // Removed unused variable
 
   // Update candidate status and AI results
-  candidate.status = "evaluated"; // Or "processing" then "evaluated"
-  candidate.matchScore = simulatedMatchScore;
-  // candidate.extractedSkills = simulatedExtractedSkills; // Add this field to ICandidate if needed
-
-  await candidate.save();
+  await candidatesCollection.updateOne(
+    { _id: new ObjectId(candidateId) },
+    { $set: { status: "evaluated", matchScore: simulatedMatchScore, updatedAt: new Date() } }
+  );
 
   return { success: true };
 }
@@ -112,11 +132,11 @@ async function rankCandidatesActionInternal(jobId: string) {
     return { success: false, error: 'Você não tem permissão para ranquear candidatos.' };
   }
 
-  // Connect to database
-  await dbConnect();
+  const jobsCollection = await getJobsCollection();
+  const candidatesCollection = await getCandidatesCollection();
 
   // 2. Validate Tenancy and fetch job details
-  const job = await Job.findById(jobId);
+  const job = await jobsCollection.findOne({ _id: new ObjectId(jobId) }) as IJob;
   if (!job) {
     return { success: false, error: 'Vaga não encontrada.' };
   }
@@ -126,15 +146,12 @@ async function rankCandidatesActionInternal(jobId: string) {
   }
 
   // 3. Business Logic: Get candidates and apply ranking logic
-  const candidates = await Candidate.find({ jobId: new mongoose.Types.ObjectId(jobId), tenantId: session.tenantId });
+  const candidates = await candidatesCollection.find({ jobId: new ObjectId(jobId), tenantId: session.tenantId }).toArray() as ICandidate[];
 
   // Simulate ranking logic (e.g., based on matchScore)
   candidates.sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
 
-  // Update candidate ranking/score (if needed, otherwise just return sorted list)
-  // For now, we'll just return the sorted list.
-
-  return { success: true, data: { candidates: candidates.map(c => c.toObject()) } };
+  return { success: true, data: { candidates: candidates } };
 }
 
 export const applyToJobAction = async (payload: z.infer<typeof applySchema>) => {

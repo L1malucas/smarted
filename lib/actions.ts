@@ -1,8 +1,6 @@
-import { AuditService } from "@/services/audit";
 import { toast } from "sonner";
 import { ActionFunction, ActionLogConfig } from "@/types/action-interface";
-
-const auditService = new AuditService();
+import { saveAuditLogAction } from "@/actions/audit-actions"; // Import the new Server Action
 
 export function withActionLogging<TArgs extends any[], TResult>(
   action: ActionFunction<TArgs, TResult>,
@@ -12,7 +10,7 @@ export function withActionLogging<TArgs extends any[], TResult>(
     try {
       const result = await action(...args);
 
-      await auditService.saveAuditLog({
+      await saveAuditLogAction({
         userId: logConfig.userId,
         userName: logConfig.userName,
         actionType: logConfig.actionType,
@@ -28,7 +26,7 @@ export function withActionLogging<TArgs extends any[], TResult>(
 
       return result;
     } catch (error: any) {
-      await auditService.saveAuditLog({
+      await saveAuditLogAction({
         userId: logConfig.userId,
         userName: logConfig.userName,
         actionType: logConfig.actionType,

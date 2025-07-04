@@ -9,8 +9,10 @@ import Image from "next/image";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label"
 import { Building2, TrendingUp, Users, BarChart3, Star, CheckCircle, UserPlus, Target } from "lucide-react"
-import { loginAction } from "@/services/auth"
+import { loginAction } from "@/actions/auth-actions"
 import { CandidateButton } from "@/components/candidate-button"
+import { useAuth } from "@/hooks/use-auth"; // Import useAuth hook
+
 
 const testimonials = [
   {
@@ -51,6 +53,8 @@ export default function LoginPage() {
   const tenantSlugFromQuery = searchParams.get("tenant_slug")
   const nextPath = searchParams.get("next")
 
+  const { clientSignIn } = useAuth(); // Use the useAuth hook
+
   const formatCPF = (value: string) => {
     const numbers = value.replace(/\D/g, "")
     return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")
@@ -63,28 +67,11 @@ export default function LoginPage() {
     }
   }
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleLogin = (formData: FormData) => {
     startTransition(async () => {
-      try {
-        const result = await loginAction({ cpf });
-
-        if (!result.success) {
-          // Error is already handled by withActionLogging and toast
-          return;
-        }
-        if (tenantSlugFromQuery && nextPath) {
-          router.push(nextPath)
-        } else if (tenantSlugFromQuery) {
-          router.push(`/${tenantSlugFromQuery}/dashboard`)
-        } else {
-          router.push("/smarted-tenant/dashboard")
-        }
-      } catch (error) {
-        // Error already handled by withActionLogging
-      }
-    })
-  }
+      await loginAction(formData.get('cpf') as string);
+    });
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -159,11 +146,12 @@ export default function LoginPage() {
               <CardDescription className="text-xs sm:text-sm">Entre com seu CPF para acessar o sistema</CardDescription>
             </CardHeader>
             <CardContent className="px-4 sm:px-6">
-              <form onSubmit={handleLogin} className="space-y-4">
+              <form action={handleLogin} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="cpf">CPF</Label>
                   <Input
                     id="cpf"
+                    name="cpf"
                     type="text"
                     placeholder="000.000.000-00"
                     value={cpf}
@@ -216,8 +204,7 @@ export default function LoginPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3 sm:gap-4 flex-1">
                     <div
-                      className="wVirusTotal: https://www.virustotal.com/gui/home
-                      w-10 h-10 sm:w-12 sm:h-12 bg-emerald-400 rounded-full flex-shrink-0 transition-all duration-500"
+                      className="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-400 rounded-full flex-shrink-0 transition-all duration-500"
                       style={{
                         background: `linear-gradient(135deg, #10b981, #059669)`
                       }}

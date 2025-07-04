@@ -13,7 +13,7 @@ import type { SystemNotification } from "@/types"
 import { User } from "@/types/user-interface"
 import { ThemeSelector } from "./theme-selector"
 import { withActionLogging } from "@/lib/actions"
-import { authService } from "@/services/auth"
+import { logoutAction } from "@/actions/auth-actions"; // Import the new logout Server Action
 
 import { NavbarProps } from "@/types/component-props"
 
@@ -74,9 +74,9 @@ export function Navbar({ tenantSlug, user }: NavbarProps) {
   const handleLogout = async () => {
     if (!user) return;
 
-    const logoutAction = withActionLogging(
+    const wrappedLogout = withActionLogging(
       async () => {
-        await authService.logout();
+        await logoutAction(); // Call the server action directly
       },
       {
         userId: user.slug,
@@ -90,7 +90,7 @@ export function Navbar({ tenantSlug, user }: NavbarProps) {
     );
 
     try {
-      await logoutAction();
+      await wrappedLogout();
       router.push('/login');
     } catch (error) {
       // Error already handled by withActionLogging
