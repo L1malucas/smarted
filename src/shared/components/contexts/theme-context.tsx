@@ -1,35 +1,35 @@
 "use client"
 
-import { ThemeContextType, Theme, ColorMode } from "@/shared/types/types/theme-interface"
+import { IThemeContextType, ITheme, IColorMode } from "@/shared/types/types/theme-interface"
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
+const ThemeContext = createContext<IThemeContextType | undefined>(undefined)
 
 const THEME_STORAGE_KEY = "recruitment-app-theme"
 const COLOR_MODE_STORAGE_KEY = "recruitment-app-color-mode"
 
 export const availableThemes = [
   {
-    value: "brutalism" as Theme,
+    value: "brutalism" as ITheme,
     label: "Soft Elegant",
     description: "Elegante e minimalista com tons suaves",
   },
   {
-    value: "friendly" as Theme,
+    value: "friendly" as ITheme,
     label: "Friendly Humanist",
     description: "Caloroso e acolhedor com cores naturais",
   },
   {
-    value: "neo-clean" as Theme,
+    value: "neo-clean" as ITheme,
     label: "Neo Brutalism",
     description: "Ousado e impactante com contrastes fortes",
   },
 ]
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const getInitialTheme = (): Theme => {
+  const getInitialTheme = (): ITheme => {
     if (typeof window !== 'undefined') {
-      const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) as Theme;
+      const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) as ITheme;
       if (savedTheme && availableThemes.find((t) => t.value === savedTheme)) {
         return savedTheme;
       }
@@ -37,9 +37,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     return "brutalism"; // Default theme if no saved theme or on server
   };
 
-  const getInitialColorMode = (): ColorMode => {
+  const getInitialColorMode = (): IColorMode => {
     if (typeof window !== 'undefined') {
-      const savedColorMode = localStorage.getItem(COLOR_MODE_STORAGE_KEY) as ColorMode;
+      const savedColorMode = localStorage.getItem(COLOR_MODE_STORAGE_KEY) as IColorMode;
       if (savedColorMode) {
         return savedColorMode;
       }
@@ -49,8 +49,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     return "dark"; // Default color mode if no saved mode or on server
   };
 
-  const [theme, setThemeState] = useState<Theme>(getInitialTheme());
-  const [colorMode, setColorModeState] = useState<ColorMode>(getInitialColorMode());
+  const [theme, setThemeState] = useState<ITheme>(getInitialTheme());
+  const [colorMode, setColorModeState] = useState<IColorMode>(getInitialColorMode());
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -95,12 +95,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     return () => mediaQuery.removeEventListener("change", handleChange)
   }, [colorMode])
 
-  const setTheme = (newTheme: Theme) => {
+  const setTheme = (newTheme: ITheme) => {
     setThemeState(newTheme)
     localStorage.setItem(THEME_STORAGE_KEY, newTheme)
   }
 
-  const setColorMode = (newMode: ColorMode) => {
+  const setColorMode = (newMode: IColorMode) => {
     setColorModeState(newMode)
     localStorage.setItem(COLOR_MODE_STORAGE_KEY, newMode)
   }

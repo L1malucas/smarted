@@ -1,25 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { Button } from "../ui/button";
 import { JobActionsMenu } from "./menu-list";
 import { getStatusBadge } from "@/shared/lib/job-status-config";
-import { Job, JobStatus } from "@/shared/types/types/jobs-interface";
+import { IJobStatus } from "@/domain/models/JobStatus";
 import { Users, Calendar } from "lucide-react";
 import { Card, CardContent, CardDescription } from "../ui/card";
 import { useToast } from "../ui/use-toast";
+import { IJobListItemProps } from "@/shared/types/types/component-props";
 
-interface JobListItemProps {
-  job: Job;
-  tenantSlug: string;
-  onStatusChange: (jobId: string, newStatus: JobStatus) => void;
-  onPublish?: (jobId: string) => void;
-}
 
-export function JobListItem({ job, tenantSlug, onStatusChange, onPublish }: JobListItemProps) {
+export function JobListItem({ job, tenantSlug, onStatusChange, onPublish }: IJobListItemProps) {
   const { toast } = useToast();
 
-  const handleStatusChange = (jobId: string, newStatus: JobStatus) => {
+  const handleStatusChange = (jobId: string, newStatus: IJobStatus) => {
     onStatusChange(jobId, newStatus);
     toast({
       title: "Status Atualizado",

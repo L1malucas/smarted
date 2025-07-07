@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useCallback } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card"
@@ -14,69 +13,10 @@ import { uploadResumeAction } from "@/infrastructure/actions/job-actions";
 import { toast } from "@/shared/components/ui/use-toast";
 import { UploadFile } from "@/shared/types/types/upload-interface"
 
-/**
- * @fileoverview Página de upload de currículos para uma vaga específica
- * @module UploadPage
- * 
- * @description
- * Este componente renderiza uma página que permite o upload de currículos em PDF para uma vaga específica.
- * Ele gerencia o estado dos arquivos enviados, fornece interface drag-and-drop, validação de arquivos
- * e feedback visual do progresso de upload.
- *
- * @requires useParams - Hook para acessar parâmetros da URL
- * @requires useRouter - Hook para navegação
- * @requires useState - Hook para gerenciamento de estado
- * @requires useCallback - Hook para memorização de funções
- *
- * @typedef {Object} UploadFile
- * @property {string} id - Identificador único do arquivo
- * @property {File} file - Objeto File do arquivo
- * @property {'pending' | 'uploading' | 'completed' | 'error'} status - Estado atual do upload
- * @property {number} progress - Progresso do upload (0-100)
- * @property {string} [error] - Mensagem de erro, se houver
- *
- * @state {UploadFile[]} files - Array de arquivos sendo gerenciados
- * @state {boolean} isDragOver - Indica se há um arquivo sendo arrastado sobre a área de upload
- *
- * @param {Object} params
- * @param {string} params.slug - Slug do tenant (organização)
- * @param {string} params.jobId - ID ou slug da vaga
- *
- * @callbacks
- * - handleDragOver: Gerencia o evento de arrastar arquivo sobre a área
- * - handleDragLeave: Gerencia o evento de saída do arquivo da área
- * - handleDrop: Processa os arquivos quando são soltos na área
- * - handleFileSelect: Processa os arquivos selecionados via input
- * - addFiles: Valida e adiciona novos arquivos à lista
- * - removeFile: Remove um arquivo da lista
- * - uploadFiles: Realiza o upload simulado dos arquivos
- * - startAnalysis: Redireciona para a página de análise de candidatos
- *
- * @validations
- * - Aceita apenas arquivos PDF
- * - Tamanho máximo por arquivo: 10MB
- *
- * @ui
- * - Área de drag-and-drop
- * - Lista de arquivos com status
- * - Progresso de upload
- * - Sumário com estatísticas
- * - Botões de ação (upload e análise)
- *
- * @navigation
- * - Volta para lista de vagas: /{tenantSlug}/jobs
- * - Avança para análise: /{tenantSlug}/jobs/{jobId}/candidates
- *
- * @todo
- * - Implementar upload real para API
- * - Adicionar validação de quantidade máxima de arquivos
- * - Adicionar tratamento de erros específicos
- * - Implementar persistência de estado
- */
 export default function UploadPage() {
   const params = useParams()
   const tenantSlug = params.slug as string
-  const jobSlugParam = params.jobId as string // Assuming this is the job's slug or ID
+  const jobSlugParam = params.jobId as string 
   const router = useRouter()
   const [files, setFiles] = useState<UploadFile[]>([])
   const [isDragOver, setIsDragOver] = useState(false)

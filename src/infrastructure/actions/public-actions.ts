@@ -3,11 +3,11 @@
 import { getJobsCollection, getCandidatesCollection, getShareableLinksCollection } from "@/infrastructure/persistence/db";
 import { ObjectId } from "mongodb";
 import { withActionLogging } from "@/shared/lib/actions";
-import { ActionLogConfig } from "@/shared/types/types/action-interface";
-import { Job } from "@/shared/types/types/jobs-interface";
+import { IActionLogConfig } from "@/shared/types/types/action-interface";
+import { IJob } from "@/domain/models/Job";
 
 // Helper to get current user's info (mocked for now)
-async function getCurrentUser() {
+async function getCurrentUser(): Promise<{ userId: string; userName: string }> {
   // This is a placeholder. For public actions, user might be anonymous
   return {
     userId: "anonymous",
@@ -27,7 +27,7 @@ async function getPublicCandidateDetailsActionInternal(hash: string): Promise<{ 
     throw new Error("Link inválido ou expirado.");
   }
 
-  const job = await jobsCollection.findOne({ _id: new ObjectId(link.resourceId) }) as Job;
+  const job = await jobsCollection.findOne({ _id: new ObjectId(link.resourceId) }) as IJob;
   if (!job) {
     throw new Error("Vaga associada ao link não encontrada.");
   }
@@ -51,7 +51,7 @@ export const getPublicCandidateDetailsAction = async (hash: string) => {
   return await withActionLogging(getPublicCandidateDetailsActionInternal, logConfig)(hash);
 };
 
-async function getPublicJobDetailsActionInternal(hash: string, password?: string): Promise<{ job: Job | null, error?: string }> {
+async function getPublicJobDetailsActionInternal(hash: string, password?: string): Promise<{ job: IJob | null, error?: string }> {
   const shareableLinksCollection = await getShareableLinksCollection();
   const jobsCollection = await getJobsCollection();
 
@@ -65,7 +65,7 @@ async function getPublicJobDetailsActionInternal(hash: string, password?: string
     throw new Error("Senha incorreta.");
   }
 
-  const job = await jobsCollection.findOne({ _id: new ObjectId(link.resourceId) }) as Job;
+  const job = await jobsCollection.findOne({ _id: new ObjectId(link.resourceId) }) as IJob;
   if (!job) {
     throw new Error("Vaga associada ao link não encontrada.");
   }

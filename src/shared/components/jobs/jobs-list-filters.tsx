@@ -1,9 +1,18 @@
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Search, Filter } from "lucide-react";
-import { JobStatus } from '@/types/jobs-interface';
-import { Button } from "@/components/ui/button";
-import { jobStatusOptions } from "@/lib/jobs-constants";
+
+import { jobStatusOptions } from "@/shared/constants/jobs-constants";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@radix-ui/react-select";
+import { Search } from "lucide-react";
+import { Input } from "../ui/input";
+import { Button } from "../ui/button";
+
+interface IJobFilterProps {
+  searchTerm: string;
+  statusFilter: string;
+  viewMode: "card" | "list";
+  onSearchChange: (value: string) => void;
+  onStatusChange: (value: string) => void;
+  onViewModeChange: (mode: "card" | "list") => void;
+}
 
 export function JobFilter({
   searchTerm,
@@ -12,7 +21,7 @@ export function JobFilter({
   onSearchChange,
   onStatusChange,
   onViewModeChange,
-}: JobFilterProps) {
+}: IJobFilterProps) {
   return (
     <div className="flex flex-col sm:flex-row gap-4">
       <div className="relative flex-1">

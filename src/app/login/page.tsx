@@ -12,7 +12,7 @@ import { Building2, TrendingUp, Users, BarChart3, Star, CheckCircle, UserPlus, T
 import { loginAction } from "@/infrastructure/actions/auth-actions"
 import { CandidateButton } from "@/shared/components/candidate-button"
 import { useAuth } from "@/shared/hooks/use-auth"; // Import useAuth hook
-
+import { toast } from "@/shared/hooks/use-toast";
 
 const testimonials = [
   {
@@ -48,13 +48,7 @@ export default function LoginPage() {
   const [cpf, setCpf] = useState("")
   const [isPending, startTransition] = useTransition()
   const [currentTestimonial, setCurrentTestimonial] = useState(0)
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const tenantSlugFromQuery = searchParams.get("tenant_slug")
-  const nextPath = searchParams.get("next")
-
-  const { clientSignIn } = useAuth(); // Use the useAuth hook
-
+ 
   const formatCPF = (value: string) => {
     const numbers = value.replace(/\D/g, "")
     return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")
@@ -67,9 +61,19 @@ export default function LoginPage() {
     }
   }
 
+
+  // ... (rest of imports)
+
   const handleLogin = (formData: FormData) => {
     startTransition(async () => {
-      await loginAction(formData.get('cpf') as string);
+      const result = await loginAction(formData.get('cpf') as string);
+      if (!result.success) {
+        toast({
+          title: "Erro de Login",
+          description: result.error || "Ocorreu um erro desconhecido.",
+          variant: "destructive",
+        });
+      }
     });
   };
 
@@ -136,11 +140,11 @@ export default function LoginPage() {
           <Card className="col-span-1 sm:col-span-2 md:col-start-2 md:row-start-2 md:col-span-2 md:row-span-2">
             <CardHeader className="text-center pb-4">
               <Image
-              src="/logo.png"
-              alt="Company Logo"
-              width={112}
-              height={112}
-              className="h-16 sm:h-24 md:h-28 mx-auto mb-4 opacity-80 object-contain"
+                src="/logo.png"
+                alt="Company Logo"
+                width={112}
+                height={112}
+                className="h-16 sm:h-24 md:h-28 mx-auto mb-4 opacity-80 object-contain"
               />
               <CardTitle className="text-lg sm:text-xl md:text-2xl font-bold">Acesso ao Sistema</CardTitle>
               <CardDescription className="text-xs sm:text-sm">Entre com seu CPF para acessar o sistema</CardDescription>

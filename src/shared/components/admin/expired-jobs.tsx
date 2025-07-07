@@ -1,5 +1,4 @@
 // components/admin/ExpiredJobs.tsx
-import { Job } from "@/shared/types/types/jobs-interface";
 import { Table } from "lucide-react";
 import type React from "react"
 import { useState, useEffect } from "react"
@@ -8,10 +7,11 @@ import { Skeleton } from "../ui/skeleton";
 import { TableHeader, TableRow, TableHead, TableBody, TableCell } from "../ui/table";
 import { toast } from "../ui/use-toast";
 import { Button } from "../ui/button";
+import { IJob } from "@/domain/models/Job";
 
 // Mock service for expired jobs
 const expiredJobsService = {
-  getExpiredJobs: async (): Promise<Job[]> => {
+  getExpiredJobs: async (): Promise<IJob[]> => {
     await new Promise(resolve => setTimeout(resolve, 1000));
     return []; // No expired jobs by default
   },
@@ -21,7 +21,7 @@ const expiredJobsService = {
 };
 
 export default function ExpiredJobs() {
-  const [jobs, setJobs] = useState<Job[]>([]);
+  const [jobs, setJobs] = useState<IJob[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {

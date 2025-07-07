@@ -1,43 +1,3 @@
-/**
- * @description Página de gerenciamento de vagas que permite visualizar, filtrar e atualizar o status das vagas
- * 
- * @component JobsPage
- * 
- * @state {Job[]} jobs - Array de vagas carregadas do mockJobs
- * @state {string} searchTerm - Termo de busca para filtrar vagas
- * @state {JobStatus | "all"} statusFilter - Filtro de status atual das vagas
- * @state {("card" | "list")} viewMode - Modo de visualização das vagas (cartão ou lista)
- * 
- * @uses {useParams} - Hook para obter o slug do tenant da URL
- * 
- * @method handleStatusChange
- * @param {string} jobId - ID da vaga a ser atualizada
- * @param {JobStatus} newStatus - Novo status a ser aplicado
- * @description Atualiza o status de uma vaga específica, registra a mudança no histórico e exibe notificação
- * 
- * @method filteredJobs
- * @description Filtra as vagas com base no termo de busca e status selecionado
- * 
- * @renders
- * - Cabeçalho com título e botão de criar nova vaga
- * - Barra de busca e filtros
- * - Alternador de visualização (card/lista)
- * - Lista de vagas em modo card ou lista
- * - Mensagem quando nenhuma vaga é encontrada
- * 
- * @dependencies
- * - Componente JobCard (para visualização em cards)
- * - Interface Job (para tipagem dos dados)
- * - jobStatusOptions (para opções de status)
- * - Diversos componentes UI (Button, Select, Card, etc)
- * 
- * @modificationGuide
- * - Para adicionar novos filtros: Adicione novo estado e lógica no método filteredJobs
- * - Para modificar aparência dos cards: Atualize o componente JobCard
- * - Para adicionar novos status: Atualize o tipo JobStatus e jobStatusOptions
- * - Para integrar com API: Substitua mockJobs e implemente chamadas reais no handleStatusChange
- */
-
 "use client"
 
 import { useState, useEffect, useTransition } from "react";
@@ -46,15 +6,16 @@ import { useParams } from "next/navigation";
 import { getAllJobsAction, updateJobStatusAction } from "@/infrastructure/actions/job-actions";
 import { JobFilter } from "@/shared/components/jobs/jobs-list-filters";
 import { JobView } from "@/shared/components/jobs/jobs-view";
-import { Job, JobStatus } from "@/shared/types/types/jobs-interface";
 import { Plus, Loader2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { toast } from "@/shared/hooks/use-toast";
+import { IJobStatus } from "@/domain/models/JobStatus";
+import { IJob } from "@/domain/models/Job";
 
 export default function JobsPage() {
-  const [jobs, setJobs] = useState<Job[]>([]);
+  const [jobs, setJobs] = useState<IJob[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<JobStatus | "all">("all");
+  const [statusFilter, setStatusFilter] = useState<IJobStatus | "all">("all");
   const [viewMode, setViewMode] = useState<"card" | "list">("card");
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
@@ -82,7 +43,7 @@ export default function JobsPage() {
     fetchJobs();
   }, [tenantSlug]);
 
-  const handleStatusChange = async (jobId: string, newStatus: JobStatus) => {
+  const handleStatusChange = async (jobId: string, newStatus: IJobStatus) => {
     startTransition(async () => {
       const result = await updateJobStatusAction(tenantSlug, jobId, newStatus, "current-user-id", "Current User"); // Replace with actual user ID/Name
       if (result.success) {

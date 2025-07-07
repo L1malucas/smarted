@@ -6,13 +6,9 @@ import { Users, Briefcase, Target, PhoneForwarded, AlertTriangle } from "lucide-
 import { getDashboardMetrics } from "@/infrastructure/actions/dashboard-actions";
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { Skeleton } from "../ui/skeleton";
+import { IMetricsCardsProps } from "@/shared/types/types/component-props";
 
-interface MetricsCardsProps {
-  tenantSlug: string;
-  period: "7d" | "30d" | "90d";
-}
-
-export function MetricsCards({ tenantSlug, period }: MetricsCardsProps) {
+export function MetricsCards({ tenantSlug, period }: IMetricsCardsProps) {
   const [metrics, setMetrics] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, startTransition] = useTransition();

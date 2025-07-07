@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { jobSchema, draftJobSchema, } from '@/application/schemas/job.schema';
 import z from 'zod';
-import { Job } from '../types/types/jobs-interface';
+import { IJob } from '@/domain/models/Job';
 import { ValidationErrors } from '../types/types/validation-interface';
 
 
 export function useJobValidation() {
   const [errors, setErrors] = useState<ValidationErrors>();
 
-  const validateJob = (job: Partial<Job>, isDraft = false): boolean => {
+  const validateJob = (job: Partial<IJob>, isDraft = false): boolean => {
     try {
       const dataToValidate = {
         title: job.title || '',

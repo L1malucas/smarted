@@ -17,35 +17,40 @@ import { z } from 'zod';
  * @type {ZodString}
  */
 const cpfSchema = z.string().refine(cpf => {
-  // Remove caracteres não numéricos
-  cpf = cpf.replace(/\D/g, '');
+  const cleanedCpf = cpf.replace(/\D/g, '');
 
-  if (cpf.length !== 11) return false;
+  if (cleanedCpf.length !== 11) return false;
 
-  // Verifica se todos os dígitos são iguais (ex: 111.111.111-11)
-  if (/^(\d)\1{10}$/.test(cpf)) return false;
+  // Elimina CPFs inválidos conhecidos
+  if (cleanedCpf === "00000000000" ||
+      cleanedCpf === "11111111111" ||
+      cleanedCpf === "22222222222" ||
+      cleanedCpf === "33333333333" ||
+      cleanedCpf === "44444444444" ||
+      cleanedCpf === "55555555555" ||
+      cleanedCpf === "66666666666" ||
+      cleanedCpf === "77777777777" ||
+      cleanedCpf === "88888888888" ||
+      cleanedCpf === "99999999999")
+      return false;
 
+  // Valida 1o digito
   let sum = 0;
-  let remainder;
-
-  // Validação do primeiro dígito verificador
-  for (let i = 1; i <= 9; i++) {
-    sum = sum + parseInt(cpf.substring(i - 1, i)) * (11 - i);
+  for (let i = 0; i < 9; i++) {
+    sum += parseInt(cleanedCpf.charAt(i)) * (10 - i);
   }
-  remainder = (sum * 10) % 11;
+  let remainder = 11 - (sum % 11);
+  if (remainder === 10 || remainder === 11) remainder = 0;
+  if (remainder !== parseInt(cleanedCpf.charAt(9))) return false;
 
-  if ((remainder === 10) || (remainder === 11)) remainder = 0;
-  if (remainder !== parseInt(cpf.substring(9, 10))) return false;
-
+  // Valida 2o digito
   sum = 0;
-  // Validação do segundo dígito verificador
-  for (let i = 1; i <= 10; i++) {
-    sum = sum + parseInt(cpf.substring(i - 1, i)) * (12 - i);
+  for (let i = 0; i < 10; i++) {
+    sum += parseInt(cleanedCpf.charAt(i)) * (11 - i);
   }
-  remainder = (sum * 10) % 11;
-
-  if ((remainder === 10) || (remainder === 11)) remainder = 0;
-  if (remainder !== parseInt(cpf.substring(10, 11))) return false;
+  remainder = 11 - (sum % 11);
+  if (remainder === 10 || remainder === 11) remainder = 0;
+  if (remainder !== parseInt(cleanedCpf.charAt(10))) return false;
 
   return true;
 }, { message: 'CPF inválido.' });
@@ -57,9 +62,12 @@ const cpfSchema = z.string().refine(cpf => {
  */
 export function validateCPF(cpf: string): boolean {
   try {
-    cpfSchema.parse(cpf);
+    const cleanedCpf = cpf.replace(/\D/g, '');
+    console.log("Validating CPF (cleaned):", cleanedCpf);
+    cpfSchema.parse(cleanedCpf);
     return true;
   } catch (error) {
+    console.error("CPF validation error:", error);
     return false;
   }
 }

@@ -1,4 +1,6 @@
-export interface TenantContextType {
-  tenantSlug: string;
-  // Add other tenant-related properties here if needed
+export interface ITenantContextType {
+  tenantSlug: string | null;
+  tenantName: string | null;
+  isLoading: boolean;
+  setTenantData: (slug: string, name: string) => void;
 }

@@ -67,11 +67,6 @@ O projeto segue uma estrutura de pastas organizada em camadas, alinhada com os p
 *   **`infrastructure/` (Infraestrutura):** Contém as implementações concretas de tudo que é externo ao domínio e à aplicação, como acesso a banco de dados, autenticação, logging, e as Server Actions que atuam como adaptadores para a camada de apresentação.
 *   **`shared/` (Compartilhado):** Contém código que é utilizado por múltiplas camadas e não pertence a nenhuma camada específica, como componentes de UI genéricos, hooks, tipos globais e utilitários.
 
-A estrutura do projeto e a visão geral das camadas no `README.md` já estão atualizadas e refletem a nova organização. Não há necessidade de fazer alterações.
-
-A refatoração da estrutura do projeto está completa.
-
-
 ## Funcionalidades Principais
 
 ### 1. Gerenciamento de Vagas

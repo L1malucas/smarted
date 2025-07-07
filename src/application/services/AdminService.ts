@@ -10,7 +10,7 @@ import { generateSlug } from '@/shared/lib/utils';
 
 export class AdminService {
 
-  static async createUser(session: UserSession, payload: z.infer<typeof createUserSchema>) {
+  static async createUser(session: IUserSession, payload: z.infer<typeof createUserSchema>) {
     if (!session || !session.userId || !session.tenantId) {
       throw new Error('Usuário não autenticado ou sessão inválida.');
     }
@@ -38,7 +38,7 @@ export class AdminService {
     return { success: true, data: { userId: result.insertedId.toString() } };
   }
 
-  static async updateUser(session: UserSession, userIdToUpdate: string, updates: Partial<IUser>) {
+  static async updateUser(session: IUserSession, userIdToUpdate: string, updates: Partial<IUser>) {
     if (!session || !session.userId || !session.tenantId) {
       throw new Error('Usuário não autenticado ou sessão inválida.');
     }
@@ -65,7 +65,7 @@ export class AdminService {
     return { success: true, data: { userId: userIdToUpdate } };
   }
 
-  static async getSystemSettings(session: UserSession) {
+  static async getSystemSettings(session: IUserSession) {
     if (!session || !session.userId || !session.tenantId) {
       throw new Error('Usuário não autenticado ou sessão inválida.');
     }
@@ -88,7 +88,7 @@ export class AdminService {
     return { success: true, data: { settings: settings } };
   }
 
-  static async updateSystemSettings(session: UserSession, payload: z.infer<typeof systemSettingsSchema>) {
+  static async updateSystemSettings(session: IUserSession, payload: z.infer<typeof systemSettingsSchema>) {
     if (!session || !session.userId || !session.tenantId) {
       throw new Error('Usuário não autenticado ou sessão inválida.');
     }

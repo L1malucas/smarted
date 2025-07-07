@@ -3,61 +3,26 @@ import { Navbar } from "@/shared/components/navbar"
 import { redirect } from "next/navigation"
 import { TenantProvider } from "@/shared/components/contexts/tenant-context"
 import { LoadingProvider } from "@/shared/components/contexts/loading-context"
-
-
 import { cookies } from 'next/headers';
 import { verifyToken } from '@/infrastructure/auth/auth';
 import { saveAuditLogAction } from "@/infrastructure/actions/audit-actions"
-
-async function getTenantData(slug: string, currentUser: any) {
+import { IUserSession } from "@/domain/models/User"
+async function getTenantData(slug: string, currentUser: IUserSession | null) {
   if (currentUser && currentUser.tenantId === slug) {
     return { id: currentUser.tenantId, name: `Tenant ${currentUser.tenantId}` };
   }
   return null
 }
-
-/**
- * Layout do aplicativo específico para um tenant (inquilino).
- * 
- * @description
- * Este componente serve como layout base para todas as páginas dentro do contexto de um tenant específico.
- * Ele realiza verificações de autenticação e validação do tenant antes de renderizar o conteúdo.
- * 
- * @param props - Propriedades do componente
- * @param props.children - Conteúdo filho a ser renderizado dentro do layout
- * @param props.params - Promise contendo os parâmetros da rota, incluindo o slug do tenant
- * @param props.params.slug - Identificador único do tenant na URL
- * 
- * @throws {Redirect} Redireciona para "/login" se:
- * - O tenant não for encontrado (com query param error=invalid_tenant)
- * - O usuário não estiver autenticado (com query params tenant_slug e next)
- * 
- * @requires getTenantData - Função para buscar dados do tenant
- * @requires authService.getCurrentUser - Serviço de autenticação para obter usuário atual
- * @requires TenantProvider - Contexto para prover dados do tenant
- * @requires Navbar - Componente de navegação
- * 
- * @example
- * Uso em páginas:
- * ```
- * // /[slug]/dashboard/page.tsx
- * export default function DashboardPage() {
- *   return <div>Dashboard Content</div>
- * }
- * ```
- */
 export default async function TenantAppLayout({
   children,
-  params: paramsPromise, // Rename to avoid confusion
+  params: paramsPromise,
 }: {
   children: React.ReactNode
-  params: Promise<{ slug: string }> // Type as Promise
+  params: Promise<{ slug: string }>
 }) {
-  // Resolve the params Promise
   const params = await paramsPromise
   const accessToken = (await cookies()).get('accessToken')?.value;
-  let currentUser = null;
-
+  let currentUser: IUserSession | null = null;
   if (accessToken) {
     try {
       const decoded = await verifyToken(accessToken);
@@ -77,17 +42,12 @@ export default async function TenantAppLayout({
     }
   }
   const tenant = await getTenantData(params.slug, currentUser);
-
   if (!tenant) {
-    // If tenant slug is invalid, redirect to a generic error or login
     redirect("/login?error=invalid_tenant")
   }
-
   if (!currentUser) {
-    // If user is not authenticated, redirect to login, possibly with tenant info
     redirect(`/login?tenant_slug=${params.slug}&next=/${params.slug}/dashboard`)
   }
-
   return (
     <TenantProvider>
       <LoadingProvider>

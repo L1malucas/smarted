@@ -4,16 +4,17 @@ import { revalidatePath } from "next/cache";
 import { ObjectId } from "mongodb";
 import { IUser } from "@/domain/models/User";
 import { withActionLogging } from "@/shared/lib/actions";
-import { ActionLogConfig } from "@/shared/types/types/action-interface";
-import { AllowedCPF, AccessLog } from "@/shared/types/types/admin-interface";
+import { IActionLogConfig } from "@/shared/types/types/action-interface";
+import { IAllowedCPF } from "@/domain/models/AllowedCPF";
+import { IAuditLog } from "@/domain/models/AuditLog";
 import { getUsersCollection, getLogsCollection } from "../persistence/db";
 
 // Helper to get current user's info (mocked for now)
 // In a real app, you'd get this from the session
-async function getCurrentUser() {
+async function getCurrentUser(): Promise<{ userId: string; tenantId: string; userName: string }> {
   // This is a placeholder. Replace with actual session logic.
   const usersCollection = await getUsersCollection();
-  const user = await usersCollection.findOne({ email: "admin@smarted.com" });
+  const user = await usersCollection.findOne({ email: "admin@smarted.com" }) as IUser;
   if (!user) throw new Error("Authenticated user not found.");
   return {
     userId: user._id.toString(),
@@ -184,7 +185,7 @@ export async function getAllowedCPFs(): Promise<AllowedCPF[]> {
     const users = await usersCollection.find({ tenantId, status: 'active' }).toArray();
     
     // Map to AllowedCPF interface
-    const allowedCPFs: AllowedCPF[] = users.map(user => ({
+    const allowedCPFs: IAllowedCPF[] = users.map(user => ({
       cpf: user.cpf,
       name: user.name,
       email: user.email,

@@ -6,13 +6,10 @@ import React, { useState, useEffect, useTransition } from "react";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../ui/card";
 import { Skeleton } from "../ui/skeleton";
+import { IUserActivityChartProps } from "@/shared/types/types/component-props";
 
-interface UserActivityChartProps {
-  tenantSlug: string;
-  period: "7d" | "30d" | "90d";
-}
 
-export function UserActivityChart({ tenantSlug, period }: UserActivityChartProps) {
+export function UserActivityChart({ tenantSlug, period }: IUserActivityChartProps) {
   const [activityData, setActivityData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, startTransition] = useTransition();

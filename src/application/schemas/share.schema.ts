@@ -9,11 +9,11 @@ export const createLinkSchema = z.object({
   }).optional(),
 });
 
-export type CreateLinkInput = z.infer<typeof createLinkSchema>;
+export type ICreateLinkInput = z.infer<typeof createLinkSchema>;
 
 export const verifyLinkSchema = z.object({
   hash: z.string().min(1, 'Hash é obrigatório.'),
   password: z.string().optional(),
 });
 
-export type VerifyLinkInput = z.infer<typeof verifyLinkSchema>;
+export type IVerifyLinkInput = z.infer<typeof verifyLinkSchema>;

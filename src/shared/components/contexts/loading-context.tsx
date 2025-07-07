@@ -1,10 +1,10 @@
 "use client"
 
-import { LoadingContextType } from "@/shared/types/types/loading-interface"
 import { createContext, useContext, useState } from "react"
 import CustomLoading from "../loading"
+import { ILoadingContextType } from "@/shared/types/types/loading-interface"
 
-const LoadingContext = createContext<LoadingContextType>({
+const LoadingContext = createContext<ILoadingContextType>({
   isLoading: false,
   setLoading: () => { },
 })

@@ -1,9 +1,10 @@
-export type Theme = "brutalism" | "friendly" | "neo-clean";
-export type ColorMode = "light" | "dark" | "system";
+export type ITheme = "brutalism" | "friendly" | "neo-clean";
+export type IColorMode = "light" | "dark" | "system";
 
-export interface ThemeContextType {
-  theme: Theme;
-  colorMode: ColorMode;
-  setTheme: (theme: Theme) => void;
-  setColorMode: (mode: ColorMode) => void;
+export interface IThemeContextType {
+  theme: ITheme;
+  colorMode: IColorMode;
+  setTheme: (theme: ITheme) => void;
+  setColorMode: (mode: IColorMode) => void;
+  availableThemes: { value: ITheme; label: string; description: string }[];
 }

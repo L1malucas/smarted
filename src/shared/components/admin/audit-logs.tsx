@@ -5,7 +5,6 @@ import { Calendar, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Loader2,
 import { format, subDays } from "date-fns";
 import { getAccessLogs } from "@/infrastructure/actions/admin-actions";
 import { cn } from "@/shared/lib/utils";
-import { AccessLog } from "@/shared/types/types/admin-interface";
 import { Popover, PopoverTrigger, PopoverContent } from "@radix-ui/react-popover";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@radix-ui/react-select";
 import { Button } from "../ui/button";
@@ -13,6 +12,7 @@ import { Label } from "recharts";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../ui/card";
 import { TableHeader, TableRow, TableHead, TableBody, TableCell } from "../ui/table";
 import { useToast } from "../ui/use-toast";
+import { IAuditLog } from "@/domain/models/AuditLog";
 
 // Helper to get start of UTC day
 const getUTCStartOfDay = (date: Date) => {
@@ -25,7 +25,7 @@ const getUTCEndOfDay = (date: Date) => {
 };
 
 export default function AuditLogs() {
-  const [logs, setLogs] = useState<AccessLog[]>([]);
+  const [logs, setLogs] = useState<IAuditLog[]>([]);
   const [isPending, startTransition] = useTransition();
   const [isFetching, setIsFetching] = useState(true);
 

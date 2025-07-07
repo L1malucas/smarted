@@ -1,11 +1,9 @@
-import { ObjectId } from 'mongodb';
+import { IBaseEntity } from "./base/BaseEntity";
 
-export interface IShareableLink {
-  _id?: ObjectId; // MongoDB's default ID
+export interface IShareableLink extends Pick<IBaseEntity, '_id' | 'createdAt'> {
   hash: string;
   type: 'job' | 'report' | 'dashboard';
-  resourceId: ObjectId;
+  resourceId: string;
   password?: string;
   expirationDate?: Date;
-  createdAt: Date;
 }

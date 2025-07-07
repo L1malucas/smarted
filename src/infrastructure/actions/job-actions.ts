@@ -1,18 +1,20 @@
 "use server";
 
 import { withActionLogging } from "@/shared/lib/actions";
-import { ActionLogConfig } from "@/shared/types/types/action-interface";
-import { Job, JobStatus, Candidate, CandidateAnswer } from "@/shared/types/types/jobs-interface";
+import { IActionLogConfig } from "@/shared/types/types/action-interface";
+import { IJob } from "@/domain/models/Job";
+import { IJobStatus } from "@/domain/models/JobStatus";
+import { ICandidate } from "@/domain/models/Candidate";
 import { ObjectId } from "mongodb";
 import { revalidatePath } from "next/cache";
 import { getUsersCollection, getJobsCollection } from "../persistence/db";
 
 // Helper to get current user's info (mocked for now)
 // In a real app, you'd get this from the session
-async function getCurrentUser() {
+async function getCurrentUser(): Promise<{ userId: string; tenantId: string; userName: string }> {
   // This is a placeholder. Replace with actual session logic.
   const usersCollection = await getUsersCollection();
-  const user = await usersCollection.findOne({ email: "admin@smarted.com" });
+  const user = await usersCollection.findOne({ email: "admin@smarted.com" }) as IUser;
   if (!user) throw new Error("Authenticated user not found.");
   return {
     userId: user._id.toString(),
@@ -21,7 +23,7 @@ async function getCurrentUser() {
   };
 }
 
-async function getAllJobsActionInternal(tenantSlug: string): Promise<Job[]> {
+async function getAllJobsActionInternal(tenantSlug: string): Promise<IJob[]> {
   const { tenantId } = await getCurrentUser();
   const jobsCollection = await getJobsCollection();
   const jobs = await jobsCollection.find({ tenantId }).toArray();
@@ -41,7 +43,7 @@ export const getAllJobsAction = async (tenantSlug: string) => {
   return await withActionLogging(getAllJobsActionInternal, logConfig)(tenantSlug);
 };
 
-async function updateJobStatusActionInternal(tenantSlug: string, jobId: string, newStatus: JobStatus, userId: string, userName: string): Promise<{ success: boolean, data?: Job, error?: string }> {
+async function updateJobStatusActionInternal(tenantSlug: string, jobId: string, newStatus: IJobStatus, userId: string, userName: string): Promise<{ success: boolean, data?: IJob, error?: string }> {
   const jobsCollection = await getJobsCollection();
   const result = await jobsCollection.findOneAndUpdate(
     { _id: new ObjectId(jobId), tenantId: tenantSlug },
@@ -57,7 +59,7 @@ async function updateJobStatusActionInternal(tenantSlug: string, jobId: string, 
   return { success: true, data: JSON.parse(JSON.stringify(result.value)) };
 }
 
-export const updateJobStatusAction = async (tenantSlug: string, jobId: string, newStatus: JobStatus, userId: string, userName: string) => {
+export const updateJobStatusAction = async (tenantSlug: string, jobId: string, newStatus: IJobStatus, userId: string, userName: string) => {
   const session = await getCurrentUser();
   const logConfig: ActionLogConfig = {
     userId: session.userId,
@@ -71,9 +73,9 @@ export const updateJobStatusAction = async (tenantSlug: string, jobId: string, n
   return await withActionLogging(updateJobStatusActionInternal, logConfig)(tenantSlug, jobId, newStatus, userId, userName);
 };
 
-async function getJobDetailsActionInternal(jobId: string): Promise<Job | null> {
+async function getJobDetailsActionInternal(jobId: string): Promise<IJob | null> {
   const jobsCollection = await getJobsCollection();
-  const job = await jobsCollection.findOne({ _id: new ObjectId(jobId) });
+  const job = await jobsCollection.findOne({ _id: new ObjectId(jobId) }) as IJob;
   return JSON.parse(JSON.stringify(job));
 }
 
@@ -109,9 +111,9 @@ export const getCandidatesForJobAction = async (jobId: string) => {
   return await withActionLogging(getCandidatesForJobActionInternal, logConfig)(jobId);
 };
 
-async function getJobBySlugActionInternal(jobSlug: string): Promise<Job | null> {
+async function getJobBySlugActionInternal(jobSlug: string): Promise<IJob | null> {
   const jobsCollection = await getJobsCollection();
-  const job = await jobsCollection.findOne({ slug: jobSlug });
+  const job = await jobsCollection.findOne({ slug: jobSlug }) as IJob;
   return JSON.parse(JSON.stringify(job));
 }
 

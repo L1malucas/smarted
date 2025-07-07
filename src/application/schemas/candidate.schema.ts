@@ -12,4 +12,4 @@ export const applySchema = z.object({
   })).optional(),
 });
 
-export type ApplyInput = z.infer<typeof applySchema>;
+export type IApplyInput = z.infer<typeof applySchema>;

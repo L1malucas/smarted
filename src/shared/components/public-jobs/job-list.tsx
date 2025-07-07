@@ -1,16 +1,11 @@
-import { Job } from "@/shared/types/types/jobs-interface";
+import { IJob } from "@/domain/models/Job";
 import { Button } from "../ui/button";
 import { Briefcase, Calendar, Users, MapPin, Clock, Building, Badge } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Card, CardHeader, CardContent, CardTitle } from "../ui/card";
+import { IJobListProps } from "@/shared/types/types/component-props";
 
-interface JobListProps {
-  jobs: Job[];
-  loading: boolean;
-  tenantSlug?: string;
-}
-
-export function JobList({ jobs, loading, tenantSlug }: JobListProps) {
+export function JobList({ jobs, loading, tenantSlug }: IJobListProps) {
   const router = useRouter();
   if (loading) {
     return (
@@ -54,7 +49,6 @@ export function JobList({ jobs, loading, tenantSlug }: JobListProps) {
                 <CardTitle className="text-2xl text-gray-900 hover:text-blue-600 transition-colors">
                   <Button variant="outline" asChild onClick={() => router.push(`/public/${tenantSlug ? `${tenantSlug}/` : ''}jobs/${job.slug}`)}>
                     {job.title}
-                  </Button>
                 </CardTitle>
                 <div className="flex items-center gap-4 text-sm text-gray-500">
                   {job.department && (

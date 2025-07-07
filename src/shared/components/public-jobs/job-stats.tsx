@@ -1,15 +1,7 @@
+import { IJobStatsProps } from "@/shared/types/types/component-props";
 import { Card, CardContent } from "../ui/card";
 
-interface JobStatsProps {
-  stats: {
-    totalJobs: number;
-    totalCandidates: number;
-    pcdJobs: number;
-    models: Record<string, number>;
-  };
-}
-
-export function JobStats({ stats }: JobStatsProps) {
+export function JobStats({ stats }: IJobStatsProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
       <Card>

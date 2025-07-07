@@ -1,8 +1,8 @@
 import { ILog } from '@/domain/models/Log';
 import { getLogsCollection } from '@/infrastructure/persistence/db';
-import { AuditLog } from '@/shared/types/types/audit-interface';
+import { IAuditLog } from '@/domain/models/AuditLog';
 
-export async function saveAuditLog(log: Omit<AuditLog, '_id' | 'timestamp'>): Promise<ILog> {
+export async function saveAuditLog(log: Omit<IAuditLog, '_id' | 'timestamp'>): Promise<IAuditLog> {
   try {
     const logsCollection = await getLogsCollection();
     const newLog: ILog = {
@@ -22,7 +22,7 @@ export async function saveAuditLog(log: Omit<AuditLog, '_id' | 'timestamp'>): Pr
   }
 }
 
-export async function getAuditLogsByResource(resourceType: string, resourceId?: string): Promise<ILog[]> {
+export async function getAuditLogsByResource(resourceType: string, resourceId?: string): Promise<IAuditLog[]> {
   try {
     const logsCollection = await getLogsCollection();
     const query: any = { resourceType };
@@ -36,7 +36,7 @@ export async function getAuditLogsByResource(resourceType: string, resourceId?: 
   }
 }
 
-export async function getAllAuditLogs(): Promise<ILog[]> {
+export async function getAllAuditLogs(): Promise<IAuditLog[]> {
   try {
     const logsCollection = await getLogsCollection();
     const logs = await logsCollection.find({}).sort({ timestamp: -1 }).toArray() as ILog[];

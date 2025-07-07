@@ -1,7 +1,7 @@
-import { JobStatus } from "@/shared/types/types/jobs-interface";
+import { IJobStatus } from "./JobStatus";
 
 export interface IStatusChangeLog {
-  status: JobStatus;
+  status: IJobStatus;
   changedAt: Date;
   changedBy: string;
   changedByName?: string;

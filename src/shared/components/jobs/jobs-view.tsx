@@ -4,13 +4,14 @@ import { useState, useEffect } from "react";
 import { JobCard } from "./job-card";
 import { JobListItem } from "./job-list-item";
 import { DropdownMenuSeparator } from "../ui/dropdown-menu";
-import { Job, JobStatus } from "@/shared/types/types/jobs-interface";
+import { IJob } from "@/domain/models/Job";
+import { IJobStatus } from "@/domain/models/JobStatus";
 
 interface JobViewProps {
-  jobs: Job[];
+  jobs: IJob[];
   tenantSlug: string;
   viewMode: "card" | "list";
-  onStatusChange: (jobId: string, newStatus: JobStatus) => void;
+  onStatusChange: (jobId: string, newStatus: IJobStatus) => void;
   onPublish?: (jobId: string) => void;
 }
 
@@ -20,7 +21,7 @@ export function JobView({
   viewMode: initialViewMode,
   onStatusChange,
   onPublish
-}: JobViewProps) {
+}: IJobViewProps) {
   const [viewMode, setViewMode] = useState<"card" | "list">(initialViewMode);
 
   // Persist view mode in localStorage

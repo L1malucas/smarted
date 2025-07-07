@@ -27,10 +27,11 @@ import {
   DialogFooter as ShadDialogFooter,
 } from "@/shared/components/ui/dialog" // Renomeado para evitar conflito
 import { Label } from "@/shared/components/ui/label"
-import { Candidate, Job } from "@/shared/types/types/jobs-interface"
+import { ICandidate } from "@/domain/models/Candidate"
+import { IJob } from "@/domain/models/Job"
 
 // Mock data - replace with actual API calls
-const mockCandidatesEvaluation: Candidate[] = [
+const mockCandidatesEvaluation: ICandidate[] = [
   {
     _id: "candEval1",
     jobId: "1",
@@ -82,7 +83,7 @@ const mockCandidatesEvaluation: Candidate[] = [
   },
 ]
 
-const mockJobsEvaluation: Job[] = [
+const mockJobsEvaluation: IJob[] = [
   {
     _id: "1",
     slug: "dev-frontend",
@@ -131,7 +132,7 @@ const mockJobsEvaluation: Job[] = [
  * - openDetailModal: Abre modal com detalhes do candidato
  * - addAnnotationToCandidate: Adiciona nova anotação ao candidato selecionado
  * 
- * @interface Candidate
+ * @interface ICandidate
  * - _id: string
  * - name: string
  * - email: string
@@ -168,16 +169,16 @@ const mockJobsEvaluation: Job[] = [
 export default function EvaluationPage() {
   const searchParams = useSearchParams()
   const [selectedJobId, setSelectedJobId] = useState<string | null>(searchParams.get("jobId"))
-  const [candidates, setCandidates] = useState<Candidate[]>([])
+  const [candidates, setCandidates] = useState<ICandidate[]>([])
   const [searchTerm, setSearchTerm] = useState("")
-  const [sortBy, setSortBy] = useState<keyof Candidate | "finalScore">("analysis.finalScore")
+  const [sortBy, setSortBy] = useState<keyof ICandidate | "finalScore">("analysis.finalScore")
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc")
   const [matchFilter, setMatchFilter] = useState<"all" | "baixo" | "médio" | "alto">("all")
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [currentPage, setCurrentPage] = useState(1)
 
   // State for detailed view modal
-  const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null)
+  const [selectedCandidate, setSelectedCandidate] = useState<ICandidate | null>(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
   const [newAnnotation, setNewAnnotation] = useState("")
 
@@ -211,8 +212,8 @@ export default function EvaluationPage() {
         valA = a.analysis?.finalScore || 0
         valB = b.analysis?.finalScore || 0
       } else {
-        valA = a[sortBy as keyof Candidate] // Add more robust deep key access if needed
-        valB = b[sortBy as keyof Candidate]
+        valA = a[sortBy as keyof ICandidate] // Add more robust deep key access if needed
+        valB = b[sortBy as keyof ICandidate]
       }
 
       if (valA === undefined || valA === null) valA = ""
@@ -233,7 +234,7 @@ export default function EvaluationPage() {
   )
   const totalPages = Math.ceil(filteredAndSortedCandidates.length / itemsPerPage)
 
-  const handleSort = (column: keyof Candidate | "finalScore") => {
+  const handleSort = (column: keyof ICandidate | "finalScore") => {
     if (sortBy === column) {
       setSortOrder(sortOrder === "asc" ? "desc" : "asc")
     } else {
@@ -252,7 +253,7 @@ export default function EvaluationPage() {
     return <Badge className={config[level].className}>{config[level].label}</Badge>
   }
 
-  const openDetailModal = (candidate: Candidate) => {
+  const openDetailModal = (candidate: ICandidate) => {
     setSelectedCandidate(candidate)
     setIsDetailModalOpen(true)
   }
@@ -435,7 +436,7 @@ export default function EvaluationPage() {
         </CardContent>
       </Card>
 
-      {/* Candidate Detail Modal */}
+      {/* ICandidate Detail Modal */}
       {selectedCandidate && (
         <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
           <ShadDialogContent className="sm:max-w-2xl">

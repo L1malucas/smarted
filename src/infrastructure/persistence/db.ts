@@ -83,9 +83,9 @@ export async function getDb(): Promise<Db> {
 
 /**
  * Retorna a coleção 'users' do banco de dados MongoDB.
- * @returns {Promise<Collection>} Uma promessa que resolve para a coleção 'users'.
+ * @returns {Promise<Collection<IUser>>} Uma promessa que resolve para a coleção 'users'.
  */
-export async function getUsersCollection(): Promise<Collection> {
+export async function getUsersCollection(): Promise<Collection<IUser>> {
   const db = await getDb();
   return db.collection('users');
 }

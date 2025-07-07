@@ -6,16 +6,16 @@ import { getJobDetailsAction, getCandidatesForJobAction } from "@/infrastructure
 import { JobDetails } from "@/shared/components/jobs/job-details";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { toast } from "@/shared/hooks/use-toast";
-import { Job, Candidate } from "@/shared/types/types/jobs-interface";
-
+import { ICandidate } from "@/domain/models/Candidate";
+import { IJob } from "@/domain/models/Job";
 
 export default function JobDetailsPage() {
   const params = useParams();
   const tenantSlug = params.slug as string;
   const jobId = params.jobId as string;
 
-  const [job, setJob] = useState<Job | null>(null);
-  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [job, setJob] = useState<IJob | null>(null);
+  const [candidates, setCandidates] = useState<ICandidate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
 

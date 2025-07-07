@@ -13,8 +13,9 @@ import { getUsersCollection } from '@/infrastructure/persistence/db';
 import { validateCPF } from '@/shared/lib/validations';
 import { generateToken, generateRefreshToken, verifyRefreshToken, UserPayload } from '@/infrastructure/auth/auth';
 import { withActionLogging } from '@/shared/lib/actions';
-import { ActionLogConfig } from '@/shared/types/types/action-interface';
+import { IActionLogConfig } from '@/shared/types/types/action-interface';
 import { verifyToken } from '@/infrastructure/auth/auth';
+import { IActionResult, IActionLogConfig } from '@/shared/types/types/action-interface';
 
 const COOKIE_OPTIONS = {
   httpOnly: true,
@@ -23,14 +24,14 @@ const COOKIE_OPTIONS = {
   path: '/',
 };
 
-async function getSessionUser(): Promise<UserPayload | null> {
+async function getSessionUser(): Promise<IUserPayload | null> {
   const accessToken = (await cookies()).get('accessToken')?.value;
   if (!accessToken) return null;
   return verifyToken(accessToken);
 }
 
-export async function loginAction(cpf: string) {
-  const logConfig: ActionLogConfig = {
+export async function loginAction(cpf: string): Promise<IActionResult<void>> {
+  const logConfig: IActionLogConfig = {
     userId: "", // Will be populated after user is found
     userName: "", // Will be populated after user is found
     actionType: "Login de Usuário",
@@ -49,7 +50,7 @@ export async function loginAction(cpf: string) {
     }
 
     const usersCollection = await getUsersCollection();
-    const user = await usersCollection.findOne({ cpf });
+    const user = await usersCollection.findOne({ cpf }) as IUser;
 
     if (!user) {
       throw new Error('CPF não encontrado.');
@@ -59,7 +60,7 @@ export async function loginAction(cpf: string) {
     logConfig.userId = user._id.toString();
     logConfig.userName = user.name;
 
-    const userPayload = {
+    const userPayload: IUserPayload = {
       userId: user._id.toString(),
       cpf: user.cpf,
       email: user.email,
@@ -80,19 +81,9 @@ export async function loginAction(cpf: string) {
     redirect(`/${tenantSlug}/dashboard`);
   };
 
-  try {
-    return await withActionLogging(loginActionInternal, logConfig)(cpf);
-  } catch (error) {
-    if (
-      error instanceof Error &&
-      error.message.includes('NEXT_REDIRECT')
-    ) {
-      throw error;
-    }
-    console.error("Login Action Error:", error);
-    throw new Error('Erro ao tentar fazer login. Tente novamente.');
-  }
+  return await withActionLogging(loginActionInternal, logConfig)(cpf);
 }
+
 
 /**
  * Ação de servidor para realizar o logout do usuário.
@@ -100,10 +91,10 @@ export async function loginAction(cpf: string) {
  *
  * @returns {void} Redireciona o usuário após o logout.
  */
-export async function logoutAction() {
+export async function logoutAction(): Promise<IActionResult<void>> {
   const sessionUser = await getSessionUser();
 
-  const logConfig: ActionLogConfig = {
+  const logConfig: IActionLogConfig = {
     userId: sessionUser?.userId ?? "anonymous",
     userName: sessionUser?.name ?? "Sistema",
     actionType: "Logout de Usuário",
@@ -121,6 +112,7 @@ export async function logoutAction() {
   return await withActionLogging(logoutActionInternal, logConfig)();
 }
 
+
 /**
  * Ação de servidor para atualizar o token de acesso usando o refresh token.
  * Verifica a validade do refresh token e, se válido, gera um novo access token,
@@ -129,11 +121,11 @@ export async function logoutAction() {
  * @returns {Promise<{ success: boolean; newAccessToken?: string; error?: string }>} Um objeto indicando o sucesso da operação,
  * o novo access token (se bem-sucedido) ou uma mensagem de erro.
  */
-export async function refreshTokenAction() {
+export async function refreshTokenAction(): Promise<IActionResult<{ newAccessToken: string }>> {
   const refreshToken = (await cookies()).get('refreshToken')?.value;
   const decoded = refreshToken ? await verifyRefreshToken(refreshToken) : null;
 
-  const logConfig: ActionLogConfig = {
+  const logConfig: IActionLogConfig = {
     userId: decoded?.userId ?? "anonymous",
     userName: decoded?.name ?? "Sistema",
     actionType: "Atualização de Token",
@@ -157,7 +149,7 @@ export async function refreshTokenAction() {
       throw new Error('Invalid refresh token.');
     }
 
-    const userPayload = {
+    const userPayload: IUserPayload = {
       userId: decoded.userId,
       cpf: decoded.cpf,
       email: decoded.email,

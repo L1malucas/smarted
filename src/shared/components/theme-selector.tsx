@@ -12,10 +12,10 @@ import {
 } from "@/shared/components/ui/dropdown-menu"
 import { Palette, Monitor, Moon, Sun } from "lucide-react"
 import { useTheme, } from "@/shared/components/contexts/theme-context"
-import { ThemeSelectorProps } from "../types/types/component-props"
-import { Theme, ColorMode } from "../types/types/theme-interface"
+import { IThemeSelectorProps } from "../types/types/component-props"
+import { ITheme, IColorMode } from "../types/types/theme-interface"
 
-export function ThemeSelector({ showLabel = false, variant = "ghost", size = "default" }: ThemeSelectorProps) {
+export function ThemeSelector({ showLabel = false, variant = "ghost", size = "default" }: IThemeSelectorProps) {
   const { theme, colorMode, setTheme, setColorMode, availableThemes } = useTheme()
 
   const currentTheme = availableThemes.find((t) => t.value === theme)
@@ -45,7 +45,7 @@ export function ThemeSelector({ showLabel = false, variant = "ghost", size = "de
 
         <div className="px-2 py-1.5">
           <div className="text-sm font-medium mb-2">Tema</div>
-          <DropdownMenuRadioGroup value={theme} onValueChange={(value: string) => setTheme(value as Theme)}>
+          <DropdownMenuRadioGroup value={theme} onValueChange={(value: string) => setTheme(value as ITheme)}>
             {availableThemes.map((themeOption) => (
               <DropdownMenuRadioItem
                 key={themeOption.value}
@@ -63,7 +63,7 @@ export function ThemeSelector({ showLabel = false, variant = "ghost", size = "de
 
         <div className="px-2 py-1.5">
           <div className="text-sm font-medium mb-2">Modo de Cor</div>
-          <DropdownMenuRadioGroup value={colorMode} onValueChange={(value) => setColorMode(value as ColorMode)}>
+          <DropdownMenuRadioGroup value={colorMode} onValueChange={(value) => setColorMode(value as IColorMode)}>
             <DropdownMenuRadioItem value="light" className="gap-2">
               <Sun className="h-4 w-4" />
               Claro

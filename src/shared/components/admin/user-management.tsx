@@ -100,8 +100,8 @@ export default function UserManagement() {
       if (result.success) {
         toast({ title: "Sucesso", description: "Usuário atualizado com sucesso." });
         fetchUsers();
-        setIsEditUserDialogOpen(false);
-        setSelectedUser(null);
+    setIsEditUserDialogOpen(false);
+    setSelectedUser(null);
         setEditRoles([]); // Clear selected roles after updating
       } else {
         toast({ title: "Erro", description: result.error, variant: "destructive" });

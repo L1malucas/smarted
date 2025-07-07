@@ -2,19 +2,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Button } from "../ui/button";
 import React, { useState } from "react"
 import { exportToPDF, exportToExcel } from "@/shared/lib/export-utils";
-import { DashboardData } from "@/shared/types/types/dashboard-interface";
 import { Download } from "lucide-react";
 import { ShareDialog } from "../share-dialog";
 import { useToast } from "../ui/use-toast";
+import { IDashboardHeaderProps } from "@/shared/types/types/component-props";
 
-interface DashboardHeaderProps {
-  tenantSlug: string
-  period: "7d" | "30d" | "90d"
-  setPeriod: (value: "7d" | "30d" | "90d") => void
-  data: DashboardData
-}
 
-export function DashboardHeader({ tenantSlug, period, setPeriod, data }: DashboardHeaderProps) {
+
+export function DashboardHeader({ tenantSlug, period, setPeriod, data }: IDashboardHeaderProps) {
   const [confirmOpen, setConfirmOpen] = useState<null | "pdf" | "excel">(null)
   const { toast } = useToast()
 

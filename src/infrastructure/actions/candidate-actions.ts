@@ -4,12 +4,12 @@ import { getUsersCollection } from "@/infrastructure/persistence/db";
 import { ObjectId } from "mongodb";
 import { withActionLogging } from "@/shared/lib/actions";
 import { IUser } from "@/domain/models/User"; 
-import { ActionLogConfig } from "@/shared/types/types/action-interface";
+import { IActionLogConfig } from "@/shared/types/types/action-interface";
 
 // Helper to get current user's info (mocked for now)
-async function getCurrentUser() {
+async function getCurrentUser(): Promise<{ userId: string; tenantId: string; userName: string }> {
   const usersCollection = await getUsersCollection();
-  const user = await usersCollection.findOne({ email: "admin@smarted.com" });
+  const user = await usersCollection.findOne({ email: "admin@smarted.com" }) as IUser;
   if (!user) throw new Error("Authenticated user not found.");
   return {
     userId: user._id.toString(),

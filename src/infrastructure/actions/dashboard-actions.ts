@@ -2,12 +2,12 @@
 
 import { JobStatus } from "@/shared/types/jobs-constants";
 import { getUsersCollection, getJobsCollection } from "@/infrastructure/persistence/db";
-import { ActionLogConfig } from "@/shared/types/types/action-interface";
+import { IActionLogConfig } from "@/shared/types/types/action-interface";
 import { withActionLogging } from "@/shared/lib/actions";
 
-async function getCurrentUser() {
+async function getCurrentUser(): Promise<{ userId: string; tenantId: string; userName: string }> {
   const usersCollection = await getUsersCollection();
-  const user = await usersCollection.findOne({ email: "admin@smarted.com" });
+  const user = await usersCollection.findOne({ email: "admin@smarted.com" }) as IUser;
   if (!user) throw new Error("Authenticated user not found.");
   return {
     userId: user._id.toString(),
@@ -21,7 +21,7 @@ async function getDashboardMetricsInternal(tenantId: string) {
   const candidatesCollection = await getUsersCollection(); // Assuming candidates are users
 
   const totalJobs = await jobsCollection.countDocuments({ tenantId });
-  const pendingJobs = await jobsCollection.countDocuments({ tenantId, status: JobStatus.Draft });
+  const pendingJobs = await jobsCollection.countDocuments({ tenantId, status: IJobStatus.Draft });
   const totalCandidates = await candidatesCollection.countDocuments({ tenantId, roles: 'candidate' }); // Assumption
 
   const metrics = {

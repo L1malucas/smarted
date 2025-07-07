@@ -1,12 +1,16 @@
-import { ObjectId } from 'mongodb';
-import { ICompetency } from '@/domain/models/Competency';
-import { IJobQuestion } from '@/domain/models/JobQuestion';
-import { ICriteriaWeights } from '@/domain/models/CriteriaWeights';
-import { IStatusChangeLog } from '@/domain/models/StatusChangeLog';
-import { JobStatus } from '@/shared/types/types/jobs-interface';
+import { IBaseEntity } from './base/BaseEntity';
+import { ICompetency } from './Competency';
+import { IJobQuestion } from './JobQuestion';
+import { ICriteriaWeights } from './CriteriaWeights';
+import { IStatusChangeLog } from './StatusChangeLog';
+import { IJobStatus } from './JobStatus';
 
-export interface IJob {
-  _id?: ObjectId; // MongoDB's default ID
+/**
+ * @interface IJob
+ * @description Represents a job posting.
+ * @extends {IBaseEntity}
+ */
+export interface IJob extends IBaseEntity {
   slug: string;
   title: string;
   description: string;
@@ -15,12 +19,11 @@ export interface IJob {
   isPCDExclusive: boolean;
   isReferralJob: boolean;
   criteriaWeights: ICriteriaWeights;
-  status: JobStatus;
+  status: IJobStatus;
   candidatesCount: number;
   isDraft: boolean;
   createdBy: string;
   createdByName: string;
-  tenantId: string; // Added tenantId
   lastStatusUpdateBy?: string;
   lastStatusUpdateByName?: string;
   statusChangeLog?: IStatusChangeLog[];
@@ -36,6 +39,4 @@ export interface IJob {
   tags?: string[];
   publishedAt?: Date;
   closingDate?: Date;
-  createdAt: Date;
-  updatedAt: Date;
 }

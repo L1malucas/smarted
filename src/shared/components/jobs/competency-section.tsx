@@ -1,4 +1,3 @@
-import { Competency } from "@/shared/types/types/jobs-interface";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@radix-ui/react-select";
 import { TooltipProvider, TooltipTrigger, TooltipContent } from "@radix-ui/react-tooltip";
 import { Button } from "../ui/button";
@@ -7,23 +6,24 @@ import { Input } from "postcss";
 import { useState } from "react";
 import { Tooltip, Label } from "recharts";
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
+import { ICompetency } from "@/domain/models/Competency";
 
 interface CompetencySectionProps {
-  competencies: Competency[];
-  onChange: (competencies: Competency[]) => void;
+  competencies: ICompetency[];
+  onChange: (competencies: ICompetency[]) => void;
   error?: string;
 }
 
 export function CompetencySection({ competencies, onChange, error }: CompetencySectionProps) {
   const [isOpen, setIsOpen] = useState(true);
-  const handleCompetencyChange = (index: number, field: keyof Competency, value: any) => {
+  const handleCompetencyChange = (index: number, field: keyof ICompetency, value: any) => {
     const updated = [...competencies];
     updated[index] = { ...updated[index], [field]: value };
     onChange(updated);
   };
 
   const addCompetency = () => {
-    const newCompetency: Competency = {
+    const newCompetency: ICompetency = {
       id: crypto.randomUUID(),
       name: "",
       weight: 3,

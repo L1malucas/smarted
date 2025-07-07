@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useTransition } from "react";
 import { useParams } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Label } from "@/shared/components/ui/label";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { IUser } from "@/domain/models/User"; // Assuming IUser is the candidate model
+import { IUser } from "@/domain/models/User"; 
 import { toast } from "@/shared/components/ui/use-toast";
 import { getCandidateDetailsAction } from "@/infrastructure/actions/candidate-actions";
 

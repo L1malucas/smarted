@@ -1,18 +1,25 @@
 import type React from "react";
-import { Job, JobStatus, Candidate } from "./jobs-interface";
-import { AllowedCPF, AccessLog, SystemMetrics } from "./admin-interface";
-import { DashboardData } from "./dashboard-interface";
-import { User } from "./user-interface";
+import { IJob } from "@/domain/models/Job";
+import { IJobStatus } from "@/domain/models/JobStatus";
+import { ICandidate } from "@/domain/models/Candidate";
+import { IAllowedCPF } from "@/domain/models/AllowedCPF";
+import { IAuditLog } from "@/domain/models/AuditLog";
+import { ISystemSettings } from "@/domain/models/SystemSettings";
+import { IDashboardData, IMetricsData, IUserActivityData } from "./dashboard-interface";
+import { IUser } from "@/domain/models/User";
+import { ITheme, IColorMode } from "./theme-interface";
+import { IJobQuestion } from "@/domain/models/JobQuestion";
+import { ICompetency } from "@/domain/models/Competency";
 
-export interface ThemeSelectorProps {
+export interface IThemeSelectorProps {
   size?: "default" | "sm" | "lg" | "icon";
 }
 
-export interface CustomThemeProviderProps {
+export interface ICustomThemeProviderProps {
   children?: React.ReactNode;
 }
 
-export interface Testimonial {
+export interface ITestimonial {
   id: number;
   name: string;
   role: string;
@@ -22,7 +29,7 @@ export interface Testimonial {
   rating: number;
 }
 
-export interface ShareDialogProps {
+export interface IShareDialogProps {
   title: string;
   resourceType: "job" | "candidates" | "report";
   resourceId: string;
@@ -31,18 +38,20 @@ export interface ShareDialogProps {
   jobSlug?: string;
 }
 
-export interface NavbarProps {
+export interface INavbarProps {
   tenantSlug: string;
-  user: User | null;
+  user: IUser | null;
 }
 
-export interface CandidateRankingProps {
-  candidates: Candidate[];
+export interface ICandidateRankingProps {
+  candidates: ICandidate[];
   jobTitle: string;
-  loading: boolean;
+  jobId: string;
+  tenantSlug: string;
+  radarData: Array<{ subject: string; A: number; fullMark: number }>;
 }
 
-export interface Step {
+export interface IStep {
   id: string;
   title: string;
   description: string;
@@ -50,20 +59,20 @@ export interface Step {
   isOptional?: boolean;
 }
 
-export interface ApplicationStepperProps {
-  steps: Step[];
+export interface IApplicationStepperProps {
+  steps: IStep[];
   onComplete: () => void;
   onStepChange?: (stepIndex: number) => void;
   onValidateStep?: (stepIndex: number) => Promise<boolean> | boolean;
   className?: string;
 }
 
-export interface PageHeaderProps {
+export interface IPageHeaderProps {
   title: string;
   description: string;
 }
 
-export interface JobStatsProps {
+export interface IJobStatsProps {
   stats: {
     totalJobs: number;
     totalCandidates: number;
@@ -76,112 +85,132 @@ export interface JobStatsProps {
   };
 }
 
-export interface JobSearchProps {
+export interface IJobSearchProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
 }
 
-export interface JobListProps {
-  jobs: Job[];
+export interface IJobListProps {
+  jobs: IJob[];
   loading: boolean;
+  tenantSlug?: string;
 }
 
-export interface QuestionSectionProps {
-  questions: any[]; // Adjust type as needed
-  onChange: (questions: any[]) => void;
+export interface IQuestionSectionProps {
+  questions: IJobQuestion[];
+  onChange: (questions: IJobQuestion[]) => void;
   error?: string;
 }
 
-export interface JobActionsMenuProps {
-  job: Job;
-  onStatusChange: (jobId: string, newStatus: JobStatus) => void;
+export interface IJobActionsMenuProps {
+  job: IJob;
+  tenantSlug: string;
+  onStatusChange: (jobId: string, newStatus: IJobStatus) => void;
+  onPublish?: (jobId: string) => void;
 }
 
-export interface JobViewProps {
-  jobs: Job[];
+export interface IJobViewProps {
+  jobs: IJob[];
   tenantSlug: string;
   viewMode: "card" | "list";
-  onStatusChange: (jobId: string, newStatus: JobStatus) => void;
+  onStatusChange: (jobId: string, newStatus: IJobStatus) => void;
+  onPublish?: (jobId: string) => void;
 }
 
-export interface JobListHeaderProps {
+export interface IJobListHeaderProps {
   tenantSlug: string;
 }
 
-export interface JobPreviewProps {
-  formData: Partial<Job>;
+export interface IJobPreviewProps {
+  formData: Partial<IJob>;
 }
 
-export interface JobListItemProps {
-  job: Job;
+export interface IJobListItemProps {
+  job: IJob;
   tenantSlug: string;
-  onStatusChange: (jobId: string, newStatus: JobStatus) => void;
+  onStatusChange: (jobId: string, newStatus: IJobStatus) => void;
+  onPublish?: (jobId: string) => void;
 }
 
-export interface JobDetailsProps {
-  job: Job;
-  candidates: Candidate[];
+export interface IJobDetailsProps {
+  job: IJob;
+  candidates: ICandidate[];
   tenantSlug: string;
-  radarData: any[]; // Adjust type as needed
+  radarData: Array<{ subject: string; A: number; fullMark: number }>;
 }
 
-export interface JobCreateFormProps {
+export interface IJobCreateFormProps {
   tenantSlug: string;
 }
 
-export interface JobCardProps {
-  job: Job;
+export interface IJobCardProps {
+  job: IJob;
   tenantSlug: string;
-  onStatusChange: (jobId: string, newStatus: JobStatus) => void;
+  onStatusChange: (jobId: string, newStatus: IJobStatus) => void;
+  onPublish?: (jobId: string) => void;
 }
 
-export interface CompetencySectionProps {
-  competencies: any[]; // Adjust type as needed
-  onChange: (competencies: any[]) => void;
+export interface ICompetencySectionProps {
+  competencies: ICompetency[];
+  onChange: (competencies: ICompetency[]) => void;
   error?: string;
 }
 
-export interface JobBasicInfoProps {
-  formData: Partial<Job>;
-  onChange: (field: keyof Job, value: any) => void;
-  errors: Record<string, string | undefined>;
+export interface IJobBasicInfoProps {
+  formData: Partial<IJob>;
+  onChange: (field: keyof IJob, value: any) => void;
+  errors: {
+    title?: string;
+    description?: string;
+    department?: string;
+    location?: string;
+    salaryRange?: string;
+  };
 }
 
-export interface ActionButtonsProps {
-  onSubmit: (status: JobStatus) => void;
+export interface IActionButtonsProps {
+  onSubmit: (status: IJobStatus) => void;
   disabled: boolean;
 }
 
-export interface UserActivityChartProps {
-  data: any[]; // Adjust type as needed
+export interface IUserActivityChartProps {
+  tenantSlug: string;
+  period: "7d" | "30d" | "90d";
 }
 
-export interface ProgressChartProps {
-  data: any[]; // Adjust type as needed
+export interface IProgressChartProps {
+  tenantSlug: string;
+  period: "7d" | "30d" | "90d";
 }
 
-export interface MetricsCardsProps {
-  data: any[]; // Adjust type as needed
+export interface IMetricsCardsProps {
+  tenantSlug: string;
+  period: "7d" | "30d" | "90d";
 }
 
-export interface DashboardHeaderProps {
+export interface IDashboardHeaderProps {
   tenantSlug: string;
   period: "7d" | "30d" | "90d";
   setPeriod: (value: "7d" | "30d" | "90d") => void;
-  data: DashboardData;
+  data: IDashboardData;
 }
 
-export interface UserManagementProps {
-  allowedCPFs: AllowedCPF[];
-  addCPF: (newUser: AllowedCPF) => Promise<void>;
+export interface IUserManagementProps {
+  allowedCPFs: IAllowedCPF[];
+  addCPF: (newUser: IAllowedCPF) => Promise<void>;
   removeCPF: (cpf: string) => Promise<void>;
 }
 
-export interface SystemSettingsProps {
-  systemMetrics: SystemMetrics | null;
+export interface ISystemSettingsProps {
+  systemMetrics: ISystemSettings | null;
 }
 
-export interface AuditLogsProps {
-  accessLogs: AccessLog[];
-  allowedCPFs: AllowedCPF[];
+export interface IAuditLogsProps {
+  accessLogs: IAuditLog[];
+  allowedCPFs: IAllowedCPF[];
+}
+
+export interface IActionButtonsProps {
+  onSubmit: (status: IJobStatus) => void;
+  disabled: boolean;
 }

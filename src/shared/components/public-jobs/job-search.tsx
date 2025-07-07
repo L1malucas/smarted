@@ -2,13 +2,9 @@
 import { Search } from "lucide-react";
 import { Input } from "postcss";
 import { Card, CardContent } from "../ui/card";
+import { IJobSearchProps } from "@/shared/types/types/component-props";
 
-interface JobSearchProps {
-  searchTerm: string;
-  onSearchChange: (value: string) => void;
-}
-
-export function JobSearch({ searchTerm, onSearchChange }: JobSearchProps) {
+export function JobSearch({ searchTerm, onSearchChange }: IJobSearchProps) {
   return (
     <Card className="border-none">
       <CardContent className="p-6">

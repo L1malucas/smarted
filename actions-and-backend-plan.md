@@ -121,7 +121,7 @@ A seguir, a lista de Server Actions necessárias para cada funcionalidade, com f
 
 *   **Propósito**: Obter detalhes de uma vaga específica.
 *   **Entrada**: `jobId` (string).
-*   **Saída**: `{ success: boolean, data?: { job: Job }, error?: string }`.
+*   **Saída**: `{ success: boolean, data?: { job: IJob }, error?: string }`.
 *   **Plano de Ação**:
     1.  **Autenticação e Autorização**:
         *   Verificar se o usuário está autenticado.

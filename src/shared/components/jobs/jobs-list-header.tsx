@@ -1,12 +1,9 @@
 import Link from "next/link";
 import { Button } from "../ui/button";
 import { Plus } from "lucide-react";
+import { IJobListHeaderProps } from "@/shared/types/types/component-props";
 
-interface JobListHeaderProps {
-  tenantSlug: string;
-}
-
-export function JobListHeader({ tenantSlug }: JobListHeaderProps) {
+export function JobListHeader({ tenantSlug }: IJobListHeaderProps) {
   return (
     <div className="flex justify-between items-center">
       <div>

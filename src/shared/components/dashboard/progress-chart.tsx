@@ -6,14 +6,9 @@ import React, { useState, useEffect, useTransition } from "react";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../ui/card";
 import { Skeleton } from "../ui/skeleton";
+import { IProgressChartProps } from "@/shared/types/types/component-props";
 
-
-interface ProgressChartProps {
-  tenantSlug: string;
-  period: "7d" | "30d" | "90d";
-}
-
-export function ProgressChart({ tenantSlug, period }: ProgressChartProps) {
+export function ProgressChart({ tenantSlug, period }: IProgressChartProps) {
   const [metrics, setMetrics] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, startTransition] = useTransition();

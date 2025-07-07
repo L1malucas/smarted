@@ -1,4 +1,4 @@
-export type LoadingContextType = {
+export type ILoadingContextType = {
   isLoading: boolean;
   setLoading: (loading: boolean) => void;
 };

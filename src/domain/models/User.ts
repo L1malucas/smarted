@@ -1,19 +1,49 @@
-import { ObjectId } from 'mongodb';
+import { IBaseEntity } from './base/BaseEntity';
 
-export interface IUser {
-  _id?: ObjectId; // MongoDB's default ID
+/**
+ * @interface IUser
+ * @description Represents a system user.
+ * @extends {IBaseEntity}
+ */
+export interface IUser extends IBaseEntity {
   cpf: string;
   slug: string;
   name: string;
   email: string;
-  tenantId: string; // Added tenantId
+  tenantId: string;
   roles: string[];
   permissions: string[];
   isAdmin: boolean;
-  createdAt: Date;
-  updatedAt: Date;
   status: 'active' | 'inactive';
-  createdBy?: string; // userId of the creator
-  updatedBy?: string; // userId of the last updater
+  createdBy?: string;
+  updatedBy?: string;
 }
 
+/**
+ * @interface IUserPayload
+ * @description Payload structure for user authentication tokens.
+ */
+export interface IUserPayload {
+  userId: string;
+  cpf: string;
+  email: string;
+  name: string;
+  roles: string[];
+  permissions: string[];
+  isAdmin: boolean;
+  tenantId: string;
+}
+
+/**
+ * @interface IUserSession
+ * @description Represents the structure of a user session.
+ */
+export interface IUserSession {
+  userId: string;
+  tenantId: string;
+  name: string;
+  email: string;
+  roles: string[];
+  permissions: string[];
+  isAdmin: boolean;
+}

@@ -10,8 +10,9 @@ import { ShareDialog } from "@/shared/components/share-dialog"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/shared/components/ui/card"
 import { Skeleton } from "@/shared/components/ui/skeleton"
 import { toast } from "@/shared/hooks/use-toast"
-import { Job, Candidate } from "@/shared/types/types/jobs-interface"
 import { Button } from "@/shared/components/ui/button"
+import { ICandidate } from "@/domain/models/Candidate"
+import { IJob } from "@/domain/models/Job"
 
 
 export default function CandidatesPage() {
@@ -19,8 +20,8 @@ export default function CandidatesPage() {
   const tenantSlug = params.slug as string;
   const jobId = params.jobId as string; // Assuming this is the job's ID
 
-  const [job, setJob] = useState<Job | null>(null);
-  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [job, setJob] = useState<IJob | null>(null);
+  const [candidates, setCandidates] = useState<ICandidate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
 

@@ -5,7 +5,6 @@ import { ChevronUp, ChevronDown, HelpCircle, CheckCircle2 } from "lucide-react";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@radix-ui/react-tooltip";
 import { Button } from "../ui/button";
 import { useAddressAutocomplete } from "@/shared/hooks/use-address";
-import { Job } from "@/shared/types/types/jobs-interface";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@radix-ui/react-select";
 import { Switch } from "@radix-ui/react-switch";
 import { Input } from "postcss";
@@ -13,20 +12,10 @@ import { Label } from "recharts";
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { Textarea } from "../ui/textarea";
 import { useToast } from "../ui/use-toast";
+import { IJobBasicInfoProps } from "@/shared/types/types/component-props";
+import { IJob } from "@/domain/models/Job";
 
-interface JobBasicInfoProps {
-  formData: Partial<Job>;
-  onChange: (field: keyof Job, value: any) => void;
-  errors: {
-    title?: string;
-    description?: string;
-    department?: string;
-    location?: string;
-    salaryRange?: string;
-  };
-}
-
-export function JobBasicInfo({ formData, onChange, errors }: JobBasicInfoProps) {
+export function JobBasicInfo({ formData, onChange, errors }: IJobBasicInfoProps) {
   const [isOpen, setIsOpen] = useState(true);
   const { loadOptions } = useAddressAutocomplete();
   const { toast } = useToast();
@@ -73,7 +62,7 @@ export function JobBasicInfo({ formData, onChange, errors }: JobBasicInfoProps) 
     return isValid;
   };
 
-  const handleInputChange = (field: keyof Job, value: any) => {
+  const handleInputChange = (field: keyof IJob, value: any) => {
     onChange(field, value);
     if (field in fieldStatus) {
       validateField(field as keyof typeof fieldStatus, value);

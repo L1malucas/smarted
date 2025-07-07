@@ -1,4 +1,3 @@
-import { JobQuestion } from "@/shared/types/types/jobs-interface";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@radix-ui/react-select";
 import { Switch } from "@radix-ui/react-switch";
 import { TooltipProvider, TooltipTrigger, TooltipContent } from "@radix-ui/react-tooltip";
@@ -9,17 +8,13 @@ import { useState } from "react";
 import { Tooltip, Label } from "recharts";
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { Textarea } from "../ui/textarea";
+import { IJobQuestion } from "@/domain/models/JobQuestion";
+import { IQuestionSectionProps } from "@/shared/types/types/component-props";
 
-interface QuestionSectionProps {
-  questions: JobQuestion[];
-  onChange: (questions: JobQuestion[]) => void;
-  error?: string;
-}
-
-export function QuestionSection({ questions, onChange, error }: QuestionSectionProps) {
+export function QuestionSection({ questions, onChange, error }: IQuestionSectionProps) {
   const [isOpen, setIsOpen] = useState(true);
 
-  const handleQuestionChange = (index: number, field: keyof JobQuestion, value: any) => {
+  const handleQuestionChange = (index: number, field: keyof IJobQuestion, value: any) => {
     const updated = [...questions];
     updated[index] = { ...updated[index], [field]: value };
     if (field === "type" && !["multiple_choice", "single_choice"].includes(value)) {

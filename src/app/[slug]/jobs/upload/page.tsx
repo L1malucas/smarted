@@ -8,19 +8,19 @@ import { useRouter, useParams } from "next/navigation"
 import { ArrowLeft, Upload, X, FileText, AlertCircle, CheckCircle, Badge } from "lucide-react"
 import Link from "next/link"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/shared/components/ui/card"
-import { Job } from "@/shared/types/types/jobs-interface"
 import { UploadFile } from "@/shared/types/types/upload-interface"
 import { Progress } from "@radix-ui/react-progress"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@radix-ui/react-select"
 import { toast } from "@/shared/hooks/use-toast"
 import { Button } from "@/shared/components/ui/button"
+import { IJob } from "@/domain/models/Job"
 
 export default function UploadPage() {
   const router = useRouter()
   const [files, setFiles] = useState<UploadFile[]>([])
   const [isDragOver, setIsDragOver] = useState(false)
   const [selectedJob, setSelectedJob] = useState<string>("")
-  const [jobs, setJobs] = useState<Job[]>([])
+  const [jobs, setJobs] = useState<IJob[]>([])
 
   const params = useParams()
   const tenantSlug = params.slug as string

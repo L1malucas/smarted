@@ -1,24 +1,20 @@
-import { JobStatus } from "@/shared/types/types/jobs-interface";
 import { Button } from "../ui/button";
 import { Save } from "lucide-react";
+import { IJobStatus } from "@/domain/models/JobStatus";
+import { IActionButtonsProps } from "@/shared/types/types/component-props";
 
-interface ActionButtonsProps {
-  onSubmit: (status: JobStatus) => void;
-  disabled: boolean;
-}
-
-export function ActionButtons({ onSubmit, disabled }: ActionButtonsProps) {
+export function ActionButtons({ onSubmit, disabled }: IActionButtonsProps) {
   return (
     <div className="space-y-2">
       <Button
-        onClick={() => onSubmit("aberta")}
+        onClick={() => onSubmit(IJobStatus.Open)}
         className="w-full"
         disabled={disabled}
       >
         Publicar Vaga
       </Button>
       <Button
-        onClick={() => onSubmit("draft")}
+        onClick={() => onSubmit(IJobStatus.Draft)}
         variant="outline"
         className="w-full"
       >

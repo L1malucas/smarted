@@ -1,8 +1,12 @@
-import { ObjectId } from 'mongodb';
+import { IBaseEntity } from './base/BaseEntity';
 
-export interface ICandidate {
-  _id?: ObjectId; // MongoDB's default ID
-  jobId: ObjectId;
+/**
+ * @interface ICandidate
+ * @description Represents a candidate who applied for a job.
+ * @extends {IBaseEntity}
+ */
+export interface ICandidate extends IBaseEntity {
+  jobId: string;
   tenantId: string;
   name: string;
   email: string;
@@ -10,7 +14,5 @@ export interface ICandidate {
   resumeUrl: string;
   status: 'applied' | 'screening' | 'evaluated' | 'contacted' | 'rejected';
   matchScore?: number;
-  answers?: Array<{ questionId: ObjectId; answer: string }>;
-  createdAt: Date;
-  updatedAt: Date;
+  answers?: Array<{ questionId: string; answer: string }>;
 }

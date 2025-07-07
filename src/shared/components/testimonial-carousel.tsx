@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar"
 import { ChevronLeft, ChevronRight, Star } from 'lucide-react'
-import { Testimonial } from '../types/types/component-props'
+import { ITestimonial } from '../types/types/component-props'
 
-const testimonials: Testimonial[] = [
+const testimonials: ITestimonial[] = [
   {
     id: 1,
     name: "Ana Silva",

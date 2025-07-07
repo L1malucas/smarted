@@ -4,11 +4,11 @@ import Link from "next/link";
 import { Users, Calendar } from "lucide-react";
 import { JobActionsMenu } from "./menu-list";
 import { getStatusBadge } from "@/shared/lib/job-status-config";
-import { JobCardProps } from "@/shared/types/types/component-props";
+import { IJobCardProps } from "@/shared/types/types/component-props";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../ui/card";
 
 
-export function JobCard({ job, tenantSlug, onStatusChange, onPublish }: JobCardProps) {
+export function JobCard({ job, tenantSlug, onStatusChange, onPublish }: IJobCardProps) {
   return (
     <Link
       href={`/${tenantSlug}/jobs/${job.slug}/details`}

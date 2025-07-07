@@ -8,15 +8,15 @@ export const createUserSchema = z.object({
   tenantId: z.string().min(1, 'Tenant ID é obrigatório.'),
 });
 
-export type CreateUserInput = z.infer<typeof createUserSchema>;
+export type ICreateUserInput = z.infer<typeof createUserSchema>;
 
 export const updateUserSchema = createUserSchema.partial();
 
-export type UpdateUserInput = z.infer<typeof updateUserSchema>;
+export type IUpdateUserInput = z.infer<typeof updateUserSchema>;
 
 export const systemSettingsSchema = z.object({
   maxUsersPerTenant: z.number().min(1).optional(),
   // Add other system-wide settings here
 });
 
-export type SystemSettingsInput = z.infer<typeof systemSettingsSchema>;
+export type ISystemSettingsInput = z.infer<typeof systemSettingsSchema>;

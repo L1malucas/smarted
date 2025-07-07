@@ -8,53 +8,10 @@ import { ShareDialog } from "@/shared/components/share-dialog"
 import { Card, CardHeader, CardTitle, CardContent } from "@/shared/components/ui/card"
 import { TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/shared/components/ui/table"
 import { toast } from "@/shared/hooks/use-toast"
-import { Candidate, Job } from "@/shared/types/types/jobs-interface"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@radix-ui/react-select"
 import { Input } from "postcss"
 import { Button } from "react-day-picker"
 
-
-/**
- * @description Página de triagem de candidatos que permite visualizar, filtrar e gerenciar candidatos em processo seletivo
- * 
- * @component ScreeningPage
- * 
- * @dependencies
- * - Requer acesso aos dados mockados: mockCandidates, mockJobsscrening
- * - Utiliza componentes UI do design system: Card, Table, Select, Badge, etc
- * - Integra com o sistema de roteamento através de useParams e useSearchParams
- * 
- * @state
- * - selectedJobId: ID da vaga selecionada para filtrar candidatos
- * - candidates: Lista de candidatos filtrada pela vaga selecionada
- * - searchTerm: Termo de busca para filtrar candidatos por nome/email
- * - sortBy: Campo usado para ordenação dos candidatos
- * - sortOrder: Direção da ordenação (asc/desc)
- * 
- * @features
- * - Filtragem de candidatos por vaga específica
- * - Busca por nome/email de candidatos
- * - Ordenação por diferentes campos (nome, match, data)
- * - Visualização de status de match via IA
- * - Ações de aprovar/reprovar candidatos
- * - Download de currículos
- * - Compartilhamento de relatório de triagem
- * 
- * @customization
- * Para modificar/estender:
- * - Adicione novos campos de ordenação em handleSort()
- * - Expanda os filtros através do botão "Filtros Avançados"
- * - Modifique a lógica de match no getMatchBadge()
- * - Adicione novas ações na coluna de ações da tabela
- * 
- * @communication
- * - Recebe parâmetros de URL para jobId
- * - Integra com sistema de compartilhamento via ShareDialog
- * - Links para perfil detalhado do candidato
- * 
- * @example
- * URL de acesso: /tenant-slug/screening?jobId=123
- */
 export default function ScreeningPage() {
   const searchParams = useSearchParams()
   const [selectedJobId, setSelectedJobId] = useState<string | null>(searchParams.get("jobId"))

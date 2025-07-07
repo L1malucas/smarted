@@ -1,8 +1,6 @@
 // components/dashboard/DashboardPage.tsx
 "use client"
 
-import { Skeleton } from "@/shared/components/ui/skeleton"
-import { DashboardData } from "@/shared/types/dashboard-interface"
 import type React from "react"
 import { useState } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs"
@@ -19,7 +17,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <DashboardHeader tenantSlug={tenantSlug} period={period} setPeriod={setPeriod}/>
+      <DashboardHeader tenantSlug={tenantSlug} period={period} setPeriod={setPeriod} data={undefined}/>
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList>
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>

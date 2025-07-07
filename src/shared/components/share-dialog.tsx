@@ -17,7 +17,7 @@ import { Label } from "@/shared/components/ui/label"
 import { Switch } from "@/shared/components/ui/switch"
 import { toast } from "@/shared/components/ui/use-toast"
 import { createShareableLinkAction } from "@/infrastructure/actions/public-actions";
-import { ShareDialogProps } from "../types/types/component-props"
+import { IShareDialogProps } from "../types/types/component-props"
 
 
 /**
@@ -69,7 +69,7 @@ import { ShareDialogProps } from "../types/types/component-props"
  * />
  * ```
  */
-export function ShareDialog({ title, resourceType, resourceId, resourceName, tenantSlug, jobSlug }: ShareDialogProps) {
+export function ShareDialog({ title, resourceType, resourceId, resourceName, tenantSlug, jobSlug }: IShareDialogProps) {
   const [copied, setCopied] = useState(false)
   const [isPublic, setIsPublic] = useState(true)
   const [expiryDays, setExpiryDays] = useState("7")

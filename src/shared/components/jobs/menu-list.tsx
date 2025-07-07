@@ -3,23 +3,16 @@
 import Link from "next/link";
 import { Button } from "../ui/button";
 import { MoreHorizontal, Edit, Trash2, Send } from "lucide-react";
-import { jobStatusOptions } from "@/shared/types/jobs-constants";
-import { Job, JobStatus } from "@/shared/types/types/jobs-interface";
+import { IJob } from "@/domain/models/Job";
+import { IJobStatus } from "@/domain/models/JobStatus";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuItem, DropdownMenuSeparator } from "@radix-ui/react-dropdown-menu";
-import { TooltipProvider, TooltipTrigger, TooltipContent } from "@radix-ui/react-tooltip";
-import { Tooltip } from "recharts";
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@radix-ui/react-tooltip";
 import { ShareDialog } from "../share-dialog";
 import { toast } from "@/shared/hooks/use-toast";
+import { IJobActionsMenuProps } from "@/shared/types/types/component-props";
 
-interface JobActionsMenuProps {
-  job: Job;
-  tenantSlug: string;
-  onStatusChange: (jobId: string, newStatus: JobStatus) => void;
-  onPublish?: (jobId: string) => void;
-}
-
-export function JobActionsMenu({ job, tenantSlug, onStatusChange, onPublish }: JobActionsMenuProps) {
-  const handleStatusChange = (newStatus: JobStatus) => {
+export function JobActionsMenu({ job, tenantSlug, onStatusChange, onPublish }: IJobActionsMenuProps) {
+  const handleStatusChange = (newStatus: IJobStatus) => {
     onStatusChange(job._id, newStatus);
     toast({
       title: "Status Atualizado",
@@ -56,7 +49,7 @@ export function JobActionsMenu({ job, tenantSlug, onStatusChange, onPublish }: J
                     .map((opt) => (
                       <DropdownMenuItem
                         key={opt.value}
-                        onClick={() => handleStatusChange(opt.value as JobStatus)}
+                        onClick={() => handleStatusChange(opt.value as IJobStatus)}
                         disabled={opt.value === job.status}
                       >
                         {opt.label}

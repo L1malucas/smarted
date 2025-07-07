@@ -1,10 +1,10 @@
 "use client"
 
 import { useParams } from "next/navigation"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { CheckCircle, Mail, Calendar, ArrowLeft } from "lucide-react"
 import Link from "next/link"
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/shared/components/ui/card"
+import { Button } from "@/shared/components/ui/button"
 
 export default function ApplicationSuccessPage() {
   const params = useParams()

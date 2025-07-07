@@ -55,7 +55,7 @@ import { NavbarProps } from "../types/types/component-props"
  * 
  * @returns Retorna null em rotas públicas/login ou componente Nav com toda navegação
  */
-export function Navbar({ tenantSlug, user }: NavbarProps) {
+export function Navbar({ tenantSlug, user }: INavbarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)

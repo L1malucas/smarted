@@ -1,11 +1,9 @@
-import { Job } from "@/shared/types/types/jobs-interface";
+import { IJob } from "@/domain/models/Job";
 import { Badge, Eye } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
-interface JobPreviewProps {
-  formData: Partial<Job>;
-}
+import { IJobPreviewProps } from "@/shared/types/types/component-props"
 
-export function JobPreview({ formData }: JobPreviewProps) {
+export function JobPreview({ formData }: IJobPreviewProps) {
   return (
     <Card>
       <CardHeader>

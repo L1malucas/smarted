@@ -3,18 +3,20 @@ import { useRouter } from "next/navigation";
 import { Button } from "../ui/button";
 import { v4 as uuidv4 } from 'uuid';
 import { useJobValidation } from "@/shared/hooks/use-job-validation";
-import { JobCreateFormProps, Job, Competency } from "@/shared/types/types/jobs-interface";
 import { Input } from "postcss";
 import { Label } from "recharts";
 import { Textarea } from "../ui/textarea";
 import { toast } from "../ui/use-toast";
+import { IJobCreateFormProps } from "@/shared/types/types/component-props";
+import { IJob } from "@/domain/models/Job";
+import { ICompetency } from "@/domain/models/Competency";
 
 
-export function JobCreateForm({ tenantSlug }: JobCreateFormProps) {
+export function JobCreateForm({ tenantSlug }: IJobCreateFormProps) {
   const router = useRouter();
   const { validateJob, validateField, getFieldError, hasFieldError, clearFieldError } = useJobValidation();
 
-  const [formData, setFormData] = useState<Partial<Job>>({
+  const [formData, setFormData] = useState<Partial<IJob>>({
     title: "",
     description: "",
     competencies: [],
@@ -72,7 +74,7 @@ export function JobCreateForm({ tenantSlug }: JobCreateFormProps) {
         }
       }
 
-      const jobData: Omit<Job, '_id' | 'createdAt' | 'updatedAt' | 'candidatesCount'> = {
+      const jobData: Omit<IJob, '_id' | 'createdAt' | 'updatedAt' | 'candidatesCount'> = {
         title: formData.title || "",
         description: formData.description || "",
         slug: generateSlug(formData.title || ""),
@@ -133,7 +135,7 @@ export function JobCreateForm({ tenantSlug }: JobCreateFormProps) {
     router.push(`/${tenantSlug}/jobs`);
   };
 
-  const handleInputChange = (field: keyof Job, value: any) => {
+  const handleInputChange = (field: keyof IJob, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
 
     // Limpar erro do campo quando o usuário começar a digitar
@@ -142,7 +144,7 @@ export function JobCreateForm({ tenantSlug }: JobCreateFormProps) {
     }
   };
 
-  const handleFieldBlur = (field: keyof Job, value: any) => {
+  const handleFieldBlur = (field: keyof IJob, value: any) => {
     // Validate field on blur for immediate feedback
     if (field === 'title' || field === 'description' || field === 'competencies') {
       validateField(field, value);
@@ -150,7 +152,7 @@ export function JobCreateForm({ tenantSlug }: JobCreateFormProps) {
   };
 
   const handleCompetencyAdd = () => {
-    const newCompetency: Competency = {
+    const newCompetency: ICompetency = {
       id: uuidv4(),
       name: "",
       weight: 1,

@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { toast } from '@/shared/hooks/use-toast';
-import { Job } from '../types/types/jobs-interface';
+import { IJob } from '@/domain/models/Job';
 
 export function usePublicJobs(tenantSlug?: string) {
-  const [jobs, setJobs] = useState<Job[]>([]);
+  const [jobs, setJobs] = useState<IJob[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const jobService = new PublicJobService();

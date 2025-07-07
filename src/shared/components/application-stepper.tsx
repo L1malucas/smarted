@@ -8,7 +8,7 @@ import { Progress } from "@/shared/components/ui/progress"
 import { Check, ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
 import { cn } from "@/shared/lib/utils"
 import { toast, } from "@/shared/components/ui/use-toast"
-import { ApplicationStepperProps } from "../types/types/component-props"
+import { IApplicationStepperProps } from "../types/types/component-props"
 
 /**
  * Componente de navegação em etapas para processos de candidatura/aplicação
@@ -79,7 +79,7 @@ import { ApplicationStepperProps } from "../types/types/component-props"
  * A persistência do progresso do usuário (ex: em localStorage) deve ser gerenciada pelo componente pai que utiliza o ApplicationStepper, 
  * pois ele detém o estado completo do formulário de aplicação.
  */
-export function ApplicationStepper({ steps, onComplete, onStepChange, onValidateStep, className }: ApplicationStepperProps) {
+export function ApplicationStepper({ steps, onComplete, onStepChange, onValidateStep, className }: IApplicationStepperProps) {
   const [currentStep, setCurrentStep] = useState(0)
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set())
   const [isSubmitting, setIsSubmitting] = useState(false)

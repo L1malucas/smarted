@@ -10,15 +10,15 @@ import { Card } from "@/shared/components/ui/card"
 import { Textarea } from "@/shared/components/ui/textarea"
 import { toast } from "@/shared/hooks/use-toast"
 import { withActionLogging } from "@/shared/lib/actions"
-import { Job, CandidateAnswer } from "@/shared/types/types/jobs-interface"
 import { Checkbox } from "@radix-ui/react-checkbox"
 import { Input } from "postcss"
 import { Label } from "recharts"
 import { Button } from "@/shared/components/ui/button"
+import { IJob } from "@/domain/models/Job"
 
 
 // Mock job data
-const mockJobData: Job = {
+const mockJobData: IJob = {
   _id: "1",
   slug: "desenvolvedor-frontend-senior",
   title: "Desenvolvedor Frontend Sênior",
@@ -56,7 +56,7 @@ export default function ApplyPage() {
   const tenantSlug = params.slug as string
   const jobSlug = params.jobSlug as string
 
-  const [job, setJob] = useState<Job | null>(null)
+  const [job, setJob] = useState<IJob | null>(null)
   const [resumeFile, setResumeFile] = useState<File | null>(null)
   const [answers, setAnswers] = useState<CandidateAnswer[]>([])
   const [personalInfo, setPersonalInfo] = useState({

@@ -11,7 +11,7 @@ export const statusConfig = {
   draft: { variant: "secondary", label: "Rascunho", className: "bg-gray-500 hover:bg-gray-600" },
 } as const;
 
-export const getStatusBadge = (status: JobStatus) => {
+export const getStatusBadge = (status: IJobStatus) => {
   const config = statusConfig[status] || { variant: "outline", label: status, className: "" };
   return (
     <Badge variant={config.variant as any} className={config.className}>

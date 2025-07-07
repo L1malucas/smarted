@@ -1,7 +1,4 @@
 "use client";
-// conectar o audit no s logs
-//  ajuste dos campos
-// gerar interface de job para backend 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
@@ -13,7 +10,10 @@ import { QuestionSection } from "@/shared/components/jobs/question-section";
 import { useJobValidation } from "@/shared/hooks/use-job-validation";
 import { toast } from "@/shared/hooks/use-toast";
 import { withActionLogging } from "@/shared/lib/actions";
-import { Job, Competency, JobStatus } from "@/shared/types/types/jobs-interface";
+import { IJob } from "@/domain/models/IJob";
+import { Button } from "react-day-picker";
+import { ICompetency } from "@/domain/models/Competency";
+import { IJobStatus } from "@/domain/models/JobStatus";
 
 
 export default function CreateJobPage() {
@@ -23,7 +23,7 @@ export default function CreateJobPage() {
   const { validateJob, getFieldError, hasFieldError, clearFieldError } = useJobValidation();
   const jobService = new JobService();
 
-  const [formData, setFormData] = useState<Partial<Job>>({
+  const [formData, setFormData] = useState<Partial<IJob>>({
     title: "",
     description: "",
     department: "",
@@ -33,7 +33,7 @@ export default function CreateJobPage() {
       { id: crypto.randomUUID(), name: "", weight: 3 },
       { id: crypto.randomUUID(), name: "", weight: 3 },
       { id: crypto.randomUUID(), name: "", weight: 3 },
-    ] as Competency[],
+    ] as ICompetency[],
     questions: [{ id: crypto.randomUUID(), question: "", type: "text", required: false, order: 0 }],
     isPCDExclusive: false,
     isReferralJob: false,
@@ -51,14 +51,14 @@ export default function CreateJobPage() {
     setHasUnsavedChanges(!!hasContent);
   }, [formData.title, formData.description, formData.department, formData.location, formData.competencies]);
 
-  const handleInputChange = (field: keyof Job, value: any) => {
+  const handleInputChange = (field: keyof IJob, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (hasFieldError(field as any)) {
       clearFieldError(field as any);
     }
   };
 
-  const handleSubmit = async (status: JobStatus) => {
+  const handleSubmit = async (status: IJobStatus) => {
     const isDraft = status === "draft";
     const logConfig = {
       userId: "current-user-slug", // Replace with actual user ID
@@ -70,7 +70,7 @@ export default function CreateJobPage() {
       errorMessage: "Não foi possível salvar a vaga.",
     };
 
-    const handleSubmitInternal = async (status: JobStatus) => {
+    const handleSubmitInternal = async (status: IJobStatus) => {
       const isValid = validateJob(formData, isDraft);
 
       if (!isValid) {
@@ -82,7 +82,7 @@ export default function CreateJobPage() {
         throw new Error("Erro de validação no formulário.");
       }
 
-      const jobData: Omit<Job, '_id' | 'createdAt' | 'updatedAt' | 'candidatesCount'> = {
+      const jobData: Omit<IJob, '_id' | 'createdAt' | 'updatedAt' | 'candidatesCount'> = {
         ...formData,
         title: formData.title || "",
         description: formData.description || "",

@@ -5,7 +5,7 @@
  * @description Define a estrutura base HTML da aplicação, incluindo a navbar, 
  * conteúdo principal e o componente Toaster para notificações.
  * 
- * @param {object} props - Propriedades do componente
+ * @param {IUser | null} props.user - Objeto contendo dados do usuário logado
  * @param {React.ReactNode} props.children - Componentes filhos que serão renderizados dentro do layout
  * 
  * @remarks

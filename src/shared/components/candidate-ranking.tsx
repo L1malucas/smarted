@@ -5,7 +5,7 @@ import { Badge } from "@/shared/components/ui/badge"
 import { Download, Eye, Star } from "lucide-react"
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer } from "recharts"
 import { ShareDialog } from "@/shared/components/share-dialog"
-import { CandidateRankingProps } from "../types/types/component-props"
+import { ICandidateRankingProps } from "../types/types/component-props"
 
 /**
  * Componente que exibe o ranking de candidatos para uma vaga específica.
@@ -47,7 +47,7 @@ import { CandidateRankingProps } from "../types/types/component-props"
  * @see Badge - Componente de badge utilizado para classificação
  * @see RadarChart - Componente do recharts para renderização do gráfico radar
  */
-export function CandidateRanking({ candidates, jobTitle, jobId, tenantSlug, radarData }: CandidateRankingProps) {
+export function CandidateRanking({ candidates, jobTitle, jobId, tenantSlug, radarData }: ICandidateRankingProps) {
   const getScoreColor = (score: number) => {
     if (score >= 80) return "text-green-500"
     if (score >= 60) return "text-yellow-500"
