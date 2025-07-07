@@ -8,7 +8,7 @@ import { IUser } from "@/domain/models/User";
 import { getTenantUsers, addUser, updateUser, deactivateUser } from "@/infrastructure/actions/admin-actions";
 import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogClose } from "@radix-ui/react-dialog";
 import { Switch } from "@radix-ui/react-switch";
-import { Input } from "postcss";
+import { Input } from "@/shared/components/ui/input";
 import { Label } from "recharts";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../ui/card";
 import { DialogHeader, DialogFooter } from "../ui/dialog";
@@ -70,7 +70,7 @@ export default function UserManagement() {
     };
 
     startTransition(async () => {
-      const result = await addUser(newUser as any);
+      const result = await addUser(newUser);
       if (result.success) {
         toast({ title: "Sucesso", description: "Usuário adicionado com sucesso." });
         fetchUsers();
@@ -100,8 +100,8 @@ export default function UserManagement() {
       if (result.success) {
         toast({ title: "Sucesso", description: "Usuário atualizado com sucesso." });
         fetchUsers();
-    setIsEditUserDialogOpen(false);
-    setSelectedUser(null);
+        setIsEditUserDialogOpen(false);
+        setSelectedUser(null);
         setEditRoles([]); // Clear selected roles after updating
       } else {
         toast({ title: "Erro", description: result.error, variant: "destructive" });

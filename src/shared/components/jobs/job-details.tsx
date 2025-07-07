@@ -3,7 +3,8 @@
 import { useState } from "react"
 import Link from "next/link"
 import { Button } from "../ui/button";
-import { ArrowLeft, Briefcase, Calendar, Users, Edit, Badge } from "lucide-react"
+import { ArrowLeft, Briefcase, Calendar, Users, Edit } from "lucide-react"
+import { Badge } from "@/shared/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@radix-ui/react-tabs";
 import { CandidateRanking } from "../candidate-ranking";
 import { ShareDialog } from "../share-dialog";
@@ -25,7 +26,7 @@ export function JobDetails({ job, candidates, tenantSlug, radarData }: IJobDetai
     } as const
     const config = statusConfig[status] || { variant: "outline", label: status, className: "" }
     return (
-      <Badge variant={config.variant as any} className={config.className}>
+      <Badge variant={config.variant} className={config.className}>
         {config.label}
       </Badge>
     )

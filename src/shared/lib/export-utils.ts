@@ -2,10 +2,10 @@
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 import * as XLSX from "xlsx"
-import { DashboardData } from "../types/types/dashboard-interface"
+import { IDashboardData } from "../types/types/dashboard-interface"
 
 export const exportToPDF = async (
-  data: DashboardData,
+  data: IDashboardData,
   tenantSlug: string,
   period: string,
   logoPath: string,
@@ -95,7 +95,7 @@ export const exportToPDF = async (
     margin: { left: 10, right: 10 }
   })
 
-  currentY = (doc as any).lastAutoTable.finalY + 15
+  currentY = doc.lastAutoTable.finalY + 15
 
   // SEÇÃO: RELATÓRIO DO STATUS
   doc.setFontSize(12)
@@ -170,7 +170,7 @@ export const exportToPDF = async (
     margin: { left: 10, right: 10 }
   })
 
-  currentY = (doc as any).lastAutoTable.finalY + 15
+  currentY = doc.lastAutoTable.finalY + 15
 
   // SEÇÃO: ATIVIDADE DO USUÁRIO
   doc.setFontSize(12)
@@ -206,7 +206,7 @@ export const exportToPDF = async (
     margin: { left: 10, right: 10 }
   })
 
-  currentY = (doc as any).lastAutoTable.finalY + 15
+  currentY = doc.lastAutoTable.finalY + 15
 
   // // SEÇÃO: CONCLUSÕES/RECOMENDAÇÕES
   // doc.setFontSize(12)
@@ -253,7 +253,7 @@ export const exportToPDF = async (
 
 
 export const exportToExcel = async (
-  data: DashboardData,
+  data: IDashboardData,
   tenantSlug: string,
   period: string
 ) => {
@@ -327,7 +327,7 @@ export const exportToExcel = async (
   const lightGrayColor = 'F0F0F0'
 
   // Função para aplicar estilo a uma célula
-  const applyCellStyle = (ws: any, cellRef: string, style: any) => {
+  const applyCellStyle = (ws: XLSX.WorkSheet, cellRef: string, style: XLSX.CellStyle) => {
     if (!ws[cellRef]) ws[cellRef] = { t: 's', v: '' }
     ws[cellRef].s = style
   }

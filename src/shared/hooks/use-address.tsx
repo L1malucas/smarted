@@ -2,6 +2,18 @@ import { useCallback } from "react";
 import debounce from "lodash/debounce"
 import { AddressOption } from "../types/types/address-interface";
 
+interface NominatimAddress {
+  city?: string;
+  town?: string;
+  village?: string;
+  state?: string;
+  country?: string;
+}
+
+interface NominatimResult {
+  address: NominatimAddress;
+}
+
 export function useAddressAutocomplete() {
   const loadOptions = useCallback((inputValue: string): Promise<AddressOption[]> => {
     return new Promise((resolve) => {
@@ -19,8 +31,8 @@ export function useAddressAutocomplete() {
           const data = await response.json();
 
           const options: AddressOption[] = data
-            .filter((item: any) => item.address && (item.address.city || item.address.town || item.address.village))
-            .map((item: any) => {
+            .filter((item: NominatimResult) => item.address && (item.address.city || item.address.town || item.address.village))
+            .map((item: NominatimResult) => {
               const city = item.address.city || item.address.town || item.address.village;
               const state = item.address.state || "";
               const country = item.address.country || "";
@@ -30,7 +42,7 @@ export function useAddressAutocomplete() {
                 label,
               };
             })
-            .filter((option: { value: any; }, index: any, self: any[]) =>
+            .filter((option: AddressOption, index: number, self: AddressOption[]) =>
               index === self.findIndex((o: { value: any; }) => o.value === option.value)
             );
 

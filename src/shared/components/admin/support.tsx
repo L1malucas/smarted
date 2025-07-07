@@ -3,7 +3,7 @@ import type React from "react"
 import { useState } from "react"
 import { Loader2 } from "lucide-react"
 import { withActionLogging } from "@/shared/lib/actions";
-import { Input } from "postcss";
+import { Input } from "@/shared/components/ui/input";
 import { Button } from "../ui/button";
 import { Label } from "recharts";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../ui/card";

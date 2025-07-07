@@ -10,7 +10,7 @@ import { IUserActivityChartProps } from "@/shared/types/types/component-props";
 
 
 export function UserActivityChart({ tenantSlug, period }: IUserActivityChartProps) {
-  const [activityData, setActivityData] = useState<any[]>([]);
+  const [activityData, setActivityData] = useState<IUserActivityData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
 

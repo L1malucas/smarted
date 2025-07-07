@@ -7,8 +7,9 @@ import { Button } from "../ui/button";
 import { useAddressAutocomplete } from "@/shared/hooks/use-address";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@radix-ui/react-select";
 import { Switch } from "@radix-ui/react-switch";
-import { Input } from "postcss";
-import { Label } from "recharts";
+import { Input } from "@/shared/components/ui/input";
+import { Label } from "@/shared/components/ui/label";
+import { Label as RechartsLabel } from "recharts";
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { Textarea } from "../ui/textarea";
 import { useToast } from "../ui/use-toast";
@@ -28,23 +29,31 @@ export function JobBasicInfo({ formData, onChange, errors }: IJobBasicInfoProps)
     salaryRange: false,
   });
 
-  const validateField = (field: keyof typeof fieldStatus, value: any) => {
+  const validateField = (field: keyof typeof fieldStatus, value: unknown) => {
     let isValid = false;
     switch (field) {
       case "title":
-        isValid = !!value && value.trim().length >= 3;
+        isValid = typeof value === "string" && value.trim().length >= 3;
         break;
       case "description":
-        isValid = !!value && value.trim().length >= 10;
+        isValid = typeof value === "string" && value.trim().length >= 10;
         break;
       case "department":
-        isValid = !!value && value.trim().length >= 3;
+        isValid = typeof value === "string" && value.trim().length >= 3;
         break;
       case "location":
-        isValid = !!value && value.trim().length >= 3;
+        isValid = typeof value === "string" && value.trim().length >= 3;
         break;
       case "salaryRange":
-        isValid = value?.min > 0 && value?.max > value?.min;
+        isValid =
+          typeof value === "object" &&
+          value !== null &&
+          "min" in value &&
+          "max" in value &&
+          typeof (value as any).min === "number" &&
+          typeof (value as any).max === "number" &&
+          (value as any).min > 0 &&
+          (value as any).max > (value as any).min;
         break;
       default:
         isValid = true;
@@ -62,14 +71,14 @@ export function JobBasicInfo({ formData, onChange, errors }: IJobBasicInfoProps)
     return isValid;
   };
 
-  const handleInputChange = (field: keyof IJob, value: any) => {
+  const handleInputChange = <K extends keyof IJob>(field: K, value: IJob[K]) => {
     onChange(field, value);
     if (field in fieldStatus) {
       validateField(field as keyof typeof fieldStatus, value);
     }
   };
 
-  const handleSalaryChange = (field: 'min' | 'max' | 'currency', value: any) => {
+  const handleSalaryChange = (field: 'min' | 'max' | 'currency', value: number | string) => {
     const newSalaryRange = { ...formData.salaryRange, [field]: value };
     onChange("salaryRange", newSalaryRange);
     validateField("salaryRange", newSalaryRange);
@@ -241,7 +250,12 @@ export function JobBasicInfo({ formData, onChange, errors }: IJobBasicInfoProps)
             <Label htmlFor="employmentType">Tipo de Contrato</Label>
             <Select
               value={formData.employmentType || ""}
-              onValueChange={(value) => handleInputChange("employmentType", value)}
+              onValueChange={(value) =>
+                handleInputChange(
+                  "employmentType",
+                  value as IJob["employmentType"]
+                )
+              }
             >
               <SelectTrigger id="employmentType">
                 <SelectValue placeholder="Selecione" />
@@ -258,7 +272,7 @@ export function JobBasicInfo({ formData, onChange, errors }: IJobBasicInfoProps)
             <Label htmlFor="experienceLevel">Nível de Experiência</Label>
             <Select
               value={formData.experienceLevel || ""}
-              onValueChange={(value) => handleInputChange("experienceLevel", value)}
+              onValueChange={(value) => handleInputChange("experienceLevel", value as IJob["experienceLevel"])}
             >
               <SelectTrigger id="experienceLevel">
                 <SelectValue placeholder="Selecione" />

@@ -27,8 +27,11 @@ export function withActionLogging<TArgs extends any[], TResult>(
       });
 
       return { success: true, data: result };
-    } catch (error: any) {
-      const errorMessage = error.message || "Ocorreu um erro desconhecido.";
+    } catch (error: unknown) {
+      let errorMessage = "Ocorreu um erro desconhecido.";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
 
       await saveAuditLogAction({
         userId: logConfig.userId,

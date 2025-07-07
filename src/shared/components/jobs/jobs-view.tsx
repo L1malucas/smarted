@@ -4,16 +4,8 @@ import { useState, useEffect } from "react";
 import { JobCard } from "./job-card";
 import { JobListItem } from "./job-list-item";
 import { DropdownMenuSeparator } from "../ui/dropdown-menu";
-import { IJob } from "@/domain/models/Job";
-import { IJobStatus } from "@/domain/models/JobStatus";
+import { IJobViewProps } from "@/shared/types/types/component-props";
 
-interface JobViewProps {
-  jobs: IJob[];
-  tenantSlug: string;
-  viewMode: "card" | "list";
-  onStatusChange: (jobId: string, newStatus: IJobStatus) => void;
-  onPublish?: (jobId: string) => void;
-}
 
 export function JobView({
   jobs,

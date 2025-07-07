@@ -9,7 +9,7 @@ import { Skeleton } from "../ui/skeleton";
 import { IMetricsCardsProps } from "@/shared/types/types/component-props";
 
 export function MetricsCards({ tenantSlug, period }: IMetricsCardsProps) {
-  const [metrics, setMetrics] = useState<any>(null);
+  const [metrics, setMetrics] = useState<IMetricsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
 

@@ -1,18 +1,19 @@
 "use client";
 
 import React, { useState, useEffect, useTransition } from "react";
-import { Calendar, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Loader2, Table } from "lucide-react";
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Loader2, Table } from "lucide-react";
+import { Calendar } from "../ui/calendar";
 import { format, subDays } from "date-fns";
 import { getAccessLogs } from "@/infrastructure/actions/admin-actions";
 import { cn } from "@/shared/lib/utils";
 import { Popover, PopoverTrigger, PopoverContent } from "@radix-ui/react-popover";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@radix-ui/react-select";
 import { Button } from "../ui/button";
-import { Label } from "recharts";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../ui/card";
 import { TableHeader, TableRow, TableHead, TableBody, TableCell } from "../ui/table";
 import { useToast } from "../ui/use-toast";
 import { IAuditLog } from "@/domain/models/AuditLog";
+import { Label } from "../ui/label";
 
 // Helper to get start of UTC day
 const getUTCStartOfDay = (date: Date) => {
@@ -169,7 +170,7 @@ export default function AuditLogs() {
             </TableHeader>
             <TableBody>
               {logs.map((log) => (
-                <TableRow key={log.id}>
+                <TableRow key={log._id}>
                   <TableCell>{log.userName}</TableCell>
                   <TableCell>{log.actionType}</TableCell>
                   <TableCell>{log.resourceType}</TableCell>

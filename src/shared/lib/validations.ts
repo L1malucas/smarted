@@ -111,7 +111,7 @@ export function sanitizeInput(input: string): string {
  * @param {Array<keyof T>} fields - Um array de chaves que representam os campos obrigatórios.
  * @returns {string[]} Um array contendo os nomes dos campos que estão faltando ou vazios.
  */
-export function validateRequiredFields<T extends Record<string, any>>(data: T, fields: Array<keyof T>): string[] {
+export function validateRequiredFields<T extends Record<string, unknown>>(data: T, fields: Array<keyof T>): string[] {
   const missingFields: string[] = [];
   for (const field of fields) {
     if (!data[field] || String(data[field]).trim() === '') {

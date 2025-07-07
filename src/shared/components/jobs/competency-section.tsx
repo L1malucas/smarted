@@ -2,11 +2,12 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { TooltipProvider, TooltipTrigger, TooltipContent } from "@radix-ui/react-tooltip";
 import { Button } from "../ui/button";
 import { ChevronDown, ChevronUp, HelpCircle, PlusCircle, Trash2 } from "lucide-react";
-import { Input } from "postcss";
+import { Input } from "@/shared/components/ui/input";
 import { useState } from "react";
-import { Tooltip, Label } from "recharts";
-import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
+import { Label } from "@/shared/components/ui/label";
 import { ICompetency } from "@/domain/models/Competency";
+import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
+import { Tooltip } from "../ui/tooltip";
 
 interface CompetencySectionProps {
   competencies: ICompetency[];
@@ -16,7 +17,7 @@ interface CompetencySectionProps {
 
 export function CompetencySection({ competencies, onChange, error }: CompetencySectionProps) {
   const [isOpen, setIsOpen] = useState(true);
-  const handleCompetencyChange = (index: number, field: keyof ICompetency, value: any) => {
+  const handleCompetencyChange = <K extends keyof ICompetency>(index: number, field: K, value: ICompetency[K]) => {
     const updated = [...competencies];
     updated[index] = { ...updated[index], [field]: value };
     onChange(updated);

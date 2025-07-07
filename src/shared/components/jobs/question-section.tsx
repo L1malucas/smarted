@@ -3,18 +3,19 @@ import { Switch } from "@radix-ui/react-switch";
 import { TooltipProvider, TooltipTrigger, TooltipContent } from "@radix-ui/react-tooltip";
 import { Button } from "../ui/button";
 import { ChevronDown, ChevronUp, HelpCircle, PlusCircle, Trash2 } from "lucide-react";
-import { Input } from "postcss";
+import { Input } from "@/shared/components/ui/input";
 import { useState } from "react";
-import { Tooltip, Label } from "recharts";
-import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
+import { Label } from "@/shared/components/ui/label";
+import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";w
 import { Textarea } from "../ui/textarea";
 import { IJobQuestion } from "@/domain/models/JobQuestion";
 import { IQuestionSectionProps } from "@/shared/types/types/component-props";
+import { Tooltip } from "../ui/tooltip";
 
 export function QuestionSection({ questions, onChange, error }: IQuestionSectionProps) {
   const [isOpen, setIsOpen] = useState(true);
 
-  const handleQuestionChange = (index: number, field: keyof IJobQuestion, value: any) => {
+  const handleQuestionChange = <K extends keyof IJobQuestion>(index: number, field: K, value: IJobQuestion[K]) => {
     const updated = [...questions];
     updated[index] = { ...updated[index], [field]: value };
     if (field === "type" && !["multiple_choice", "single_choice"].includes(value)) {

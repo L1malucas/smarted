@@ -9,7 +9,7 @@ import { Skeleton } from "../ui/skeleton";
 import { IProgressChartProps } from "@/shared/types/types/component-props";
 
 export function ProgressChart({ tenantSlug, period }: IProgressChartProps) {
-  const [metrics, setMetrics] = useState<any>(null);
+  const [metrics, setMetrics] = useState<IProgressChartDataItem[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
 
@@ -19,9 +19,14 @@ export function ProgressChart({ tenantSlug, period }: IProgressChartProps) {
       startTransition(async () => {
         const result = await getDashboardMetrics(tenantSlug);
         if (result.success) {
-          // ProgressChart expects an array of data, so we need to adapt the single metrics object
-          // For now, we'll create a dummy array or use a more detailed metrics action if available
-          setMetrics([result.data]); // Assuming getDashboardMetrics returns a single object
+          setMetrics([
+            {
+              name: "Total",
+              vagasCriadas: result.data.totalVagasCriadas,
+              candidatosCadastrados: result.data.totalCandidatos,
+              contatosRealizados: result.data.totalContatos,
+            },
+          ]);
         } else {
           setMetrics(null); // Handle error case
         }
@@ -53,7 +58,7 @@ export function ProgressChart({ tenantSlug, period }: IProgressChartProps) {
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={data}>
+          <LineChart data={metrics}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="name" />
             <YAxis />

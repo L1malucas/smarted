@@ -3,8 +3,8 @@ import { useRouter } from "next/navigation";
 import { Button } from "../ui/button";
 import { v4 as uuidv4 } from 'uuid';
 import { useJobValidation } from "@/shared/hooks/use-job-validation";
-import { Input } from "postcss";
-import { Label } from "recharts";
+import { Input } from "@/shared/components/ui/input";
+import { Label } from "@/shared/components/ui/label";
 import { Textarea } from "../ui/textarea";
 import { toast } from "../ui/use-toast";
 import { IJobCreateFormProps } from "@/shared/types/types/component-props";
@@ -135,16 +135,16 @@ export function JobCreateForm({ tenantSlug }: IJobCreateFormProps) {
     router.push(`/${tenantSlug}/jobs`);
   };
 
-  const handleInputChange = (field: keyof IJob, value: any) => {
+  const handleInputChange = <K extends keyof IJob>(field: K, value: IJob[K]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
 
     // Limpar erro do campo quando o usuário começar a digitar
-    if (hasFieldError(field as any)) {
-      clearFieldError(field as any);
+    if (hasFieldError(field)) {
+      clearFieldError(field);
     }
   };
 
-  const handleFieldBlur = (field: keyof IJob, value: any) => {
+  const handleFieldBlur = <K extends keyof IJob>(field: K, value: IJob[K]) => {
     // Validate field on blur for immediate feedback
     if (field === 'title' || field === 'description' || field === 'competencies') {
       validateField(field, value);

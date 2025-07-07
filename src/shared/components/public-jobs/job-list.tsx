@@ -49,6 +49,7 @@ export function JobList({ jobs, loading, tenantSlug }: IJobListProps) {
                 <CardTitle className="text-2xl text-gray-900 hover:text-blue-600 transition-colors">
                   <Button variant="outline" asChild onClick={() => router.push(`/public/${tenantSlug ? `${tenantSlug}/` : ''}jobs/${job.slug}`)}>
                     {job.title}
+                  </Button>
                 </CardTitle>
                 <div className="flex items-center gap-4 text-sm text-gray-500">
                   {job.department && (

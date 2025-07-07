@@ -46,7 +46,7 @@ export function useJobValidation() {
     }
   };
 
-  const validateField = (field: keyof ValidationErrors, value: any): boolean => {
+  const validateField = (field: keyof ValidationErrors, value: unknown): boolean => {
     try {
       switch (field) {
         case 'title':

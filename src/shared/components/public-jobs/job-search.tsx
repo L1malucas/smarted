@@ -1,6 +1,6 @@
 
 import { Search } from "lucide-react";
-import { Input } from "postcss";
+import { Input } from "@/shared/components/ui/input";
 import { Card, CardContent } from "../ui/card";
 import { IJobSearchProps } from "@/shared/types/types/component-props";
 

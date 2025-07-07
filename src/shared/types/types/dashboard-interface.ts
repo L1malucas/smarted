@@ -25,3 +25,10 @@ export interface ISystemMetrics {
   systemUptime: string;
   avgResponseTime: string;
 }
+
+export interface IProgressChartDataItem {
+  name: string;
+  vagasCriadas: number;
+  candidatosCadastrados: number;
+  contatosRealizados: number;
+}

@@ -12,6 +12,8 @@ import { IJobQuestion } from "@/domain/models/JobQuestion";
 import { ICompetency } from "@/domain/models/Competency";
 
 export interface IThemeSelectorProps {
+  showLabel?: boolean;
+  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
   size?: "default" | "sm" | "lg" | "icon";
 }
 
@@ -158,7 +160,7 @@ export interface ICompetencySectionProps {
 
 export interface IJobBasicInfoProps {
   formData: Partial<IJob>;
-  onChange: (field: keyof IJob, value: any) => void;
+  onChange: <K extends keyof IJob>(field: K, value: IJob[K]) => void;
   errors: {
     title?: string;
     description?: string;

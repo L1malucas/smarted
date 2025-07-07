@@ -1,4 +1,4 @@
-import { Badge } from "lucide-react";
+import { Badge } from "@/shared/components/ui/badge";
 import { JobStatus } from "../types/types/jobs-interface";
 
 export const statusConfig = {
@@ -14,7 +14,7 @@ export const statusConfig = {
 export const getStatusBadge = (status: IJobStatus) => {
   const config = statusConfig[status] || { variant: "outline", label: status, className: "" };
   return (
-    <Badge variant={config.variant as any} className={config.className}>
+    <Badge variant={config.variant} className={config.className}>
       {config.label}
     </Badge>
   );
