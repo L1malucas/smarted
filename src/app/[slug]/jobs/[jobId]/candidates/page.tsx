@@ -5,7 +5,7 @@ import { useParams } from "next/navigation"
 import { ArrowLeft, Download, Eye, Star, Loader2, Badge } from "lucide-react"
 import Link from "next/link"
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer } from "recharts"
-import { getJobDetailsAction, getCandidatesForJobAction } from "@/infrastructure/actions/job-actions"
+import { getCandidatesForJobAction } from "@/infrastructure/actions/candidate-actions"
 import { ShareDialog } from "@/shared/components/share-dialog"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/shared/components/ui/card"
 import { Skeleton } from "@/shared/components/ui/skeleton"
@@ -30,7 +30,7 @@ export default function CandidatesPage() {
       setIsLoading(true);
       startTransition(async () => {
         try {
-          const jobResult = await getJobDetailsAction(jobId);
+          const jobResult = await getCandidatesForJobAction(jobId);
           if (jobResult.success && jobResult.data) {
             setJob(jobResult.data);
           } else {

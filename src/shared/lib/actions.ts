@@ -1,30 +1,39 @@
 import { saveAuditLogAction } from "@/infrastructure/actions/audit-actions";
 import { IActionFunction, IActionLogConfig, IActionResult } from "../types/types/action-interface";
+import { getSessionUser } from "@/infrastructure/actions/auth-actions"; // Import getSessionUser
 
 export function withActionLogging<TArgs extends any[], TResult>(
   action: IActionFunction<TArgs, TResult>,
-  logConfig: IActionLogConfig
+  actionType: IActionLogConfig['actionType'],
+  resourceType: IActionLogConfig['resourceType'],
+  resourceId?: IActionLogConfig['resourceId'],
+  details?: IActionLogConfig['details']
 ): IActionFunction<TArgs, IActionResult<TResult>> {
   return async (...args: TArgs): Promise<IActionResult<TResult>> => {
+    const session = await getSessionUser(); // Get session here
+
+    let logConfig: IActionLogConfig = {
+      userId: session?.userId ?? "anonymous",
+      userName: session?.name ?? "Sistema",
+      actionType: actionType,
+      resourceType: resourceType,
+      resourceId: resourceId,
+      details: details,
+      success: false, // Will be updated based on outcome
+      tenantId: session?.tenantId ?? "",
+      tenantName: session?.tenantName ?? "",
+    };
+
     try {
       const result = await action(...args);
 
-      await saveAuditLogAction({
-        userId: logConfig.userId,
-        userName: logConfig.userName,
-        actionType: logConfig.actionType,
-        resourceType: logConfig.resourceType,
-        resourceId: logConfig.resourceId,
-        details: logConfig.details || `Ação ${logConfig.actionType} em ${logConfig.resourceType} bem-sucedida.`,
-        success: true,
-      });
-
-
+      logConfig.success = true;
+      await saveAuditLogAction(logConfig);
 
       return { success: true, data: result };
     } catch (error: any) {
       if (error && typeof error.digest === 'string' && error.digest.startsWith('NEXT_REDIRECT')) {
-        throw error; 
+        throw error;
       }
 
       let errorMessage = "Ocorreu um erro desconhecido.";
@@ -32,15 +41,9 @@ export function withActionLogging<TArgs extends any[], TResult>(
         errorMessage = error.message;
       }
 
-      await saveAuditLogAction({
-        userId: logConfig.userId,
-        userName: logConfig.userName,
-        actionType: logConfig.actionType,
-        resourceType: logConfig.resourceType,
-        resourceId: logConfig.resourceId,
-        details: logConfig.details || `Ação ${logConfig.actionType} em ${logConfig.resourceType} falhou: ${errorMessage}`,
-        success: false,
-      });
+      logConfig.success = false;
+      logConfig.details = logConfig.details || `Ação ${logConfig.actionType} em ${logConfig.resourceType} falhou: ${errorMessage}`;
+      await saveAuditLogAction(logConfig);
 
       return { success: false, error: errorMessage };
     }

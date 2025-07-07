@@ -96,3 +96,20 @@ export const submitApplicationAction = withActionLogging(
     success: false,
   } as IActionLogConfig
 );
+
+export const getCandidatesForJobAction = withActionLogging(
+  async (jobId: string) => {
+    const { tenantId } = await getCurrentUser();
+    const candidatesCollection = await getCandidatesCollection();
+    const candidates = await candidatesCollection.find({ jobId, tenantId }).toArray() as unknown as ICandidate[];
+    return candidates;
+  },
+  {
+    userId: "", // Will be populated by getCurrentUser
+    userName: "", // Will be populated by getCurrentUser
+    actionType: "Listar Candidatos por Vaga",
+    resourceType: "Candidate",
+    resourceId: "", // Will be populated by jobId
+    success: false,
+  } as IActionLogConfig
+);

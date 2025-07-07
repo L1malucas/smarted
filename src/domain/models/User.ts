@@ -1,3 +1,4 @@
+import { ObjectId } from 'mongodb';
 import { IBaseEntity } from './base/BaseEntity';
 
 /**
@@ -6,6 +7,7 @@ import { IBaseEntity } from './base/BaseEntity';
  * @extends {IBaseEntity}
  */
 export interface IUser extends IBaseEntity {
+  _id?: ObjectId;
   cpf: string;
   slug: string;
   name: string;
@@ -17,6 +19,7 @@ export interface IUser extends IBaseEntity {
   status: 'active' | 'inactive';
   createdBy?: string;
   updatedBy?: string;
+  tenantName?: string;
 }
 
 /**

@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useTransition } from "react";
 import { Button } from "../ui/button";
-import { PlusCircle, Edit, Trash2, Loader2, } from "lucide-react";
+import { PlusCircle, Edit, Trash2, Loader2, Building } from "lucide-react";
 import { Badge } from "../ui/badge";
 import { IUser } from "@/domain/models/User";
 import { getTenantUsers, addUser, updateUser, deactivateUser } from "@/infrastructure/actions/admin-actions";
@@ -15,6 +15,8 @@ import { TableHeader, TableRow, TableHead, TableBody, TableCell, Table } from ".
 import { useToast } from "../ui/use-toast";
 import { Label } from "../ui/label";
 import { Switch } from "../ui/switch";
+import { getSessionUser } from "@/infrastructure/actions/auth-actions";
+import TenantManagement from "./tenant-management";
 
 
 const AVAILABLE_ROLES = [
@@ -31,13 +33,22 @@ export default function UserManagement() {
   const [selectedUser, setSelectedUser] = useState<IUser | null>(null);
   const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
   const [isEditUserDialogOpen, setIsEditUserDialogOpen] = useState(false);
+  const [isAddTenantDialogOpen, setIsAddTenantDialogOpen] = useState(false);
   const [newRoles, setNewRoles] = useState<string[]>([]);
   const [editRoles, setEditRoles] = useState<string[]>([]);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchUsers();
+    const checkRoleAndFetchUsers = async () => {
+      const session = await getSessionUser();
+      if (session?.roles.includes('super-admin')) {
+        setIsSuperAdmin(true);
+      }
+      fetchUsers();
+    };
+    checkRoleAndFetchUsers();
   }, []);
 
   useEffect(() => {
@@ -125,16 +136,17 @@ export default function UserManagement() {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div>
           <CardTitle>Gerenciamento de Usuários</CardTitle>
           <CardDescription>Adicione, edite e gerencie usuários para o seu tenant.</CardDescription>
         </div>
-        <Dialog open={isAddUserDialogOpen} onOpenChange={setIsAddUserDialogOpen}>
-          <DialogTrigger asChild>
-            <Button><PlusCircle className="mr-2 h-4 w-4" /> Adicionar Usuário</Button>
-          </DialogTrigger>
-          <DialogContent>
+        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto">
+          <Dialog open={isAddUserDialogOpen} onOpenChange={setIsAddUserDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="w-full sm:w-auto"><PlusCircle className="mr-2 h-4 w-4" /> Adicionar Usuário</Button>
+            </DialogTrigger>
+            <DialogContent>
             <DialogHeader>
               <DialogTitle>Adicionar Novo Usuário</DialogTitle>
             </DialogHeader>
@@ -161,6 +173,10 @@ export default function UserManagement() {
                   placeholder="Selecione os cargos"
                 />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="tenantId">Tenant ID</Label>
+                <Input id="tenantId" name="tenantId" required />
+              </div>
               <div className="flex items-center space-x-2">
                 <Switch id="isAdmin" name="isAdmin" />
                 <Label htmlFor="isAdmin">Administrador</Label>
@@ -172,6 +188,20 @@ export default function UserManagement() {
             </form>
           </DialogContent>
         </Dialog>
+        {isSuperAdmin && (
+          <Dialog open={isAddTenantDialogOpen} onOpenChange={setIsAddTenantDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="w-full sm:w-auto ml-0 sm:ml-2"><Building className="mr-2 h-4 w-4" /> Criar Novo Tenant</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Criar Novo Tenant</DialogTitle>
+              </DialogHeader>
+              <TenantManagement />
+            </DialogContent>
+          </Dialog>
+        )}
+      </div>
       </CardHeader>
       <CardContent>
         {isFetching ? (
@@ -179,7 +209,8 @@ export default function UserManagement() {
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
         ) : (
-          <Table>
+          <div className="overflow-x-auto">
+            <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Nome</TableHead>
@@ -256,6 +287,7 @@ export default function UserManagement() {
               ))}
             </TableBody>
           </Table>
+          </div>
         )}
       </CardContent>
     </Card>

@@ -2,7 +2,7 @@ import { ILog } from '@/domain/models/Log';
 import { getLogsCollection } from '@/infrastructure/persistence/db';
 import { IAuditLog } from '@/domain/models/AuditLog';
 
-export async function saveAuditLog(log: Omit<IAuditLog, '_id' | 'timestamp'>): Promise<IAuditLog> {
+export async function saveAuditLog(log: Omit<IAuditLog, '_id' | 'timestamp'> & { tenantId: string; tenantName?: string }): Promise<IAuditLog> {
   try {
     const logsCollection = await getLogsCollection();
     const newLog: ILog = {
@@ -13,7 +13,9 @@ export async function saveAuditLog(log: Omit<IAuditLog, '_id' | 'timestamp'>): P
       resourceId: log.resourceId,
       details: log.details,
       success: log.success,
-      timestamp: new Date(), // Manually add timestamp
+      timestamp: new Date(),
+      tenantId: log.tenantId,
+      tenantName: log.tenantName || 'Unknown Tenant',
     };
     const result = await logsCollection.insertOne(newLog);
     return { ...newLog, _id: result.insertedId };
@@ -22,10 +24,10 @@ export async function saveAuditLog(log: Omit<IAuditLog, '_id' | 'timestamp'>): P
   }
 }
 
-export async function getAuditLogsByResource(resourceType: string, resourceId?: string): Promise<IAuditLog[]> {
+export async function getAuditLogsByResource(resourceType: string, tenantId: string, resourceId?: string): Promise<IAuditLog[]> {
   try {
     const logsCollection = await getLogsCollection();
-    const query: any = { resourceType };
+    const query: any = { resourceType, tenantId };
     if (resourceId) {
       query.resourceId = resourceId;
     }
@@ -36,10 +38,10 @@ export async function getAuditLogsByResource(resourceType: string, resourceId?: 
   }
 }
 
-export async function getAllAuditLogs(): Promise<IAuditLog[]> {
+export async function getAllAuditLogs(tenantId: string): Promise<IAuditLog[]> {
   try {
     const logsCollection = await getLogsCollection();
-    const logs = await logsCollection.find({}).sort({ timestamp: -1 }).toArray() as ILog[];
+    const logs = await logsCollection.find({ tenantId }).sort({ timestamp: -1 }).toArray() as ILog[];
     return logs;
   } catch (error) {
     throw new Error('Falha ao buscar todos os logs de auditoria.');

@@ -9,16 +9,16 @@ import { Progress } from "@/shared/components/ui/progress"
 import { Badge } from "@/shared/components/ui/badge"
 import { ArrowLeft, Upload, X, FileText, AlertCircle, CheckCircle, Loader2 } from "lucide-react"
 import Link from "next/link"
-import { uploadResumeAction } from "@/infrastructure/actions/job-actions";
+import { uploadResumeAction } from "@/infrastructure/actions/file-actions";
 import { toast } from "@/shared/components/ui/use-toast";
-import { UploadFile } from "@/shared/types/types/upload-interface"
+import { IUploadFile } from "@/shared/types/types/upload-file"
 
 export default function UploadPage() {
   const params = useParams()
   const tenantSlug = params.slug as string
   const jobSlugParam = params.jobId as string 
   const router = useRouter()
-  const [files, setFiles] = useState<UploadFile[]>([])
+  const [files, setFiles] = useState<IUploadFile[]>([])
   const [isDragOver, setIsDragOver] = useState(false)
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -60,7 +60,7 @@ export default function UploadPage() {
       return true
     })
 
-    const uploadFiles: UploadFile[] = validFiles.map((file) => ({
+    const uploadFiles: IUploadFile[] = validFiles.map((file) => ({
       id: Math.random().toString(36).substr(2, 9),
       file,
       status: "pending",

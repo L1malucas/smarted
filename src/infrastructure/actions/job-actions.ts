@@ -6,12 +6,13 @@ import { IJob } from "@/domain/models/Job";
 import { ObjectId } from "mongodb";
 import { IJobStatus } from "@/domain/models/JobStatus";
 import { jobSchema, draftJobSchema, updateJobSchema } from "@/application/schemas/job.schema";
-import { getCurrentUser, serializeJob } from "@/shared/lib/server-utils";
+import { serializeJob } from "@/shared/lib/server-utils";
+import { getSessionUser } from "./auth-actions";
 import { IActionLogConfig } from "@/shared/types/types/action-interface";
 export const createJobAction = withActionLogging(
   async (jobData: Partial<IJob>, isDraft: boolean = false) => {
-    const user = await getCurrentUser();
-    if (!user) throw new Error("Usuário não autenticado.");
+    const session = await getSessionUser();
+    if (!session) throw new Error("Usuário não autenticado.");
     const jobsCollection = await getJobsCollection();
     const schema = isDraft ? draftJobSchema : jobSchema;
     const validatedData = schema.parse(jobData);
@@ -23,9 +24,10 @@ export const createJobAction = withActionLogging(
       ...validatedData,
       _id: new ObjectId(), 
       slug: slug,
-      createdBy: user.userId,
-      createdByName: user.userName,
-      tenantId: user.tenantId,
+      createdBy: session.userId,
+      createdByName: session.name,
+      tenantId: session.tenantId,
+      tenantName: session.tenantName,
       createdAt: new Date(),
       updatedAt: new Date(),
       status: isDraft ? "draft" : "aberta",
@@ -33,8 +35,8 @@ export const createJobAction = withActionLogging(
       statusChangeLog: [{
         status: isDraft ? "draft" : "aberta",
         changedAt: new Date(),
-        changedBy: user.userId,
-        changedByName: user.userName,
+        changedBy: session.userId,
+        changedByName: session.name,
       }],
       criteriaWeights: validatedData.criteriaWeights,
       candidatesCount: validatedData.candidatesCount || 0,
@@ -43,21 +45,17 @@ export const createJobAction = withActionLogging(
     const createdJob = serializeJob({ ...newJobForDb, _id: result.insertedId });
     return createdJob;
   },
-  {
-    userId: "", 
-    userName: "", 
-    actionType: "Criar Vaga",
-    resourceType: "Job",
-    resourceId: "", 
-    success: false,
-  } as IActionLogConfig
+  "Criar Vaga",
+  "Job",
+  "",
+  ""
 );
 export const updateJobAction = withActionLogging(
   async (jobId: string, jobData: Partial<IJob>) => {
-    const user = await getCurrentUser();
-    if (!user) throw new Error("Usuário não autenticado.");
+    const session = await getSessionUser();
+    if (!session) throw new Error("Usuário não autenticado.");
     const jobsCollection = await getJobsCollection();
-    const existingJob = await jobsCollection.findOne({ _id: new ObjectId(jobId) as any, tenantId: user.tenantId }) as unknown as IJob;
+    const existingJob = await jobsCollection.findOne({ _id: new ObjectId(jobId) as any, tenantId: session.tenantId }) as unknown as IJob;
     if (!existingJob) throw new Error("Vaga não encontrada ou não pertence ao tenant.");
     const validatedData = updateJobSchema.parse(jobData);
     const updateFields: Partial<IJob> = {
@@ -73,7 +71,7 @@ export const updateJobAction = withActionLogging(
       }
     }
     const result = await jobsCollection.updateOne(
-      { _id: new ObjectId(jobId) as any, tenantId: user.tenantId },
+      { _id: new ObjectId(jobId) as any, tenantId: session.tenantId },
       { $set: updateFields }
     );
     if (result.modifiedCount === 0) {
@@ -82,65 +80,53 @@ export const updateJobAction = withActionLogging(
     const updatedJob = await jobsCollection.findOne({ _id: new ObjectId(jobId) as any }) as unknown as IJob;
     return serializeJob(updatedJob);
   },
-  {
-    userId: "", 
-    userName: "", 
-    actionType: "Atualizar Vaga",
-    resourceType: "Job",
-    resourceId: "", 
-    success: false,
-  } as IActionLogConfig
+  "Atualizar Vaga",
+  "Job",
+  "",
+  ""
 );
 export const deleteJobAction = withActionLogging(
   async (jobId: string) => {
-    const user = await getCurrentUser();
-    if (!user) throw new Error("Usuário não autenticado.");
+    const session = await getSessionUser();
+    if (!session) throw new Error("Usuário não autenticado.");
     const jobsCollection = await getJobsCollection();
-    const jobToDelete = await jobsCollection.findOne({ _id: new ObjectId(jobId) as any, tenantId: user.tenantId }) as unknown as IJob;
+    const jobToDelete = await jobsCollection.findOne({ _id: new ObjectId(jobId) as any, tenantId: session.tenantId }) as unknown as IJob;
     if (!jobToDelete) throw new Error("Vaga não encontrada ou não pertence ao tenant.");
-    if (jobToDelete.createdBy !== user.userId && !user.isAdmin) {
+    if (jobToDelete.createdBy !== session.userId && !session.isAdmin) {
       throw new Error("Você não tem permissão para deletar esta vaga.");
     }
-    const result = await jobsCollection.deleteOne({ _id: new ObjectId(jobId) as any, tenantId: user.tenantId });
+    const result = await jobsCollection.deleteOne({ _id: new ObjectId(jobId) as any, tenantId: session.tenantId });
     if (result.deletedCount === 0) {
       throw new Error("Nenhuma vaga encontrada para exclusão.");
     }
     return { success: true };
   },
-  {
-    userId: "", 
-    userName: "", 
-    actionType: "Deletar Vaga",
-    resourceType: "Job",
-    resourceId: "", 
-    success: false,
-  } as IActionLogConfig
+  "Deletar Vaga",
+  "Job",
+  "",
+  ""
 );
 export const getJobByIdAction = withActionLogging(
   async (jobId: string) => {
-    const user = await getCurrentUser();
+    const session = await getSessionUser();
     const jobsCollection = await getJobsCollection();
     const query: any = { _id: new ObjectId(jobId) as any };
-    if (user) {
-      query.tenantId = user.tenantId;
+    if (session) {
+      query.tenantId = session.tenantId;
     }
     const job = await jobsCollection.findOne(query) as unknown as IJob;
     if (!job) {
       throw new Error("Vaga não encontrada.");
     }
-    if (!user && job.status !== "aberta") {
+    if (!session && job.status !== "aberta") {
       throw new Error("Vaga não encontrada ou não está aberta para visualização pública.");
     }
     return serializeJob(job);
   },
-  {
-    userId: "", 
-    userName: "", 
-    actionType: "Obter Vaga por ID",
-    resourceType: "Job",
-    resourceId: "", 
-    success: false,
-  } as IActionLogConfig
+  "Obter Vaga por ID",
+  "Job",
+  "",
+  ""
 );
 export const getJobBySlugAction = withActionLogging(
   async (slug: string) => {
@@ -148,14 +134,10 @@ export const getJobBySlugAction = withActionLogging(
     const job = await jobsCollection.findOne({ slug }) as unknown as IJob;
     return serializeJob(job);
   },
-  {
-    userId: "", 
-    userName: "", 
-    actionType: "Obter Vaga por Slug",
-    resourceType: "Job",
-    resourceId: "", 
-    success: false,
-  } as IActionLogConfig
+  "Obter Vaga por Slug",
+  "Job",
+  "",
+  ""
 );
 export const listJobsAction = withActionLogging(
   async (filters: {
@@ -166,14 +148,27 @@ export const listJobsAction = withActionLogging(
     sortBy?: string;
     tenantId?: string; 
   }) => {
-    const user = await getCurrentUser();
+    const session = await getSessionUser();
     const jobsCollection = await getJobsCollection();
-    const { status, searchQuery, page = 1, limit = 10, sortBy, tenantId } = filters;
+    const { status, searchQuery, page = 1, limit = 10, sortBy } = filters;
     const query: any = {};
-    if (tenantId) {
-      query.tenantId = tenantId;
+
+    let effectiveTenantId: string | undefined;
+    if (session) {
+      effectiveTenantId = session.tenantId;
+    } else if (filters.tenantId) {
+      effectiveTenantId = filters.tenantId;
     }
-    query.status = "aberta";
+
+    if (effectiveTenantId) {
+      query.tenantId = effectiveTenantId;
+      if (status) {
+        query.status = status;
+      }
+    } else {
+      query.status = "aberta";
+    }
+
     if (searchQuery) {
       query.title = { $regex: searchQuery, $options: "i" };
     }
@@ -197,37 +192,33 @@ export const listJobsAction = withActionLogging(
       total,
     };
   },
-  {
-    userId: "", 
-    userName: "", 
-    actionType: "Listar Vagas",
-    resourceType: "Job",
-    resourceId: "", 
-    success: false,
-  } as IActionLogConfig
+  "Listar Vagas",
+  "Job",
+  "",
+  ""
 );
 export const updateJobStatusAction = withActionLogging(
   async (jobId: string, newStatus: IJobStatus) => {
-    const user = await getCurrentUser();
-    if (!user) throw new Error("Usuário não autenticado.");
+    const session = await getSessionUser();
+    if (!session) throw new Error("Usuário não autenticado.");
     const jobsCollection = await getJobsCollection();
-    const existingJob = await jobsCollection.findOne({ _id: new ObjectId(jobId) as any, tenantId: user.tenantId }) as unknown as IJob;
+    const existingJob = await jobsCollection.findOne({ _id: new ObjectId(jobId) as any, tenantId: session.tenantId }) as unknown as IJob;
     if (!existingJob) throw new Error("Vaga não encontrada ou não pertence ao tenant.");
     const result = await jobsCollection.updateOne(
-      { _id: new ObjectId(jobId) as any, tenantId: user.tenantId },
+      { _id: new ObjectId(jobId) as any, tenantId: session.tenantId },
       { 
         $set: { 
           status: newStatus, 
           updatedAt: new Date(), 
-          lastStatusUpdateBy: user.userId, 
-          lastStatusUpdateByName: user.userName 
+          lastStatusUpdateBy: session.userId, 
+          lastStatusUpdateByName: session.name 
         },
         $push: {
           statusChangeLog: {
             status: newStatus,
             changedAt: new Date(),
-            changedBy: user.userId,
-            changedByName: user.userName,
+            changedBy: session.userId,
+            changedByName: session.name,
           },
         },
       }
@@ -238,12 +229,8 @@ export const updateJobStatusAction = withActionLogging(
     const updatedJob = await jobsCollection.findOne({ _id: new ObjectId(jobId) as any }) as unknown as IJob;
     return serializeJob(updatedJob);
   },
-  {
-    userId: "", 
-    userName: "", 
-    actionType: "Atualizar Status da Vaga",
-    resourceType: "Job",
-    resourceId: "", 
-    success: false,
-  } as IActionLogConfig
+  "Atualizar Status da Vaga",
+  "Job",
+  "",
+  ""
 );

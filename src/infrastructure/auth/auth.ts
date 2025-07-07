@@ -8,8 +8,7 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { SignJWT, jwtVerify } from 'jose';
-
-
+import { IUserPayload } from '@/shared/types/types/auth';
 
 const JWT_SECRET = process.env.JWT_SECRET as string;
 console.log('Auth Lib: JWT_SECRET loaded:', JWT_SECRET ? 'YES' : 'NO');

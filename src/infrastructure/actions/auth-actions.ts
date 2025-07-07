@@ -9,13 +9,13 @@
 
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { getUsersCollection } from '@/infrastructure/persistence/db';
+import { getUsersCollection, getTenantsCollection } from '@/infrastructure/persistence/db';
+import { ObjectId } from 'mongodb';
 import { validateCPF } from '@/shared/lib/validations';
-import { generateToken, generateRefreshToken, verifyRefreshToken, UserPayload } from '@/infrastructure/auth/auth';
+import { generateToken, generateRefreshToken, verifyRefreshToken, verifyToken } from '@/infrastructure/auth/auth';
 import { withActionLogging } from '@/shared/lib/actions';
-import { IActionLogConfig } from '@/shared/types/types/action-interface';
-import { verifyToken } from '@/infrastructure/auth/auth';
 import { IActionResult, IActionLogConfig } from '@/shared/types/types/action-interface';
+import { IUserPayload } from '@/shared/types/types/auth';
 
 const COOKIE_OPTIONS = {
   httpOnly: true,
@@ -24,22 +24,13 @@ const COOKIE_OPTIONS = {
   path: '/',
 };
 
-async function getSessionUser(): Promise<IUserPayload | null> {
+export async function getSessionUser(): Promise<IUserPayload | null> {
   const accessToken = (await cookies()).get('accessToken')?.value;
   if (!accessToken) return null;
   return verifyToken(accessToken);
 }
 
 export async function loginAction(cpf: string): Promise<IActionResult<void>> {
-  const logConfig: IActionLogConfig = {
-    userId: "", // Will be populated after user is found
-    userName: "", // Will be populated after user is found
-    actionType: "Login de Usuário",
-    resourceType: "Autenticação",
-    resourceId: cpf, // Using CPF as resourceId for login attempts
-    success: false
-  };
-
   const loginActionInternal = async (cpf: string) => {
     if (!cpf) {
       throw new Error('CPF é obrigatório.');
@@ -56,9 +47,9 @@ export async function loginAction(cpf: string): Promise<IActionResult<void>> {
       throw new Error('CPF não encontrado.');
     }
 
-    // Update logConfig with actual user data
-    logConfig.userId = user._id.toString();
-    logConfig.userName = user.name;
+    const tenantsCollection = await getTenantsCollection();
+    const tenant = await tenantsCollection.findOne({ slug: user.tenantId }); // Assuming user.tenantId is the slug
+    const tenantName = tenant?.name || 'Default Tenant';
 
     const userPayload: IUserPayload = {
       userId: user._id.toString(),
@@ -69,6 +60,7 @@ export async function loginAction(cpf: string): Promise<IActionResult<void>> {
       permissions: user.permissions,
       isAdmin: user.isAdmin,
       tenantId: user.tenantId,
+      tenantName: tenantName,
     };
 
     const accessToken = generateToken(userPayload);
@@ -81,7 +73,13 @@ export async function loginAction(cpf: string): Promise<IActionResult<void>> {
     redirect(`/${tenantSlug}/dashboard`);
   };
 
-  return await withActionLogging(loginActionInternal, logConfig)(cpf);
+  return await withActionLogging(
+    loginActionInternal,
+    "Login de Usuário",
+    "Autenticação",
+    cpf,
+    ""
+  )(cpf);
 }
 
 
@@ -94,22 +92,19 @@ export async function loginAction(cpf: string): Promise<IActionResult<void>> {
 export async function logoutAction(): Promise<IActionResult<void>> {
   const sessionUser = await getSessionUser();
 
-  const logConfig: IActionLogConfig = {
-    userId: sessionUser?.userId ?? "anonymous",
-    userName: sessionUser?.name ?? "Sistema",
-    actionType: "Logout de Usuário",
-    resourceType: "Autenticação",
-    resourceId: sessionUser?.userId ?? "",
-    success: false
-  };
-
   const logoutActionInternal = async () => {
     (await cookies()).delete('accessToken');
     (await cookies()).delete('refreshToken');
     redirect('/login');
   };
 
-  return await withActionLogging(logoutActionInternal, logConfig)();
+  return await withActionLogging(
+    logoutActionInternal,
+    "Logout de Usuário",
+    "Autenticação",
+    sessionUser?.userId ?? "",
+    ""
+  )();
 }
 
 
@@ -124,15 +119,6 @@ export async function logoutAction(): Promise<IActionResult<void>> {
 export async function refreshTokenAction(): Promise<IActionResult<{ newAccessToken: string }>> {
   const refreshToken = (await cookies()).get('refreshToken')?.value;
   const decoded = refreshToken ? await verifyRefreshToken(refreshToken) : null;
-
-  const logConfig: IActionLogConfig = {
-    userId: decoded?.userId ?? "anonymous",
-    userName: decoded?.name ?? "Sistema",
-    actionType: "Atualização de Token",
-    resourceType: "Autenticação",
-    resourceId: decoded?.userId ?? "",
-    success: false
-  };
 
   const refreshTokenActionInternal = async () => {
     const refreshToken = (await cookies()).get('refreshToken')?.value;
@@ -158,6 +144,7 @@ export async function refreshTokenAction(): Promise<IActionResult<{ newAccessTok
       permissions: decoded.permissions,
       isAdmin: decoded.isAdmin,
       tenantId: decoded.tenantId,
+      tenantName: decoded.tenantName,
     };
 
     const newAccessToken = generateToken(userPayload);
@@ -166,5 +153,11 @@ export async function refreshTokenAction(): Promise<IActionResult<{ newAccessTok
     return { success: true, newAccessToken };
   };
 
-  return await withActionLogging(refreshTokenActionInternal, logConfig)();
+  return await withActionLogging(
+    refreshTokenActionInternal,
+    "Atualização de Token",
+    "Autenticação",
+    decoded?.userId ?? "",
+    ""
+  )();
 }

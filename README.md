@@ -290,3 +290,6 @@ O projeto segue uma estrutura de pastas organizada em camadas, alinhada com os p
 *   Adicionar testes unitários e de integração.
 
 Este README provê uma visão geral da aplicação SMARTED TECH SOLUTIONS para recrutamento. Para detalhes específicos sobre componentes ou fluxos, consulte o código-fonte e os comentários.
+
+
+

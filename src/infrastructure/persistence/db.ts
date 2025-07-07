@@ -10,6 +10,7 @@ import { INotification } from '@/domain/models/Notification';
 import { IJob } from '@/domain/models/Job'; // Import IJob
 import { IFileMetadata } from '@/domain/models/FileMetadata'; // Import IFileMetadata
 import { MongoClient, ServerApiVersion, Db, Collection } from 'mongodb';
+import { ITenant } from '@/domain/models/Tenant';
 
 /**
  * URI de conexão com o MongoDB, obtida da variável de ambiente `MONGODB_URI`.
@@ -155,4 +156,13 @@ export async function getNotificationsCollection(): Promise<Collection<INotifica
 export async function getFilesCollection(): Promise<Collection<IFileMetadata>> {
   const db = await getDb();
   return db.collection('files');
+}
+
+/**
+ * Retorna a coleção 'tenants' do banco de dados MongoDB.
+ * @returns {Promise<Collection<ITenant>>} Uma promessa que resolve para a coleção 'tenants'.
+ */
+export async function getTenantsCollection(): Promise<Collection<ITenant>> {
+  const db = await getDb();
+  return db.collection('tenants');
 }

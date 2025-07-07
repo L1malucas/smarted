@@ -10,6 +10,8 @@ export interface IActionLogConfig {
   resourceId?: string;
   details?: string;
   success: boolean;
+  tenantId: string;
+  tenantName?: string;
 }
 
 export interface IActionResult<T> {

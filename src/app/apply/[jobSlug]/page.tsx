@@ -14,8 +14,9 @@ import { Textarea } from "@/shared/components/ui/textarea"
 import { Progress } from "@/shared/components/ui/progress"
 import { toast } from "@/shared/components/ui/use-toast"
 import { UploadCloud, FileText, ArrowRight, ArrowLeft, Loader2 } from "lucide-react"
-import { getJobBySlugAction, submitApplicationAction } from "@/infrastructure/actions/job-actions"
-import { Job, CandidateAnswer } from "@/shared/types/types/jobs-interface"
+import { getJobBySlugAction } from "@/infrastructure/actions/job-actions"
+import { submitApplicationAction } from "@/infrastructure/actions/candidate-actions"
+import { IJob } from "@/domain/models/Job"
 
 /**
  * Componente de página para o formulário de candidatura a uma vaga.
@@ -67,9 +68,9 @@ export default function ApplyPage() {
   const jobSlug = params.jobSlug as string
 
   const [currentStep, setCurrentStep] = useState(1)
-  const [job, setJob] = useState<Job | null>(null)
+  const [job, setJob] = useState<IJob | null>(null)
   const [resumeFile, setResumeFile] = useState<File | null>(null)
-  const [answers, setAnswers] = useState<CandidateAnswer[]>([])
+  const [answers, setAnswers] = useState<ICandidateAnswer[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {

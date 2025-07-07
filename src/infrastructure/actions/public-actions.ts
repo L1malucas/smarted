@@ -1,8 +1,9 @@
 "use server";
 
 import { withActionLogging } from "@/shared/lib/actions";
-import { getJobsCollection } from "../persistence/db";
+import { getJobsCollection, getCandidatesCollection } from "../persistence/db";
 import { IJob } from "@/domain/models/Job";
+import { ICandidate } from "@/domain/models/Candidate";
 import { serializeJob } from "@/shared/lib/server-utils";
 import { IActionLogConfig } from "@/shared/types/types/action-interface";
 
@@ -76,6 +77,25 @@ export const listPublicJobsAction = withActionLogging(
     userName: "Public User", // Special userName for public actions
     actionType: "Listar Vagas Públicas",
     resourceType: "Job",
+    resourceId: "",
+    success: false,
+  } as IActionLogConfig
+);
+
+export const getPublicCandidateDetailsAction = withActionLogging(
+  async (hash: string) => {
+    const candidatesCollection = await getCandidatesCollection();
+    const candidate = await candidatesCollection.findOne({ _id: hash }) as unknown as ICandidate;
+    if (!candidate) {
+      throw new Error("Candidato não encontrado.");
+    }
+    return candidate;
+  },
+  {
+    userId: "public",
+    userName: "Public User",
+    actionType: "Obter Detalhes de Candidato Público",
+    resourceType: "Candidate",
     resourceId: "",
     success: false,
   } as IActionLogConfig

@@ -1,8 +1,6 @@
-import { ObjectId } from 'mongodb';
 
 export interface ILog {
-  _id?: string; // MongoDB's default ID (represented as string in application)
-  userId: string;
+  _id?: string; 
   userName: string;
   actionType: string;
   resourceType: string;
@@ -10,4 +8,6 @@ export interface ILog {
   details?: string;
   success: boolean;
   timestamp: Date;
+  tenantId: string;
+  tenantName: string;
 }

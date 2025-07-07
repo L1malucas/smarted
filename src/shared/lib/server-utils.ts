@@ -1,22 +1,4 @@
-import { cookies } from "next/headers";
-import { verifyToken } from "@/infrastructure/auth/auth";
 import { IJob } from "@/domain/models/Job";
-
-// Helper to get current user's info
-export async function getCurrentUser(): Promise<{ userId: string; tenantId: string; userName: string; isAdmin: boolean } | null> {
-  const accessToken = (await cookies()).get('accessToken')?.value;
-  if (!accessToken) return null; // Return null if no access token
-
-  const decoded = await verifyToken(accessToken);
-  if (!decoded) return null; // Return null if token is invalid
-
-  return {
-    userId: decoded.userId,
-    tenantId: decoded.tenantId,
-    userName: decoded.name || "Unknown User",
-    isAdmin: decoded.isAdmin || false,
-  };
-}
 
 // Helper to serialize job objects for client components
 export function serializeJob(job: any): IJob {

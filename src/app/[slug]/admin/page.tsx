@@ -3,16 +3,31 @@
 
 import type React from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs"
-import { Settings, CalendarX, UserCog, History, LifeBuoy } from "lucide-react"
+import { Settings, CalendarX, UserCog, History, LifeBuoy, Building } from "lucide-react"
 import { useParams } from "next/navigation"
 import UserManagement from "@/shared/components/admin/user-management";
 import AuditLogs from "@/shared/components/admin/audit-logs";
 import ExpiredJobs from "@/shared/components/admin/expired-jobs";
 import Support from "@/shared/components/admin/support";
 import SystemSettings from "@/shared/components/admin/system-settings";
+import TenantManagement from "@/shared/components/admin/tenant-management";
+import { getSessionUser } from "@/infrastructure/actions/auth-actions";
+import { useState, useEffect } from "react"
+
 export default function AdminPage() {
   const params = useParams();
   const tenantSlug = params.slug as string;
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+
+  useEffect(() => {
+    const checkRole = async () => {
+      const session = await getSessionUser();
+      if (session?.roles.includes('super-admin')) {
+        setIsSuperAdmin(true);
+      }
+    };
+    checkRole();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -62,6 +77,11 @@ export default function AdminPage() {
         <TabsContent value="system_settings" className="space-y-6">
           <SystemSettings />
         </TabsContent>
+        {isSuperAdmin && (
+          <TabsContent value="tenants" className="space-y-6">
+            <TenantManagement />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   )

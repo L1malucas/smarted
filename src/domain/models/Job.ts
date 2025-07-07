@@ -39,4 +39,6 @@ export interface IJob extends IBaseEntity {
   tags?: string[];
   publishedAt?: Date;
   closingDate?: Date;
+  tenantId: string;
+  tenantName?: string;
 }
