@@ -7,12 +7,15 @@ import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/shared/components/ui/button"
 import { Badge } from "@/shared/components/ui/badge"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/shared/components/ui/dropdown-menu"
+import { Popover, PopoverContent, PopoverTrigger } from "@/shared/components/ui/popover";
 import { LayoutDashboard, Briefcase, Shield, LogOut, Menu, X, Bell } from "lucide-react"
 import { cn } from "@/shared/lib/utils"
 import { ThemeSelector } from "@/shared/components/theme-selector"
 import { withActionLogging } from "@/shared/lib/actions"
 import { logoutAction } from "@/infrastructure/actions/auth-actions";
+import { listNotificationsAction } from "@/infrastructure/actions/notification-actions";
 import { NavbarProps } from "../types/types/component-props"
+import { INotification } from "@/domain/models/Notification";
 
 /**
  * Componente de navegação principal da aplicação.
@@ -59,6 +62,23 @@ export function Navbar({ tenantSlug, user }: INavbarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
+  const [latestNotifications, setLatestNotifications] = useState<INotification[]>([]);
+
+  const fetchNotifications = async () => {
+    if (!user) return;
+    const result = await listNotificationsAction({ isRead: false, limit: 5 });
+    if (result.success && result.data) {
+      setUnreadNotificationsCount(result.data.totalUnread);
+      setLatestNotifications(result.data.notifications);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 60000); // Refresh every minute
+    return () => clearInterval(interval);
+  }, [user]);
 
   const navigation = [
     { name: "Dashboard", href: `/${tenantSlug}/dashboard`, icon: LayoutDashboard },
@@ -156,6 +176,41 @@ export function Navbar({ tenantSlug, user }: INavbarProps) {
           </div>
           <ThemeSelector />
           <div className="hidden sm:ml-6 sm:flex sm:items-center sm:space-x-3">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative">
+                  <Bell className="h-6 w-6" />
+                  {unreadNotificationsCount > 0 && (
+                    <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full transform translate-x-1/2 -translate-y-1/2">
+                      {unreadNotificationsCount}
+                    </span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-0">
+                <div className="p-4">
+                  <h4 className="text-sm font-semibold">Notificações Recentes</h4>
+                  {latestNotifications.length === 0 && (
+                    <p className="text-xs text-muted-foreground mt-2">Nenhuma notificação não lida.</p>
+                  )}
+                </div>
+                {latestNotifications.length > 0 && (
+                  <div className="max-h-60 overflow-y-auto">
+                    {latestNotifications.map((notif) => (
+                      <Link key={notif._id} href={`/dashboard/notifications?id=${notif._id}`} className="block px-4 py-2 text-sm hover:bg-accent">
+                        <p className="font-medium">{notif.message}</p>
+                        <p className="text-xs text-muted-foreground">{new Date(notif.createdAt).toLocaleDateString()}</p>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+                <div className="p-4 border-t">
+                  <Link href={`/${tenantSlug}/notifications`} className="text-sm text-blue-500 hover:underline">
+                    Ver todas as notificações
+                  </Link>
+                </div>
+              </PopoverContent>
+            </Popover>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="flex items-center gap-2">

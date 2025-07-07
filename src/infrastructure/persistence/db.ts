@@ -6,6 +6,7 @@
  */
 
 import { IUser } from '@/domain/models/User';
+import { INotification } from '@/domain/models/Notification';
 import { MongoClient, ServerApiVersion, Db, Collection } from 'mongodb';
 
 /**
@@ -134,4 +135,13 @@ export async function getLogsCollection(): Promise<Collection> {
 export async function getSystemSettingsCollection(): Promise<Collection> {
   const db = await getDb();
   return db.collection('systemsettings');
+}
+
+/**
+ * Retorna a coleção 'notifications' do banco de dados MongoDB.
+ * @returns {Promise<Collection<INotification>>} Uma promessa que resolve para a coleção 'notifications'.
+ */
+export async function getNotificationsCollection(): Promise<Collection<INotification>> {
+  const db = await getDb();
+  return db.collection('notifications');
 }

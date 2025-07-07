@@ -7,7 +7,8 @@ import { IJobStatus } from "@/domain/models/JobStatus";
 import { ICandidate } from "@/domain/models/Candidate";
 import { ObjectId } from "mongodb";
 import { revalidatePath } from "next/cache";
-import { getUsersCollection, getJobsCollection } from "../persistence/db";
+import { getUsersCollection, getJobsCollection, getNotificationsCollection } from "../persistence/db";
+import { createNotificationAction } from "./notification-actions";
 
 // Helper to get current user's info (mocked for now)
 // In a real app, you'd get this from the session
@@ -41,6 +42,53 @@ export const getAllJobsAction = async (tenantSlug: string) => {
     success: false
   };
   return await withActionLogging(getAllJobsActionInternal, logConfig)(tenantSlug);
+};
+
+async function createJobActionInternal(jobData: Omit<IJob, "_id" | "createdAt" | "updatedAt" | "tenantId" | "createdBy" | "createdByUserName" | "status" | "slug">): Promise<IJob> {
+  const session = await getCurrentUser();
+  const jobsCollection = await getJobsCollection();
+
+  const newJob: IJob = {
+    ...jobData,
+    _id: new ObjectId(),
+    tenantId: session.tenantId,
+    createdBy: session.userId,
+    createdByUserName: session.userName,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    status: "active", // Default status for new jobs
+    slug: jobData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-*|-*$/g, ''), // Generate slug from title
+  };
+
+  const result = await jobsCollection.insertOne(newJob);
+  const createdJob = { ...newJob, _id: result.insertedId.toString() };
+
+  // Create a notification for the job creator
+  await createNotificationAction({
+    recipientId: session.userId,
+    senderId: "system",
+    senderName: "Sistema",
+    type: "job_created",
+    message: `A vaga "${createdJob.title}" foi criada com sucesso.`, 
+    resourceType: "job",
+    resourceId: createdJob._id,
+  });
+
+  revalidatePath(`/${session.tenantId}/jobs`);
+  return createdJob;
+}
+
+export const createJobAction = async (jobData: Omit<IJob, "_id" | "createdAt" | "updatedAt" | "tenantId" | "createdBy" | "createdByUserName" | "status" | "slug">) => {
+  const session = await getCurrentUser();
+  const logConfig: ActionLogConfig = {
+    userId: session.userId,
+    userName: session.userName,
+    actionType: "Criar Vaga",
+    resourceType: "Job",
+    resourceId: "", // Will be populated after creation
+    success: false
+  };
+  return await withActionLogging(createJobActionInternal, logConfig)(jobData);
 };
 
 async function updateJobStatusActionInternal(tenantSlug: string, jobId: string, newStatus: IJobStatus, userId: string, userName: string): Promise<{ success: boolean, data?: IJob, error?: string }> {
