@@ -16,7 +16,9 @@ import { Input } from "@/shared/components/ui/input"
 import { Label } from "@/shared/components/ui/label"
 import { Switch } from "@/shared/components/ui/switch"
 import { toast } from "@/shared/components/ui/use-toast"
-import { createShareableLinkAction } from "@/infrastructure/actions/public-actions";
+import { generateShareableLinkAction } from "@/infrastructure/actions/share-actions";
+import { getSystemSettingsAction } from "@/infrastructure/actions/admin-actions";
+import { ISystemSettings } from "@/domain/models/SystemSettings";
 import { IShareDialogProps } from "../types/types/component-props"
 
 
@@ -69,19 +71,31 @@ import { IShareDialogProps } from "../types/types/component-props"
  * />
  * ```
  */
-export function ShareDialog({ title, resourceType, resourceId, resourceName, tenantSlug, jobSlug }: IShareDialogProps) {
+export function ShareDialog({ title, resourceType, resourceId, resourceName, tenantSlug }: IShareDialogProps) {
   const [copied, setCopied] = useState(false)
-  const [isPublic, setIsPublic] = useState(true)
-  const [expiryDays, setExpiryDays] = useState("7")
   const [shareUrl, setShareUrl] = useState("")
   const [password, setPassword] = useState("")
   const [isPasswordProtected, setIsPasswordProtected] = useState(false)
   const [isCreatingLink, setIsCreatingLink] = useState(false);
+  const [systemSettings, setSystemSettings] = useState<ISystemSettings | null>(null);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      const result = await getSystemSettingsAction();
+      if (result.success && result.data) {
+        setSystemSettings(result.data.settings);
+        setIsPasswordProtected(result.data.settings.requirePasswordForPublicLinks || false);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   useEffect(() => {
     // Generate a temporary URL for display while the actual link is not created
     if (resourceType === "job" && tenantSlug) {
       setShareUrl(`${window.location.origin}/public/${tenantSlug}/jobs`);
+    } else if (resourceType === "dashboard" && tenantSlug) {
+      setShareUrl(`${window.location.origin}/public/${tenantSlug}/dashboard`);
     } else {
       setShareUrl(`${window.location.origin}/public/shared-resource`); // Generic placeholder
     }
@@ -102,23 +116,27 @@ export function ShareDialog({ title, resourceType, resourceId, resourceName, ten
   const handleShare = async () => {
     setIsCreatingLink(true);
     try {
-      const result = await createShareableLinkAction(
+      const expiresAt = systemSettings?.defaultLinkExpirationDays === 0 ? undefined : (systemSettings?.defaultLinkExpirationDays ? new Date(Date.now() + systemSettings.defaultLinkExpirationDays * 24 * 60 * 60 * 1000) : undefined);
+      const options = {
+        expiresAt,
+        password: isPasswordProtected ? password : undefined,
+      };
+
+      const result = await generateShareableLinkAction(
         resourceType,
         resourceId,
         resourceName,
-        tenantSlug,
-        isPasswordProtected,
-        isPasswordProtected ? password : undefined,
-        expiryDays ? Number(expiryDays) : undefined
+        options
       );
 
-      if (result.success && result.hash) {
-        setShareUrl(`${window.location.origin}/public/${resourceType === "job" ? "job" : "candidates"}/${result.hash}`);
+      if (result.success && result.data) {
+        const finalShareUrl = `${window.location.origin}/share/${result.data.hash}`;
+        setShareUrl(finalShareUrl);
+        navigator.clipboard.writeText(finalShareUrl); // Copy to clipboard
+        window.open(finalShareUrl, '_blank'); // Open in new tab
         toast({
           title: "Link compartilhado!",
-          description: `${resourceName} agora está ${isPublic ? "publicamente" : "privadamente"} compartilhado ${
-            isPasswordProtected ? "com senha" : ""
-          }.`,
+          description: `${resourceName} agora está ${result.data.passwordHash ? "protegido por senha" : ""}. Expiração definida pelas configurações do sistema.`,
         });
       } else {
         toast({
@@ -127,10 +145,10 @@ export function ShareDialog({ title, resourceType, resourceId, resourceName, ten
           variant: "destructive",
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Erro Inesperado",
-        description: "Ocorreu um erro inesperado ao compartilhar o recurso.",
+        description: error.message || "Ocorreu um erro inesperado ao compartilhar o recurso.",
         variant: "destructive",
       });
     } finally {
@@ -162,13 +180,18 @@ export function ShareDialog({ title, resourceType, resourceId, resourceName, ten
             </Label>
             <Input id="link" value={shareUrl} readOnly placeholder="Gerando link..." />
           </div>
-          <Button size="sm" className="px-3" onClick={copyToClipboard} disabled={!shareUrl || isCreatingLink}>
-            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-          </Button>
         </div>
 
-        {resourceType === "job" && (
-          <div className="space-y-3 mt-4">
+        {systemSettings && (
+          <div className="text-sm text-muted-foreground mt-2">
+            Este link irá expirar em:
+            {systemSettings.defaultLinkExpirationDays === 0
+              ? " Nunca"
+              : ` ${systemSettings.defaultLinkExpirationDays} dia(s)`}
+          </div>
+        )}
+
+        <div className="space-y-3 mt-4">
             <div className="flex items-center space-x-2">
               <Switch id="password-protect" checked={isPasswordProtected} onCheckedChange={setIsPasswordProtected} />
               <Label htmlFor="password-protect">Proteger com senha</Label>
@@ -190,29 +213,8 @@ export function ShareDialog({ title, resourceType, resourceId, resourceName, ten
               </div>
             )}
           </div>
-        )}
 
-        <div className="flex items-center space-x-2 mt-4">
-          <Label htmlFor="public-access" className="flex-1">
-            Acesso público
-          </Label>
-          <Switch id="public-access" checked={isPublic} onCheckedChange={setIsPublic} />
-        </div>
-        <div className="grid gap-2 mt-4">
-          <Label htmlFor="expiry">Expirar após</Label>
-          <select
-            id="expiry"
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            value={expiryDays}
-            onChange={(e) => setExpiryDays(e.target.value)}
-          >
-            <option value="1">1 dia</option>
-            <option value="7">7 dias</option>
-            <option value="30">30 dias</option>
-            <option value="90">90 dias</option>
-            <option value="0">Nunca</option>
-          </select>
-        </div>
+        
         <DialogFooter className="mt-6">
           <Button type="submit" onClick={handleShare} disabled={!shareUrl || (isPasswordProtected && !password) || isCreatingLink}>
             {isCreatingLink ? "Gerando Link..." : "Confirmar compartilhamento"}

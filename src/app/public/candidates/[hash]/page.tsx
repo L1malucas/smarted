@@ -84,7 +84,7 @@ const radarData = [
  */
 export default function PublicCandidatesPage() {
   const params = useParams()
-  const [candidates, setCandidates] = useState<PublicCandidate[]>([])
+  const [candidates, setCandidates] = useState<IPublicCandidate[]>([])
   const [jobTitle, setJobTitle] = useState("")
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)

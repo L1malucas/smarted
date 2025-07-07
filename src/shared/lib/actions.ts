@@ -20,14 +20,14 @@ export function withActionLogging<TArgs extends any[], TResult>(
         success: true,
       });
 
-      toast({
-        title: "Sucesso",
-        description: `Ação ${logConfig.actionType} realizada com sucesso.`, // Use a more generic success message
-        variant: "default",
-      });
+
 
       return { success: true, data: result };
-    } catch (error: unknown) {
+    } catch (error: any) {
+      if (error && typeof error.digest === 'string' && error.digest.startsWith('NEXT_REDIRECT')) {
+        throw error; // Re-throw the redirect error so Next.js can handle it
+      }
+
       let errorMessage = "Ocorreu um erro desconhecido.";
       if (error instanceof Error) {
         errorMessage = error.message;
@@ -41,12 +41,6 @@ export function withActionLogging<TArgs extends any[], TResult>(
         resourceId: logConfig.resourceId,
         details: logConfig.details || `Ação ${logConfig.actionType} em ${logConfig.resourceType} falhou: ${errorMessage}`,
         success: false,
-      });
-
-      toast({
-        title: "Erro",
-        description: errorMessage,
-        variant: "destructive",
       });
 
       return { success: false, error: errorMessage };

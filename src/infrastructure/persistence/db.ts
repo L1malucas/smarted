@@ -5,6 +5,7 @@
  * @module Database
  */
 
+import { IUser } from '@/domain/models/User';
 import { MongoClient, ServerApiVersion, Db, Collection } from 'mongodb';
 
 /**

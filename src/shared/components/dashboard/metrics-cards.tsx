@@ -2,14 +2,14 @@
 "use client";
 
 import React, { useState, useEffect, useTransition } from "react";
-import { Users, Briefcase, Target, PhoneForwarded, AlertTriangle } from "lucide-react";
-import { getDashboardMetrics } from "@/infrastructure/actions/dashboard-actions";
+import { Users, Briefcase,  } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { Skeleton } from "../ui/skeleton";
 import { IMetricsCardsProps } from "@/shared/types/types/component-props";
+import { ISystemMetrics } from "@/shared/types/types/dashboard-interface";
 
 export function MetricsCards({ tenantSlug, period }: IMetricsCardsProps) {
-  const [metrics, setMetrics] = useState<IMetricsData | null>(null);
+  const [metrics, setMetrics] = useState<ISystemMetrics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
 
@@ -43,58 +43,58 @@ export function MetricsCards({ tenantSlug, period }: IMetricsCardsProps) {
     );
   }
 
-  const { totalVagasCriadas, totalCandidatos, totalContatos, totalMatches, totalAcoesPendentes } = metrics;
+  const { totalUsers, totalJobs, totalCandidates } = metrics;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Vagas Criadas</CardTitle>
-          <Briefcase className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{displayValue(totalVagasCriadas)}</div>
-          <p className="text-xs text-muted-foreground">Total de vagas abertas</p>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Candidatos Cadastrados</CardTitle>
+          <CardTitle className="text-sm font-medium">Total de Usuários</CardTitle>
           <Users className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{displayValue(totalCandidatos)}</div>
-          <p className="text-xs text-muted-foreground">Total de inscritos</p>
+          <div className="text-2xl font-bold">{displayValue(totalUsers)}</div>
+          <p className="text-xs text-muted-foreground">Usuários cadastrados</p>
         </CardContent>
       </Card>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Contatos Realizados</CardTitle>
-          <PhoneForwarded className="h-4 w-4 text-muted-foreground" />
+          <CardTitle className="text-sm font-medium">Total de Vagas</CardTitle>
+          <Briefcase className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{displayValue(totalContatos)}</div>
-          <p className="text-xs text-muted-foreground">Interações realizadas</p>
+          <div className="text-2xl font-bold">{displayValue(totalJobs)}</div>
+          <p className="text-xs text-muted-foreground">Vagas criadas</p>
         </CardContent>
       </Card>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Matches Gerados</CardTitle>
-          <Target className="h-4 w-4 text-muted-foreground" />
+          <CardTitle className="text-sm font-medium">Total de Candidatos</CardTitle>
+          <Users className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{displayValue(totalMatches)}</div>
-          <p className="text-xs text-muted-foreground">Compatibilidades encontradas</p>
+          <div className="text-2xl font-bold">{displayValue(totalCandidates)}</div>
+          <p className="text-xs text-muted-foreground">Candidatos no sistema</p>
         </CardContent>
       </Card>
-      <Card className="border-yellow-500">
+      <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-yellow-600">Ações Pendentes</CardTitle>
-          <AlertTriangle className="h-4 w-4 text-yellow-500" />
+          <CardTitle className="text-sm font-medium">Uptime do Sistema</CardTitle>
+          <Briefcase className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-yellow-600">{displayValue(totalAcoesPendentes)}</div>
-          <p className="text-xs text-muted-foreground">Vagas/candidatos requerendo atenção</p>
+          <div className="text-2xl font-bold">{metrics.systemUptime}</div>
+          <p className="text-xs text-muted-foreground">Disponibilidade do sistema</p>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Tempo Médio de Resposta</CardTitle>
+          <Briefcase className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{metrics.avgResponseTime}</div>
+          <p className="text-xs text-muted-foreground">Performance da API</p>
         </CardContent>
       </Card>
     </div>

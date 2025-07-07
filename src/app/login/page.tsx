@@ -48,7 +48,7 @@ export default function LoginPage() {
   const [cpf, setCpf] = useState("")
   const [isPending, startTransition] = useTransition()
   const [currentTestimonial, setCurrentTestimonial] = useState(0)
- 
+
   const formatCPF = (value: string) => {
     const numbers = value.replace(/\D/g, "")
     return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")
@@ -61,9 +61,6 @@ export default function LoginPage() {
     }
   }
 
-
-  // ... (rest of imports)
-
   const handleLogin = (formData: FormData) => {
     startTransition(async () => {
       const result = await loginAction(formData.get('cpf') as string);
@@ -73,6 +70,8 @@ export default function LoginPage() {
           description: result.error || "Ocorreu um erro desconhecido.",
           variant: "destructive",
         });
+        console.log("Login failed:", result);
+
       }
     });
   };

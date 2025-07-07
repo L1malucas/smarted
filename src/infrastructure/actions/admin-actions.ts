@@ -1,72 +1,57 @@
 "use server";
-
-import { revalidatePath } from "next/cache"; 
+import { revalidatePath } from "next/cache";
 import { ObjectId } from "mongodb";
 import { IUser } from "@/domain/models/User";
 import { withActionLogging } from "@/shared/lib/actions";
 import { IActionLogConfig } from "@/shared/types/types/action-interface";
 import { IAllowedCPF } from "@/domain/models/AllowedCPF";
 import { IAuditLog } from "@/domain/models/AuditLog";
-import { getUsersCollection, getLogsCollection } from "../persistence/db";
+import { getUsersCollection, getLogsCollection, getSystemSettingsCollection } from "../persistence/db";
+import { ISystemSettings } from "@/domain/models/SystemSettings";
+import { IActionResult } from "@/shared/types/types/action-interface";
 
-// Helper to get current user's info (mocked for now)
-// In a real app, you'd get this from the session
 async function getCurrentUser(): Promise<{ userId: string; tenantId: string; userName: string }> {
-  // This is a placeholder. Replace with actual session logic.
   const usersCollection = await getUsersCollection();
   const user = await usersCollection.findOne({ email: "admin@smarted.com" }) as IUser;
   if (!user) throw new Error("Authenticated user not found.");
   return {
     userId: user._id.toString(),
     tenantId: user.tenantId,
-    userName: user.name || "Unknown User",
+    userName: user.name
   };
 }
-
 export async function getTenantUsers(): Promise<IUser[]> {
   const session = await getCurrentUser();
-  const logConfig: ActionLogConfig = {
+  const logConfig: IActionLogConfig = {
     userId: session.userId,
     userName: session.userName,
     actionType: "Listar Usuários",
     resourceType: "User",
     resourceId: session.tenantId,
-    successMessage: "Usuários listados com sucesso!",
-    errorMessage: "Erro ao listar usuários.",
     success: false
   };
-
   const getTenantUsersInternal = async () => {
     const { tenantId } = await getCurrentUser();
-    // console.log(`[Admin Action] Fetching users for tenant: ${tenantId}`);
     const usersCollection = await getUsersCollection();
     const users = await usersCollection.find({ tenantId }).toArray();
-    // console.log(`[Admin Action] Found ${users.length} users.`);
     return JSON.parse(JSON.stringify(users));
   };
-
-  return await withActionLogging(getTenantUsersInternal, logConfig)();
+  const actionResult = await withActionLogging(getTenantUsersInternal, logConfig)();
+  return actionResult.data;
 }
-
 export async function addUser(userData: Omit<IUser, '_id' | 'createdAt' | 'updatedAt' | 'status' | 'tenantId' | 'slug'>) {
   const session = await getCurrentUser();
-  const logConfig: ActionLogConfig = {
+  const logConfig: IActionLogConfig = {
     userId: session.userId,
     userName: session.userName,
     actionType: "Adicionar Usuário",
     resourceType: "User",
-    resourceId: "", // Will be populated after creation
-    successMessage: "Usuário adicionado com sucesso!",
-    errorMessage: "Erro ao adicionar usuário.",
+    resourceId: "",
     success: false
   };
-
   const addUserInternal = async (userData: Omit<IUser, '_id' | 'createdAt' | 'updatedAt' | 'status' | 'tenantId' | 'slug'>) => {
     const { userId, tenantId } = await getCurrentUser();
-    // console.log(`[Admin Action] User ${userId} is adding a new user to tenant ${tenantId}`);
-    
     const usersCollection = await getUsersCollection();
-    
     const newUser: Omit<IUser, '_id'> = {
       ...userData,
       tenantId,
@@ -77,114 +62,80 @@ export async function addUser(userData: Omit<IUser, '_id' | 'createdAt' | 'updat
       updatedAt: new Date(),
       updatedBy: userId,
     };
-
-    const result = await usersCollection.insertOne(newUser);
-    // console.log("[Admin Action] New user added successfully:", result.insertedId);
-    revalidatePath("/admin/users"); // Adjust path as needed
+    await usersCollection.insertOne(newUser);
+    revalidatePath("/admin/users");
     return { success: true, user: JSON.parse(JSON.stringify(newUser)) };
   };
-
   const result = await withActionLogging(addUserInternal, logConfig)(userData);
   if (result.success && result.user) {
     logConfig.resourceId = result.user._id.toString();
   }
   return result;
 }
-
 export async function updateUser(userIdToUpdate: string, updates: Partial<IUser>) {
   const session = await getCurrentUser();
-  const logConfig: ActionLogConfig = {
+  const logConfig: IActionLogConfig = {
     userId: session.userId,
     userName: session.userName,
     actionType: "Atualizar Usuário",
     resourceType: "User",
     resourceId: userIdToUpdate,
-    successMessage: "Usuário atualizado com sucesso!",
-    errorMessage: "Erro ao atualizar usuário.",
     success: false
   };
-
   const updateUserInternal = async (userIdToUpdate: string, updates: Partial<IUser>) => {
     const { userId } = await getCurrentUser();
-    // console.log(`[Admin Action] User ${userId} is updating user ${userIdToUpdate}`);
-
     const usersCollection = await getUsersCollection();
-    
     const result = await usersCollection.updateOne(
       { _id: new ObjectId(userIdToUpdate) },
       { $set: { ...updates, updatedAt: new Date(), updatedBy: userId } }
     );
-
     if (result.modifiedCount === 0) {
-      // console.warn("[Admin Action] No user found or no changes made for ID:", userIdToUpdate);
       throw new Error("Usuário não encontrado ou nenhuma alteração realizada.");
     }
-
-    // console.log("[Admin Action] User updated successfully:", userIdToUpdate);
     revalidatePath("/admin/users");
     return { success: true };
   };
-
   return await withActionLogging(updateUserInternal, logConfig)(userIdToUpdate, updates);
 }
-
 export async function deactivateUser(userIdToDeactivate: string) {
   const session = await getCurrentUser();
-  const logConfig: ActionLogConfig = {
+  const logConfig: IActionLogConfig = {
     userId: session.userId,
     userName: session.userName,
     actionType: "Desativar Usuário",
     resourceType: "User",
     resourceId: userIdToDeactivate,
-    successMessage: "Usuário desativado com sucesso!",
-    errorMessage: "Erro ao desativar usuário.",
     success: false
   };
-
   const deactivateUserInternal = async (userIdToDeactivate: string) => {
     const { userId } = await getCurrentUser();
-    // console.log(`[Admin Action] User ${userId} is deactivating user ${userIdToDeactivate}`);
-
     const usersCollection = await getUsersCollection();
-
     const result = await usersCollection.updateOne(
       { _id: new ObjectId(userIdToDeactivate) },
       { $set: { status: 'inactive', updatedAt: new Date(), updatedBy: userId } }
     );
-
     if (result.modifiedCount === 0) {
-      // console.warn("[Admin Action] No user found to deactivate for ID:", userIdToDeactivate);
       throw new Error("Usuário não encontrado.");
     }
-
-    // console.log("[Admin Action] User deactivated successfully:", userIdToDeactivate);
     revalidatePath("/admin/users");
     return { success: true };
   };
-
   return await withActionLogging(deactivateUserInternal, logConfig)(userIdToDeactivate);
 }
-
-export async function getAllowedCPFs(): Promise<AllowedCPF[]> {
+export async function getAllowedCPFs(): Promise<IAllowedCPF[]> {
   const session = await getCurrentUser();
-  const logConfig: ActionLogConfig = {
+  const logConfig: IActionLogConfig = {
     userId: session.userId,
     userName: session.userName,
     actionType: "Listar CPFs Autorizados",
     resourceType: "User",
     resourceId: session.tenantId,
-    successMessage: "CPFs autorizados listados com sucesso!",
-    errorMessage: "Erro ao listar CPFs autorizados.",
     success: false
   };
-
   const getAllowedCPFsInternal = async () => {
     const { tenantId } = await getCurrentUser();
-    // console.log(`[Admin Action] Fetching allowed CPFs for tenant: ${tenantId}`);
     const usersCollection = await getUsersCollection();
     const users = await usersCollection.find({ tenantId, status: 'active' }).toArray();
-    
-    // Map to AllowedCPF interface
     const allowedCPFs: IAllowedCPF[] = users.map(user => ({
       cpf: user.cpf,
       name: user.name,
@@ -193,53 +144,39 @@ export async function getAllowedCPFs(): Promise<AllowedCPF[]> {
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     }));
-
-    // console.log(`[Admin Action] Found ${allowedCPFs.length} allowed CPFs.`);
     return JSON.parse(JSON.stringify(allowedCPFs));
   };
-
-  return await withActionLogging(getAllowedCPFsInternal, logConfig)();
+  const result = await withActionLogging(getAllowedCPFsInternal, logConfig)();
+  return result.data;
 }
-
 export async function getAccessLogs(startDate?: Date, endDate?: Date, page: number = 1, limit: number = 10): Promise<{ logs: AccessLog[], totalPages: number, currentPage: number }> {
   const session = await getCurrentUser();
-  const logConfig: ActionLogConfig = {
+  const logConfig: IActionLogConfig = {
     userId: session.userId,
     userName: session.userName,
     actionType: "Listar Logs de Auditoria",
     resourceType: "AuditLog",
     resourceId: session.tenantId,
-    successMessage: "Logs de auditoria listados com sucesso!",
-    errorMessage: "Erro ao listar logs de auditoria.",
     success: false
   };
-
   const getAccessLogsInternal = async (startDate?: Date, endDate?: Date, page: number = 1, limit: number = 10) => {
     const { tenantId } = await getCurrentUser();
-    // console.log(`[Admin Action] Fetching access logs for tenant: ${tenantId} with filters: startDate=${startDate}, endDate=${endDate}, page=${page}, limit=${limit}`);
     const logsCollection = await getLogsCollection();
-
-    const query: any = { tenantId };
+    const query: { tenantId: string; timestamp?: { $gte?: Date; $lte?: Date } } = { tenantId };
     if (startDate) {
       query.timestamp = { ...query.timestamp, $gte: startDate };
     }
     if (endDate) {
       query.timestamp = { ...query.timestamp, $lte: endDate };
     }
-    // console.log(`[Admin Action] MongoDB Query for logs:`, JSON.stringify(query));
-
     const totalLogs = await logsCollection.countDocuments(query);
     const totalPages = Math.ceil(totalLogs / limit);
-
     const logs = await logsCollection.find(query)
       .sort({ timestamp: -1 })
       .skip((page - 1) * limit)
       .limit(limit)
       .toArray();
-
-    // console.log(`[Admin Action] Raw logs fetched from DB:`, logs);
-
-    const accessLogs: AccessLog[] = logs.map(log => ({
+    const accessLogs: IAuditLog[] = logs.map(log => ({
       id: log._id.toString(),
       userId: log.userId,
       userName: log.userName,
@@ -250,10 +187,76 @@ export async function getAccessLogs(startDate?: Date, endDate?: Date, page: numb
       success: log.success,
       timestamp: log.timestamp,
     }));
-
-    // console.log(`[Admin Action] Found ${accessLogs.length} access logs for page ${page} of ${totalPages}.`);
     return { logs: JSON.parse(JSON.stringify(accessLogs)), totalPages, currentPage: page };
   };
+  const result = await withActionLogging(getAccessLogsInternal, logConfig)(startDate, endDate, page, limit);
+  if (!result.data) {
+    return { logs: [], totalPages: 0, currentPage: page };
+  }
+  return result.data;
+}
 
-  return await withActionLogging(getAccessLogsInternal, logConfig)(startDate, endDate, page, limit);
+export async function getSystemSettingsAction(): Promise<IActionResult<{ settings: ISystemSettings }>> {
+  const session = await getCurrentUser();
+  const logConfig: IActionLogConfig = {
+    userId: session.userId,
+    userName: session.userName,
+    actionType: "Obter Configurações do Sistema",
+    resourceType: "SystemSettings",
+    resourceId: session.tenantId,
+    success: false
+  };
+
+  const getSystemSettingsInternal = async () => {
+    const { tenantId } = await getCurrentUser();
+    const settingsCollection = await getSystemSettingsCollection();
+    let settings = await settingsCollection.findOne({ tenantId }) as ISystemSettings;
+
+    if (!settings) {
+      // Create default settings if none exist
+      const defaultSettings: ISystemSettings = {
+        tenantId,
+        maxUsersPerTenant: 10, // Default value
+        defaultLinkExpirationDays: 30,
+        requirePasswordForPublicLinks: false,
+        allowPublicLinkSharing: true,
+        maxLinkViews: 0, // 0 means unlimited
+      };
+      await settingsCollection.insertOne(defaultSettings);
+      settings = defaultSettings;
+    }
+    return { settings: JSON.parse(JSON.stringify(settings)) };
+  };
+
+  return await withActionLogging(getSystemSettingsInternal, logConfig)();
+}
+
+export async function updateSystemSettingsAction(updates: Partial<ISystemSettings>): Promise<IActionResult<void>> {
+  const session = await getCurrentUser();
+  const logConfig: IActionLogConfig = {
+    userId: session.userId,
+    userName: session.userName,
+    actionType: "Atualizar Configurações do Sistema",
+    resourceType: "SystemSettings",
+    resourceId: session.tenantId,
+    success: false
+  };
+
+  const updateSystemSettingsInternal = async (updates: Partial<ISystemSettings>) => {
+    const { tenantId } = await getCurrentUser();
+    const settingsCollection = await getSystemSettingsCollection();
+    const result = await settingsCollection.updateOne(
+      { tenantId },
+      { $set: { ...updates, updatedAt: new Date() } },
+      { upsert: true } // Create if not exists
+    );
+
+    if (result.modifiedCount === 0 && result.upsertedCount === 0) {
+      throw new Error("Nenhuma alteração realizada ou configurações não encontradas.");
+    }
+    revalidatePath("/admin/settings"); // Adjust path as needed
+    return { success: true };
+  };
+
+  return await withActionLogging(updateSystemSettingsInternal, logConfig)(updates);
 }

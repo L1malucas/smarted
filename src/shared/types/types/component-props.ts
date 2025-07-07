@@ -33,11 +33,10 @@ export interface ITestimonial {
 
 export interface IShareDialogProps {
   title: string;
-  resourceType: "job" | "candidates" | "report";
+  resourceType: "job" | "candidate_report" | "dashboard";
   resourceId: string;
   resourceName: string;
   tenantSlug?: string;
-  jobSlug?: string;
 }
 
 export interface INavbarProps {

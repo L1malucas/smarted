@@ -3,18 +3,18 @@
 
 import React, { useState, useEffect, useTransition } from "react";
 import { Button } from "../ui/button";
-import { PlusCircle, Edit, Trash2, Loader2, Badge, Table } from "lucide-react";
+import { PlusCircle, Edit, Trash2, Loader2, } from "lucide-react";
+import { Badge } from "../ui/badge";
 import { IUser } from "@/domain/models/User";
 import { getTenantUsers, addUser, updateUser, deactivateUser } from "@/infrastructure/actions/admin-actions";
-import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogClose } from "@radix-ui/react-dialog";
-import { Switch } from "@radix-ui/react-switch";
 import { Input } from "@/shared/components/ui/input";
-import { Label } from "recharts";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../ui/card";
-import { DialogHeader, DialogFooter } from "../ui/dialog";
+import { DialogHeader, DialogFooter, Dialog, DialogTrigger, DialogContent, DialogTitle, DialogClose } from "../ui/dialog";
 import { MultiSelect } from "../ui/multi-select";
-import { TableHeader, TableRow, TableHead, TableBody, TableCell } from "../ui/table";
+import { TableHeader, TableRow, TableHead, TableBody, TableCell, Table } from "../ui/table";
 import { useToast } from "../ui/use-toast";
+import { Label } from "../ui/label";
+import { Switch } from "../ui/switch";
 
 
 const AVAILABLE_ROLES = [
@@ -86,6 +86,8 @@ export default function UserManagement() {
     event.preventDefault();
     if (!selectedUser?._id) return;
 
+    const userId = selectedUser._id.toString();
+
     const formData = new FormData(event.currentTarget);
     const updates = {
       name: formData.get("name") as string,
@@ -96,7 +98,7 @@ export default function UserManagement() {
     };
 
     startTransition(async () => {
-      const result = await updateUser(selectedUser._id.toString(), updates);
+      const result = await updateUser(userId, updates);
       if (result.success) {
         toast({ title: "Sucesso", description: "Usuário atualizado com sucesso." });
         fetchUsers();
@@ -191,7 +193,7 @@ export default function UserManagement() {
             </TableHeader>
             <TableBody>
               {users.map((user) => (
-                <TableRow key={user._id.toString()}>
+                <TableRow key={user._id!.toString()}>
                   <TableCell>{user.name}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>
@@ -246,7 +248,7 @@ export default function UserManagement() {
                         </form>
                       </DialogContent>
                     </Dialog>
-                    <Button variant="ghost" size="icon" onClick={() => handleDeactivateUser(user._id.toString())} disabled={isPending}>
+                    <Button variant="ghost" size="icon" onClick={() => handleDeactivateUser(user._id!.toString())} disabled={isPending}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </TableCell>
