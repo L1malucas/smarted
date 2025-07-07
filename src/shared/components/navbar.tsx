@@ -14,8 +14,8 @@ import { ThemeSelector } from "@/shared/components/theme-selector"
 import { withActionLogging } from "@/shared/lib/actions"
 import { logoutAction } from "@/infrastructure/actions/auth-actions";
 import { listNotificationsAction } from "@/infrastructure/actions/notification-actions";
-import { NavbarProps } from "../types/types/component-props"
 import { INotification } from "@/domain/models/Notification";
+import { INavbarProps } from "../types/types/component-props"
 
 /**
  * Componente de navegação principal da aplicação.
@@ -70,7 +70,7 @@ export function Navbar({ tenantSlug, user }: INavbarProps) {
     const result = await listNotificationsAction({ isRead: false, limit: 5 });
     if (result.success && result.data) {
       setUnreadNotificationsCount(result.data.totalUnread);
-      setLatestNotifications(result.data.notifications);
+      setLatestNotifications(result.data.notifications || []);
     }
   };
 
@@ -100,9 +100,8 @@ export function Navbar({ tenantSlug, user }: INavbarProps) {
         userName: user.name,
         actionType: "logout",
         resourceType: "user",
-        details: `User ${user.name} logged out.`, 
-        successMessage: "Você foi desconectado com sucesso.",
-        errorMessage: "Erro ao desconectar.",
+        details: `User ${user.name} logged out.`,
+        success: true,
       }
     );
 

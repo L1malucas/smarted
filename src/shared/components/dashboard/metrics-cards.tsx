@@ -7,6 +7,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { Skeleton } from "../ui/skeleton";
 import { IMetricsCardsProps } from "@/shared/types/types/component-props";
 import { ISystemMetrics } from "@/shared/types/types/dashboard-interface";
+import { getPublicDashboardMetricsAction } from "@/infrastructure/actions/dashboard-actions";
 
 export function MetricsCards({ tenantSlug, period }: IMetricsCardsProps) {
   const [metrics, setMetrics] = useState<ISystemMetrics | null>(null);
@@ -17,7 +18,7 @@ export function MetricsCards({ tenantSlug, period }: IMetricsCardsProps) {
     const fetchMetrics = async () => {
       setIsLoading(true);
       startTransition(async () => {
-        const result = await getDashboardMetrics(tenantSlug);
+        const result = await getPublicDashboardMetricsAction(tenantSlug, period);
         if (result.success) {
           setMetrics(result.data);
         } else {

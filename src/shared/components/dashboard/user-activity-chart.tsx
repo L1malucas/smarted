@@ -1,13 +1,10 @@
-// components/dashboard/UserActivityChart.tsx
-"use client";
-
-import { getUserActivityData } from "@/infrastructure/actions/dashboard-actions";
+import { getUserActivityChartDataAction } from "@/infrastructure/actions/dashboard-actions";
 import React, { useState, useEffect, useTransition } from "react";
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../ui/card";
 import { Skeleton } from "../ui/skeleton";
 import { IUserActivityChartProps } from "@/shared/types/types/component-props";
-
+import { IUserActivityData } from "@/shared/types/types/dashboard-interface";
 
 export function UserActivityChart({ tenantSlug, period }: IUserActivityChartProps) {
   const [activityData, setActivityData] = useState<IUserActivityData[]>([]);
@@ -18,8 +15,8 @@ export function UserActivityChart({ tenantSlug, period }: IUserActivityChartProp
     const fetchActivityData = async () => {
       setIsLoading(true);
       startTransition(async () => {
-        const result = await getUserActivityData(tenantSlug, period);
-        if (result.success) {
+        const result = await getUserActivityChartDataAction(tenantSlug, period);
+        if (result.success && result.data) {
           setActivityData(result.data);
         } else {
           setActivityData([]); // Handle error case
@@ -30,7 +27,7 @@ export function UserActivityChart({ tenantSlug, period }: IUserActivityChartProp
     fetchActivityData();
   }, [tenantSlug, period]);
 
-  if (isLoading || activityData.length === 0) {
+  if (isLoading) {
     return (
       <Card>
         <CardHeader>
@@ -52,11 +49,12 @@ export function UserActivityChart({ tenantSlug, period }: IUserActivityChartProp
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={data}>
+          <BarChart data={activityData || []}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="name" />
             <YAxis />
             <Tooltip />
+            <Legend />
             <Bar dataKey="logins" name="Logins" fill="#3B82F6" />
             <Bar dataKey="acoes" name="Ações no Sistema" fill="#F97316" />
           </BarChart>

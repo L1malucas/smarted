@@ -9,6 +9,7 @@ import { ObjectId } from "mongodb";
 import { revalidatePath } from "next/cache";
 import { getUsersCollection, getJobsCollection, getNotificationsCollection } from "../persistence/db";
 import { createNotificationAction } from "./notification-actions";
+import { IUser } from "@/domain/models/User";
 
 // Helper to get current user's info (mocked for now)
 // In a real app, you'd get this from the session
@@ -33,7 +34,7 @@ async function getAllJobsActionInternal(tenantSlug: string): Promise<IJob[]> {
 
 export const getAllJobsAction = async (tenantSlug: string) => {
   const session = await getCurrentUser();
-  const logConfig: ActionLogConfig = {
+  const logConfig: IActionLogConfig = {
     userId: session.userId,
     userName: session.userName,
     actionType: "Listar Vagas",
@@ -80,7 +81,7 @@ async function createJobActionInternal(jobData: Omit<IJob, "_id" | "createdAt" |
 
 export const createJobAction = async (jobData: Omit<IJob, "_id" | "createdAt" | "updatedAt" | "tenantId" | "createdBy" | "createdByUserName" | "status" | "slug">) => {
   const session = await getCurrentUser();
-  const logConfig: ActionLogConfig = {
+  const logConfig: IActionLogConfig = {
     userId: session.userId,
     userName: session.userName,
     actionType: "Criar Vaga",
@@ -109,7 +110,7 @@ async function updateJobStatusActionInternal(tenantSlug: string, jobId: string, 
 
 export const updateJobStatusAction = async (tenantSlug: string, jobId: string, newStatus: IJobStatus, userId: string, userName: string) => {
   const session = await getCurrentUser();
-  const logConfig: ActionLogConfig = {
+  const logConfig: IActionLogConfig = {
     userId: session.userId,
     userName: session.userName,
     actionType: "Atualizar Status da Vaga",
@@ -129,7 +130,7 @@ async function getJobDetailsActionInternal(jobId: string): Promise<IJob | null> 
 
 export const getJobDetailsAction = async (jobId: string) => {
   const session = await getCurrentUser();
-  const logConfig: ActionLogConfig = {
+  const logConfig: IActionLogConfig = {
     userId: session.userId,
     userName: session.userName,
     actionType: "Obter Detalhes da Vaga",
@@ -148,7 +149,7 @@ async function getCandidatesForJobActionInternal(jobId: string): Promise<Candida
 
 export const getCandidatesForJobAction = async (jobId: string) => {
   const session = await getCurrentUser();
-  const logConfig: ActionLogConfig = {
+  const logConfig: IActionLogConfig = {
     userId: session.userId,
     userName: session.userName,
     actionType: "Obter Candidatos da Vaga",
@@ -167,7 +168,7 @@ async function getJobBySlugActionInternal(jobSlug: string): Promise<IJob | null>
 
 export const getJobBySlugAction = async (jobSlug: string) => {
   const session = await getCurrentUser();
-  const logConfig: ActionLogConfig = {
+  const logConfig: IActionLogConfig = {
     userId: session.userId,
     userName: session.userName,
     actionType: "Obter Vaga por Slug",
@@ -187,7 +188,7 @@ async function submitApplicationActionInternal(jobSlug: string, resumeFile: File
 
 export const submitApplicationAction = async (jobSlug: string, resumeFile: File, answers: CandidateAnswer[]) => {
   const session = await getCurrentUser();
-  const logConfig: ActionLogConfig = {
+  const logConfig: IActionLogConfig = {
     userId: "candidate-anonymous", // Placeholder: replace with actual candidate ID/info if available
     userName: "Candidato Anônimo", // Placeholder
     actionType: "Submeter Candidatura",
@@ -209,7 +210,7 @@ async function uploadResumeActionInternal(jobId: string, file: File): Promise<{ 
 
 export const uploadResumeAction = async (jobId: string, file: File) => {
   const session = await getCurrentUser(); // Assuming a user is logged in, even if anonymous
-  const logConfig: ActionLogConfig = {
+  const logConfig: IActionLogConfig = {
     userId: session.userId || "",
     userName: session.userName || "Sistema",
     actionType: "Upload de Currículo",
@@ -232,7 +233,7 @@ async function uploadResumeActionInternal(jobId: string, file: File): Promise<{ 
 
 export const uploadResumeAction = async (jobId: string, file: File) => {
   const session = await getCurrentUser(); // Assuming a user is logged in, even if anonymous
-  const logConfig: ActionLogConfig = {
+  const logConfig: IActionLogConfig = {
     userId: session.userId || "",
     userName: session.userName || "Sistema",
     actionType: "Upload de Currículo",

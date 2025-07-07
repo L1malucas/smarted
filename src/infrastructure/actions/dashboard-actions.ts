@@ -2,7 +2,7 @@
 
 import { withActionLogging } from "@/shared/lib/actions";
 import { IActionLogConfig, IActionResult } from "@/shared/types/types/action-interface";
-import { ISystemMetrics } from "@/shared/types/types/dashboard-interface";
+import { ISystemMetrics, IUserActivityData } from "@/shared/types/types/dashboard-interface";
 
 export async function getPublicDashboardMetricsAction(
   tenantId: string,
@@ -31,8 +31,38 @@ export async function getPublicDashboardMetricsAction(
       candidatesApplied: [],
       hires: [],
     };
-    return { success: true, data: defaultMetrics };
+    return defaultMetrics;
   };
 
   return await withActionLogging(getMetricsInternal, logConfig)();
+}
+
+export async function getUserActivityChartDataAction(
+  tenantId: string,
+  period: string
+): Promise<IActionResult<IUserActivityData[]>> {
+  const logConfig: IActionLogConfig = {
+    userId: "system",
+    userName: "System",
+    actionType: "Obter Dados de Atividade do Usuário",
+    resourceType: "Dashboard",
+    resourceId: tenantId,
+    success: false,
+  };
+
+  const getChartDataInternal = async () => {
+    // TODO: Replace with real data aggregation from AuditLog collection
+    const mockData: IUserActivityData[] = [
+      { name: 'Seg', logins: 4, acoes: 24 },
+      { name: 'Ter', logins: 3, acoes: 13 },
+      { name: 'Qua', logins: 6, acoes: 48 },
+      { name: 'Qui', logins: 5, acoes: 39 },
+      { name: 'Sex', logins: 8, acoes: 60 },
+      { name: 'Sáb', logins: 2, acoes: 10 },
+      { name: 'Dom', logins: 1, acoes: 5 },
+    ];
+    return mockData;
+  };
+
+  return await withActionLogging(getChartDataInternal, logConfig)();
 }
