@@ -6,6 +6,7 @@ import { JobActionsMenu } from "./menu-list";
 import { getStatusBadge } from "@/shared/lib/job-status-config";
 import { IJobCardProps } from "@/shared/types/types/component-props";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../ui/card";
+import { IJob } from "@/domain/models/Job";
 
 
 export function JobCard({ job, tenantSlug, onStatusChange, onPublish }: IJobCardProps) {
@@ -21,7 +22,7 @@ export function JobCard({ job, tenantSlug, onStatusChange, onPublish }: IJobCard
               <CardTitle className="text-xl mb-2">
                 {job.title}
               </CardTitle>
-              {getStatusBadge(job.status)}
+              {getStatusBadge((job as IJob).status)}
             </div>
             <JobActionsMenu
               job={job}

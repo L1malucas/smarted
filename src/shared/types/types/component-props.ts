@@ -37,6 +37,7 @@ export interface IShareDialogProps {
   resourceId: string;
   resourceName: string;
   tenantSlug?: string;
+  jobSlug?: string;
 }
 
 export interface INavbarProps {

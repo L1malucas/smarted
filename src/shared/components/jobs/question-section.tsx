@@ -6,7 +6,7 @@ import { ChevronDown, ChevronUp, HelpCircle, PlusCircle, Trash2 } from "lucide-r
 import { Input } from "@/shared/components/ui/input";
 import { useState } from "react";
 import { Label } from "@/shared/components/ui/label";
-import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";w
+import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { Textarea } from "../ui/textarea";
 import { IJobQuestion } from "@/domain/models/JobQuestion";
 import { IQuestionSectionProps } from "@/shared/types/types/component-props";
@@ -17,11 +17,17 @@ export function QuestionSection({ questions, onChange, error }: IQuestionSection
 
   const handleQuestionChange = <K extends keyof IJobQuestion>(index: number, field: K, value: IJobQuestion[K]) => {
     const updated = [...questions];
-    updated[index] = { ...updated[index], [field]: value };
-    if (field === "type" && !["multiple_choice", "single_choice"].includes(value)) {
-      delete updated[index].options;
-    } else if (field === "type" && ["multiple_choice", "single_choice"].includes(value) && !updated[index].options) {
-      updated[index].options = [""];
+    if (field === "type") {
+      updated[index] = { ...updated[index], [field]: value as "text" | "multiple_choice" | "single_choice" | "file_upload" };
+      if (!["multiple_choice", "single_choice"].includes(value as string)) {
+        delete updated[index].options;
+      } else if (["multiple_choice", "single_choice"].includes(value as string) && !updated[index].options) {
+        updated[index].options = [""];
+      }
+    } else if (field === "options") {
+      updated[index] = { ...updated[index], [field]: value as string[] };
+    } else {
+      updated[index] = { ...updated[index], [field]: value };
     }
     onChange(updated);
   };

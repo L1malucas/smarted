@@ -7,6 +7,7 @@
 
 import { IUser } from '@/domain/models/User';
 import { INotification } from '@/domain/models/Notification';
+import { IJob } from '@/domain/models/Job'; // Import IJob
 import { MongoClient, ServerApiVersion, Db, Collection } from 'mongodb';
 
 /**
@@ -94,9 +95,9 @@ export async function getUsersCollection(): Promise<Collection<IUser>> {
 
 /**
  * Retorna a coleção 'jobs' do banco de dados MongoDB.
- * @returns {Promise<Collection>} Uma promessa que resolve para a coleção 'jobs'.
+ * @returns {Promise<Collection<IJob>>} Uma promessa que resolve para a coleção 'jobs'.
  */
-export async function getJobsCollection(): Promise<Collection> {
+export async function getJobsCollection(): Promise<Collection<IJob>> {
   const db = await getDb();
   return db.collection('jobs');
 }

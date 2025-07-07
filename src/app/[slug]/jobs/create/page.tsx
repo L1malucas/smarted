@@ -10,10 +10,12 @@ import { QuestionSection } from "@/shared/components/jobs/question-section";
 import { useJobValidation } from "@/shared/hooks/use-job-validation";
 import { toast } from "@/shared/hooks/use-toast";
 import { withActionLogging } from "@/shared/lib/actions";
-import { IJob } from "@/domain/models/IJob";
-import { Button } from "react-day-picker";
+
+import { createJobAction } from "@/infrastructure/actions/job-actions";
 import { ICompetency } from "@/domain/models/Competency";
 import { IJobStatus } from "@/domain/models/JobStatus";
+import { IJob } from "@/domain/models/Job";
+import { Button } from "@/shared/components/ui/button";
 
 
 export default function CreateJobPage() {
@@ -21,7 +23,7 @@ export default function CreateJobPage() {
   const { slug } = useParams();
   const tenantSlug = slug as string;
   const { validateJob, getFieldError, hasFieldError, clearFieldError } = useJobValidation();
-  const jobService = new JobService();
+  
 
   const [formData, setFormData] = useState<Partial<IJob>>({
     title: "",
@@ -66,8 +68,7 @@ export default function CreateJobPage() {
       actionType: isDraft ? "Salvar Rascunho de Vaga" : "Publicar Vaga",
       resourceType: "Vaga",
       resourceId: formData._id?.toString() || "", // Will be populated after creation
-      successMessage: isDraft ? "A vaga foi salva como rascunho." : "A vaga foi publicada com sucesso.",
-      errorMessage: "Não foi possível salvar a vaga.",
+      success: false, // Required by IActionLogConfig
     };
 
     const handleSubmitInternal = async (status: IJobStatus) => {
@@ -111,7 +112,7 @@ export default function CreateJobPage() {
         },
       };
 
-      const result = await JobService.saveJob(tenantSlug, jobData);
+      const result = await createJobAction(jobData, isDraft);
       setHasUnsavedChanges(false);
 
       router.push(`/${tenantSlug}/jobs`);

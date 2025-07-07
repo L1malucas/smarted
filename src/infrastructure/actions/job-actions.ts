@@ -1,246 +1,303 @@
 "use server";
 
+import { z } from "zod";
 import { withActionLogging } from "@/shared/lib/actions";
-import { IActionLogConfig } from "@/shared/types/types/action-interface";
+import { getJobsCollection } from "../persistence/db";
 import { IJob } from "@/domain/models/Job";
-import { IJobStatus } from "@/domain/models/JobStatus";
-import { ICandidate } from "@/domain/models/Candidate";
 import { ObjectId } from "mongodb";
-import { revalidatePath } from "next/cache";
-import { getUsersCollection, getJobsCollection, getNotificationsCollection } from "../persistence/db";
-import { createNotificationAction } from "./notification-actions";
-import { IUser } from "@/domain/models/User";
+import { IJobStatus } from "@/domain/models/JobStatus";
+import { jobSchema, draftJobSchema, updateJobSchema } from "@/application/schemas/job.schema";
+import { getCurrentUser, serializeJob } from "@/shared/lib/server-utils";
+import { IActionLogConfig } from "@/shared/types/types/action-interface";
 
-// Helper to get current user's info (mocked for now)
-// In a real app, you'd get this from the session
-async function getCurrentUser(): Promise<{ userId: string; tenantId: string; userName: string }> {
-  // This is a placeholder. Replace with actual session logic.
-  const usersCollection = await getUsersCollection();
-  const user = await usersCollection.findOne({ email: "admin@smarted.com" }) as IUser;
-  if (!user) throw new Error("Authenticated user not found.");
-  return {
-    userId: user._id.toString(),
-    tenantId: user.tenantId,
-    userName: user.name || "Unknown User",
-  };
-}
+// 1. createJobAction
+export const createJobAction = withActionLogging(
+  async (jobData: Partial<IJob>, isDraft: boolean = false) => {
+    const user = await getCurrentUser();
+    if (!user) throw new Error("Usuário não autenticado.");
 
-async function getAllJobsActionInternal(tenantSlug: string): Promise<IJob[]> {
-  const { tenantId } = await getCurrentUser();
-  const jobsCollection = await getJobsCollection();
-  const jobs = await jobsCollection.find({ tenantId }).toArray();
-  return JSON.parse(JSON.stringify(jobs));
-}
+    const jobsCollection = await getJobsCollection();
 
-export const getAllJobsAction = async (tenantSlug: string) => {
-  const session = await getCurrentUser();
-  const logConfig: IActionLogConfig = {
-    userId: session.userId,
-    userName: session.userName,
-    actionType: "Listar Vagas",
-    resourceType: "Job",
-    resourceId: tenantSlug,
-    success: false
-  };
-  return await withActionLogging(getAllJobsActionInternal, logConfig)(tenantSlug);
-};
+    const schema = isDraft ? draftJobSchema : jobSchema;
+    const validatedData = schema.parse(jobData);
 
-async function createJobActionInternal(jobData: Omit<IJob, "_id" | "createdAt" | "updatedAt" | "tenantId" | "createdBy" | "createdByUserName" | "status" | "slug">): Promise<IJob> {
-  const session = await getCurrentUser();
-  const jobsCollection = await getJobsCollection();
+    // Ensure title exists for slug generation if not a draft or if draft has a title
+    let slug = "";
+    if (validatedData.title) {
+      slug = validatedData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-*|-*$/g, '');
+    }
 
-  const newJob: IJob = {
-    ...jobData,
-    _id: new ObjectId(),
-    tenantId: session.tenantId,
-    createdBy: session.userId,
-    createdByUserName: session.userName,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    status: "active", // Default status for new jobs
-    slug: jobData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-*|-*$/g, ''), // Generate slug from title
-  };
+    const newJobForDb = {
+      ...validatedData,
+      _id: new ObjectId(), // MongoDB ObjectId
+      slug: slug,
+      createdBy: user.userId,
+      createdByName: user.userName,
+      tenantId: user.tenantId,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      status: isDraft ? "draft" : "aberta",
+      isDraft: isDraft,
+      statusChangeLog: [{
+        status: isDraft ? "draft" : "aberta",
+        changedAt: new Date(),
+        changedBy: user.userId,
+        changedByName: user.userName,
+      }],
+      // Add default values for required fields not always present in validatedData
+      criteriaWeights: validatedData.criteriaWeights,
+      candidatesCount: validatedData.candidatesCount || 0,
+    };
 
-  const result = await jobsCollection.insertOne(newJob);
-  const createdJob = { ...newJob, _id: result.insertedId.toString() };
+    const result = await jobsCollection.insertOne(newJobForDb as any);
+    // After insertion, the _id is an ObjectId, serialize it for client components
+    const createdJob = serializeJob({ ...newJobForDb, _id: result.insertedId });
 
-  // Create a notification for the job creator
-  await createNotificationAction({
-    recipientId: session.userId,
-    senderId: "system",
-    senderName: "Sistema",
-    type: "job_created",
-    message: `A vaga "${createdJob.title}" foi criada com sucesso.`, 
-    resourceType: "job",
-    resourceId: createdJob._id,
-  });
-
-  revalidatePath(`/${session.tenantId}/jobs`);
-  return createdJob;
-}
-
-export const createJobAction = async (jobData: Omit<IJob, "_id" | "createdAt" | "updatedAt" | "tenantId" | "createdBy" | "createdByUserName" | "status" | "slug">) => {
-  const session = await getCurrentUser();
-  const logConfig: IActionLogConfig = {
-    userId: session.userId,
-    userName: session.userName,
+    return createdJob;
+  },
+  {
+    userId: "", // Populated by withActionLogging
+    userName: "", // Populated by withActionLogging
     actionType: "Criar Vaga",
     resourceType: "Job",
-    resourceId: "", // Will be populated after creation
-    success: false
-  };
-  return await withActionLogging(createJobActionInternal, logConfig)(jobData);
-};
+    resourceId: "", // Populated after creation
+    success: false,
+  } as IActionLogConfig
+);
 
-async function updateJobStatusActionInternal(tenantSlug: string, jobId: string, newStatus: IJobStatus, userId: string, userName: string): Promise<{ success: boolean, data?: IJob, error?: string }> {
-  const jobsCollection = await getJobsCollection();
-  const result = await jobsCollection.findOneAndUpdate(
-    { _id: new ObjectId(jobId), tenantId: tenantSlug },
-    { $set: { status: newStatus, updatedAt: new Date() } },
-    { returnDocument: 'after' }
-  );
+// 2. updateJobAction
+export const updateJobAction = withActionLogging(
+  async (jobId: string, jobData: Partial<IJob>) => {
+    const user = await getCurrentUser();
+    if (!user) throw new Error("Usuário não autenticado.");
 
-  if (!result.value) {
-    throw new Error("Vaga não encontrada ou não pertence ao tenant.");
-  }
+    const jobsCollection = await getJobsCollection();
 
-  revalidatePath(`/${tenantSlug}/jobs`);
-  return { success: true, data: JSON.parse(JSON.stringify(result.value)) };
-}
+    const existingJob = await jobsCollection.findOne({ _id: new ObjectId(jobId) as any, tenantId: user.tenantId }) as unknown as IJob;
+    if (!existingJob) throw new Error("Vaga não encontrada ou não pertence ao tenant.");
 
-export const updateJobStatusAction = async (tenantSlug: string, jobId: string, newStatus: IJobStatus, userId: string, userName: string) => {
-  const session = await getCurrentUser();
-  const logConfig: IActionLogConfig = {
-    userId: session.userId,
-    userName: session.userName,
-    actionType: "Atualizar Status da Vaga",
+    const validatedData = updateJobSchema.parse(jobData);
+
+    const updateFields: Partial<IJob> = {
+      updatedAt: new Date(),
+    };
+
+    for (const key in validatedData) {
+      if (Object.prototype.hasOwnProperty.call(validatedData, key)) {
+        if (key === 'status') {
+          updateFields.status = validatedData.status as IJobStatus;
+        } else {
+          (updateFields as any)[key] = (validatedData as any)[key];
+        }
+      }
+    }
+
+    const result = await jobsCollection.updateOne(
+      { _id: new ObjectId(jobId) as any, tenantId: user.tenantId },
+      { $set: updateFields }
+    );
+
+    if (result.modifiedCount === 0) {
+      throw new Error("Nenhuma alteração realizada ou vaga não encontrada.");
+    }
+
+    const updatedJob = await jobsCollection.findOne({ _id: new ObjectId(jobId) as any }) as unknown as IJob;
+
+    return serializeJob(updatedJob);
+  },
+  {
+    userId: "", // Populated by withActionLogging
+    userName: "", // Populated by withActionLogging
+    actionType: "Atualizar Vaga",
     resourceType: "Job",
-    resourceId: jobId,
-    details: `Status da vaga ${jobId} atualizado para ${newStatus}.`,
-    success: false
-  };
-  return await withActionLogging(updateJobStatusActionInternal, logConfig)(tenantSlug, jobId, newStatus, userId, userName);
-};
+    resourceId: "", // Populated by withActionLogging
+    success: false,
+  } as IActionLogConfig
+);
 
-async function getJobDetailsActionInternal(jobId: string): Promise<IJob | null> {
-  const jobsCollection = await getJobsCollection();
-  const job = await jobsCollection.findOne({ _id: new ObjectId(jobId) }) as IJob;
-  return JSON.parse(JSON.stringify(job));
-}
+// 3. deleteJobAction
+export const deleteJobAction = withActionLogging(
+  async (jobId: string) => {
+    const user = await getCurrentUser();
+    if (!user) throw new Error("Usuário não autenticado.");
 
-export const getJobDetailsAction = async (jobId: string) => {
-  const session = await getCurrentUser();
-  const logConfig: IActionLogConfig = {
-    userId: session.userId,
-    userName: session.userName,
-    actionType: "Obter Detalhes da Vaga",
+    const jobsCollection = await getJobsCollection();
+
+    const jobToDelete = await jobsCollection.findOne({ _id: new ObjectId(jobId) as any, tenantId: user.tenantId }) as unknown as IJob;
+    if (!jobToDelete) throw new Error("Vaga não encontrada ou não pertence ao tenant.");
+
+    // Only creator or admin can delete
+    if (jobToDelete.createdBy !== user.userId && !user.isAdmin) {
+      throw new Error("Você não tem permissão para deletar esta vaga.");
+    }
+
+    const result = await jobsCollection.deleteOne({ _id: new ObjectId(jobId) as any, tenantId: user.tenantId });
+
+    if (result.deletedCount === 0) {
+      throw new Error("Nenhuma vaga encontrada para exclusão.");
+    }
+
+    return { success: true };
+  },
+  {
+    userId: "", // Populated by withActionLogging
+    userName: "", // Populated by withActionLogging
+    actionType: "Deletar Vaga",
     resourceType: "Job",
-    resourceId: jobId,
-    success: false
-  };
-  return await withActionLogging(getJobDetailsActionInternal, logConfig)(jobId);
-};
+    resourceId: "", // Populated by withActionLogging
+    success: false,
+  } as IActionLogConfig
+);
 
-async function getCandidatesForJobActionInternal(jobId: string): Promise<Candidate[]> {
-  const candidatesCollection = await getUsersCollection(); // Assuming candidates are users
-  const candidates = await candidatesCollection.find({ jobId: new ObjectId(jobId) }).toArray();
-  return JSON.parse(JSON.stringify(candidates));
-}
+// 4. getJobByIdAction
+export const getJobByIdAction = withActionLogging(
+  async (jobId: string) => {
+    const user = await getCurrentUser();
+    if (!user) throw new Error("Usuário não autenticado.");
 
-export const getCandidatesForJobAction = async (jobId: string) => {
-  const session = await getCurrentUser();
-  const logConfig: IActionLogConfig = {
-    userId: session.userId,
-    userName: session.userName,
-    actionType: "Obter Candidatos da Vaga",
-    resourceType: "Candidate",
-    resourceId: jobId,
-    success: false
-  };
-  return await withActionLogging(getCandidatesForJobActionInternal, logConfig)(jobId);
-};
+    const jobsCollection = await getJobsCollection();
 
-async function getJobBySlugActionInternal(jobSlug: string): Promise<IJob | null> {
-  const jobsCollection = await getJobsCollection();
-  const job = await jobsCollection.findOne({ slug: jobSlug }) as IJob;
-  return JSON.parse(JSON.stringify(job));
-}
+    const job = await jobsCollection.findOne({
+      _id: new ObjectId(jobId) as any,
+      tenantId: user.tenantId,
+    }) as unknown as IJob;
 
-export const getJobBySlugAction = async (jobSlug: string) => {
-  const session = await getCurrentUser();
-  const logConfig: IActionLogConfig = {
-    userId: session.userId,
-    userName: session.userName,
+    return serializeJob(job);
+  },
+  {
+    userId: "", // Populated by withActionLogging
+    userName: "", // Populated by withActionLogging
+    actionType: "Obter Vaga por ID",
+    resourceType: "Job",
+    resourceId: "", // Populated by withActionLogging
+    success: false,
+  } as IActionLogConfig
+);
+
+// 5. getJobBySlugAction
+export const getJobBySlugAction = withActionLogging(
+  async (slug: string) => {
+    // This action is intended for public access and does not require authentication.
+    const jobsCollection = await getJobsCollection();
+    const job = await jobsCollection.findOne({ slug }) as unknown as IJob;
+
+    return serializeJob(job);
+  },
+  {
+    userId: "", // Populated by withActionLogging
+    userName: "", // Populated by withActionLogging
     actionType: "Obter Vaga por Slug",
     resourceType: "Job",
-    resourceId: jobSlug,
-    success: false
-  };
-  return await withActionLogging(getJobBySlugActionInternal, logConfig)(jobSlug);
-};
+    resourceId: "", // Populated by withActionLogging
+    success: false,
+  } as IActionLogConfig
+);
 
-async function submitApplicationActionInternal(jobSlug: string, resumeFile: File, answers: CandidateAnswer[]): Promise<{ success: boolean, error?: string }> {
-  // Placeholder for actual application submission logic
-  // In a real app, you would handle file upload to storage (e.g., S3) and save candidate data to DB
-  await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API call
-  return { success: true };
-}
+// 6. listJobsAction
+export const listJobsAction = withActionLogging(
+  async (filters: {
+    status?: string;
+    searchQuery?: string;
+    page?: number;
+    limit?: number;
+    sortBy?: string;
+  }) => {
+    const user = await getCurrentUser();
+    if (!user) throw new Error("Usuário não autenticado.");
 
-export const submitApplicationAction = async (jobSlug: string, resumeFile: File, answers: CandidateAnswer[]) => {
-  const session = await getCurrentUser();
-  const logConfig: IActionLogConfig = {
-    userId: "candidate-anonymous", // Placeholder: replace with actual candidate ID/info if available
-    userName: "Candidato Anônimo", // Placeholder
-    actionType: "Submeter Candidatura",
-    resourceType: "JobApplication",
-    resourceId: jobSlug,
-    success: false
-  };
-  return await withActionLogging(submitApplicationActionInternal, logConfig)(jobSlug, resumeFile, answers);
-};
+    const jobsCollection = await getJobsCollection();
 
-async function uploadResumeActionInternal(jobId: string, file: File): Promise<{ success: boolean, error?: string, url?: string }> {
-  // In a real application, you would upload the file to a storage service (e.g., AWS S3, Google Cloud Storage)
-  // and then save the URL to your database.
-  // For now, we'll simulate the upload.
-  await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate upload time
-  const simulatedUrl = `/uploads/${jobId}/${file.name}`;
-  return { success: true, url: simulatedUrl };
-}
+    const { status, searchQuery, page = 1, limit = 10, sortBy } = filters;
 
-export const uploadResumeAction = async (jobId: string, file: File) => {
-  const session = await getCurrentUser(); // Assuming a user is logged in, even if anonymous
-  const logConfig: IActionLogConfig = {
-    userId: session.userId || "",
-    userName: session.userName || "Sistema",
-    actionType: "Upload de Currículo",
-    resourceType: "Resume",
-    resourceId: jobId,
-    details: `Upload do currículo ${file.name} para a vaga ${jobId}.`,
-    success: false
-  };
-  return await withActionLogging(uploadResumeActionInternal, logConfig)(jobId, file);
-};
+    const query: any = { tenantId: user.tenantId };
 
-async function uploadResumeActionInternal(jobId: string, file: File): Promise<{ success: boolean, error?: string, url?: string }> {
-  // In a real application, you would upload the file to a storage service (e.g., AWS S3, Google Cloud Storage)
-  // and then save the URL to your database.
-  // For now, we'll simulate the upload.
-  await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate upload time
-  const simulatedUrl = `/uploads/${jobId}/${file.name}`;
-  return { success: true, url: simulatedUrl };
-}
+    if (status) {
+      query.status = status;
+    }
 
-export const uploadResumeAction = async (jobId: string, file: File) => {
-  const session = await getCurrentUser(); // Assuming a user is logged in, even if anonymous
-  const logConfig: IActionLogConfig = {
-    userId: session.userId || "",
-    userName: session.userName || "Sistema",
-    actionType: "Upload de Currículo",
-    resourceType: "Resume",
-    resourceId: jobId,
-    details: `Upload do currículo ${file.name} para a vaga ${jobId}.`,
-    success: false
-  };
-  return await withActionLogging(uploadResumeActionInternal, logConfig)(jobId, file);
-};
+    if (searchQuery) {
+      query.title = { $regex: searchQuery, $options: "i" };
+    }
+
+    const sortOptions: any = {};
+    if (sortBy) {
+      const [field, order] = sortBy.split(":");
+      sortOptions[field] = order === "desc" ? -1 : 1;
+    } else {
+      sortOptions.createdAt = -1;
+    }
+
+    const jobs = await jobsCollection
+      .find(query)
+      .sort(sortOptions)
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .toArray() as unknown as IJob[];
+
+    const total = await jobsCollection.countDocuments(query);
+
+    const serializedJobs = jobs.map(job => serializeJob(job));
+
+    return {
+      data: serializedJobs as IJob[],
+      total,
+    };
+  },
+  {
+    userId: "", // Populated by withActionLogging
+    userName: "", // Populated by withActionLogging
+    actionType: "Listar Vagas",
+    resourceType: "Job",
+    resourceId: "", // Populated by withActionLogging
+    success: false,
+  } as IActionLogConfig
+);
+
+// 7. updateJobStatusAction
+export const updateJobStatusAction = withActionLogging(
+  async (jobId: string, newStatus: IJobStatus) => {
+    const user = await getCurrentUser();
+    if (!user) throw new Error("Usuário não autenticado.");
+
+    const jobsCollection = await getJobsCollection();
+
+    const existingJob = await jobsCollection.findOne({ _id: new ObjectId(jobId) as any, tenantId: user.tenantId }) as unknown as IJob;
+    if (!existingJob) throw new Error("Vaga não encontrada ou não pertence ao tenant.");
+
+    const result = await jobsCollection.updateOne(
+      { _id: new ObjectId(jobId) as any, tenantId: user.tenantId },
+      { 
+        $set: { 
+          status: newStatus, 
+          updatedAt: new Date(), 
+          lastStatusUpdateBy: user.userId, 
+          lastStatusUpdateByName: user.userName 
+        },
+        $push: {
+          statusChangeLog: {
+            status: newStatus,
+            changedAt: new Date(),
+            changedBy: user.userId,
+            changedByName: user.userName,
+          },
+        },
+      }
+    );
+
+    if (result.modifiedCount === 0) {
+      throw new Error("Nenhuma alteração de status realizada.");
+    }
+
+    const updatedJob = await jobsCollection.findOne({ _id: new ObjectId(jobId) as any }) as unknown as IJob;
+
+    return serializeJob(updatedJob);
+  },
+  {
+    userId: "", // Populated by withActionLogging
+    userName: "", // Populated by withActionLogging
+    actionType: "Atualizar Status da Vaga",
+    resourceType: "Job",
+    resourceId: "", // Populated by withActionLogging
+    success: false,
+  } as IActionLogConfig
+);

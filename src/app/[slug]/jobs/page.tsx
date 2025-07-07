@@ -3,7 +3,7 @@
 import { useState, useEffect, useTransition } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { getAllJobsAction, updateJobStatusAction } from "@/infrastructure/actions/job-actions";
+import { listJobsAction, updateJobStatusAction } from "@/infrastructure/actions/job-actions";
 import { JobFilter } from "@/shared/components/jobs/jobs-list-filters";
 import { JobView } from "@/shared/components/jobs/jobs-view";
 import { Plus, Loader2 } from "lucide-react";
@@ -27,10 +27,18 @@ export default function JobsPage() {
     const fetchJobs = async () => {
       setIsLoading(true);
       startTransition(async () => {
-        const result = await getAllJobsAction(tenantSlug);
+        const result = await listJobsAction({
+          status: statusFilter === "all" ? undefined : statusFilter,
+          searchQuery: searchTerm,
+        });
         if (result.success) {
-          setJobs(result.data || []);
+          if (result.data) {
+            setJobs(result.data.data || []);
+          } else {
+            setJobs([]);
+          }
         } else {
+          setJobs([]);
           toast({
             title: "Erro",
             description: result.error || "Falha ao carregar vagas.",
@@ -41,14 +49,14 @@ export default function JobsPage() {
       });
     };
     fetchJobs();
-  }, [tenantSlug]);
+  }, [searchTerm, statusFilter]); 
 
   const handleStatusChange = async (jobId: string, newStatus: IJobStatus) => {
     startTransition(async () => {
-      const result = await updateJobStatusAction(tenantSlug, jobId, newStatus, "current-user-id", "Current User"); // Replace with actual user ID/Name
+      const result = await updateJobStatusAction(jobId, newStatus);
       if (result.success) {
         setJobs((prevJobs) =>
-          prevJobs.map((job) => (job._id === jobId ? result.data || job : job))
+          prevJobs.map((job) => (job._id === jobId ? (result.data as IJob) || job : job))
         );
         toast({
           title: "Status da Vaga Atualizado",
@@ -64,14 +72,7 @@ export default function JobsPage() {
     });
   };
 
-  const filteredJobs = jobs.filter((job) => {
-    if (job.isDraft) return false;
-    const matchesSearch =
-      job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || job.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const filteredJobs = jobs.filter((job) => !job.isDraft); // Keep client-side filter for isDraft - Added comment to force type re-evaluation
 
   return (
     <div className="space-y-6">

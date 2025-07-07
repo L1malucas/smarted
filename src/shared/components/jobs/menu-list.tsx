@@ -3,17 +3,17 @@
 import Link from "next/link";
 import { Button } from "../ui/button";
 import { MoreHorizontal, Edit, Trash2, Send } from "lucide-react";
-import { IJob } from "@/domain/models/Job";
 import { IJobStatus } from "@/domain/models/JobStatus";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuItem, DropdownMenuSeparator } from "@radix-ui/react-dropdown-menu";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@radix-ui/react-tooltip";
 import { ShareDialog } from "../share-dialog";
 import { toast } from "@/shared/hooks/use-toast";
 import { IJobActionsMenuProps } from "@/shared/types/types/component-props";
+import { JOB_STATUS_OPTIONS } from "@/shared/constants/jobs-constants";
 
 export function JobActionsMenu({ job, tenantSlug, onStatusChange, onPublish }: IJobActionsMenuProps) {
   const handleStatusChange = (newStatus: IJobStatus) => {
-    onStatusChange(job._id, newStatus);
+    onStatusChange(job._id!, newStatus);
     toast({
       title: "Status Atualizado",
       description: `O status da vaga foi alterado para "${newStatus}".`,
@@ -22,7 +22,7 @@ export function JobActionsMenu({ job, tenantSlug, onStatusChange, onPublish }: I
 
   const handlePublish = () => {
     if (onPublish) {
-      onPublish(job._id);
+      onPublish(job._id!);
       toast({
         title: "Vaga Publicada",
         description: "A vaga foi publicada com sucesso.",
@@ -44,7 +44,7 @@ export function JobActionsMenu({ job, tenantSlug, onStatusChange, onPublish }: I
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>Alterar Status</DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
-                  {jobStatusOptions
+                  {JOB_STATUS_OPTIONS
                     .filter((opt) => opt.value !== "all")
                     .map((opt) => (
                       <DropdownMenuItem
@@ -77,7 +77,7 @@ export function JobActionsMenu({ job, tenantSlug, onStatusChange, onPublish }: I
               <ShareDialog
                 title={`Compartilhar Vaga: ${job.title}`}
                 resourceType="job"
-                resourceId={job._id}
+                resourceId={job._id!}
                 resourceName={job.title}
                 tenantSlug={tenantSlug}
                 jobSlug={job.slug}

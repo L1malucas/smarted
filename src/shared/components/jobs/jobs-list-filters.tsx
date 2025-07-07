@@ -1,16 +1,17 @@
 
-import { jobStatusOptions } from "@/shared/constants/jobs-constants";
+import { JOB_STATUS_OPTIONS } from "@/shared/constants/jobs-constants";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@radix-ui/react-select";
 import { Search } from "lucide-react";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
+import { IJobStatus } from "@/domain/models/JobStatus";
 
 interface IJobFilterProps {
   searchTerm: string;
-  statusFilter: string;
+  statusFilter: IJobStatus | "all";
   viewMode: "card" | "list";
   onSearchChange: (value: string) => void;
-  onStatusChange: (value: string) => void;
+  onStatusChange: (value: IJobStatus | "all") => void;
   onViewModeChange: (mode: "card" | "list") => void;
 }
 
@@ -38,7 +39,7 @@ export function JobFilter({
           <SelectValue placeholder="Filtrar por status" />
         </SelectTrigger>
         <SelectContent>
-          {jobStatusOptions.map((opt) => (
+          {JOB_STATUS_OPTIONS.map((opt) => (
             <SelectItem key={opt.value} value={opt.value}>
               {opt.label}
             </SelectItem>

@@ -173,7 +173,6 @@ export function Navbar({ tenantSlug, user }: INavbarProps) {
               )}
             </div>
           </div>
-          <ThemeSelector />
           <div className="hidden sm:ml-6 sm:flex sm:items-center sm:space-x-3">
             <Popover>
               <PopoverTrigger asChild>

@@ -1,12 +1,11 @@
-import { IJobStatus } from '@/domain/models/JobStatus';
-
-export const jobStatusOptions = [
-  { value: IJobStatus.All, label: "Todos os Status" },
-  { value: IJobStatus.Open, label: "Aberta" },
-  { value: IJobStatus.Recruitment, label: "Recrutamento" },
-  { value: IJobStatus.Screening, label: "Triagem" },
-  { value: IJobStatus.Evaluation, label: "Avaliação" },
-  { value: IJobStatus.Contact, label: "Contato" },
-  { value: IJobStatus.Closed, label: "Vaga Fechada" },
-  { value: IJobStatus.Draft, label: "Rascunho" },
+export const JOB_STATUS_OPTIONS = [
+  { value: "all", label: "Todos os Status" },
+  { value: "aberta", label: "Aberta" },
+  { value: "recrutamento", label: "Recrutamento" },
+  { value: "triagem", label: "Triagem" },
+  { value: "avaliação", label: "Avaliação" },
+  { value: "contato", label: "Contato" },
+  { value: "vaga fechada", label: "Vaga Fechada" },
+  { value: "draft", label: "Rascunho" },
 ];
+ 

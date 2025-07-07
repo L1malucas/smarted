@@ -1,5 +1,5 @@
+import { IJobStatus } from "@/domain/models/JobStatus";
 import { Badge } from "@/shared/components/ui/badge";
-import { JobStatus } from "../types/types/jobs-interface";
 
 export const statusConfig = {
   aberta: { variant: "default", label: "Aberta", className: "bg-sky-500 hover:bg-sky-600" },
