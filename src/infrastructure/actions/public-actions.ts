@@ -1,123 +1,82 @@
 "use server";
 
-import { getJobsCollection, getCandidatesCollection, getShareableLinksCollection } from "@/infrastructure/persistence/db";
-import { ObjectId } from "mongodb";
 import { withActionLogging } from "@/shared/lib/actions";
-import { IActionLogConfig } from "@/shared/types/types/action-interface";
+import { getJobsCollection } from "../persistence/db";
 import { IJob } from "@/domain/models/Job";
+import { serializeJob } from "@/shared/lib/server-utils";
+import { IActionLogConfig } from "@/shared/types/types/action-interface";
 
-// Helper to get current user's info (mocked for now)
-async function getCurrentUser(): Promise<{ userId: string; userName: string }> {
-  // This is a placeholder. For public actions, user might be anonymous
-  return {
-    userId: "anonymous",
-    userName: "Anônimo",
-    tenantId: "public",
-  };
-}
+export const listPublicJobsAction = withActionLogging(
+  async (filters: {
+    tenantId?: string;
+    searchQuery?: string;
+    employmentType?: string;
+    experienceLevel?: string;
+    isPCDExclusive?: boolean;
+    page?: number;
+    limit?: number;
+    sortBy?: string;
+  }) => {
+    const jobsCollection = await getJobsCollection();
+    const { tenantId, searchQuery, employmentType, experienceLevel, isPCDExclusive, page = 1, limit = 10, sortBy } = filters;
 
-async function getPublicCandidateDetailsActionInternal(hash: string): Promise<{ jobTitle: string, candidates: PublicCandidate[] } | null> {
-  const shareableLinksCollection = await getShareableLinksCollection();
-  const jobsCollection = await getJobsCollection();
-  const candidatesCollection = await getCandidatesCollection();
+    const query: any = { status: "aberta" }; // Always filter by open jobs
 
-  const link = await shareableLinksCollection.findOne({ hash });
+    if (tenantId) {
+      query.tenantId = tenantId;
+    }
 
-  if (!link || link.expiresAt < new Date()) {
-    throw new Error("Link inválido ou expirado.");
-  }
+    if (searchQuery) {
+      query.$or = [
+        { title: { $regex: searchQuery, $options: "i" } },
+        { description: { $regex: searchQuery, $options: "i" } },
+        { department: { $regex: searchQuery, $options: "i" } },
+        { location: { $regex: searchQuery, $options: "i" } },
+      ];
+    }
 
-  const job = await jobsCollection.findOne({ _id: new ObjectId(link.resourceId) }) as IJob;
-  if (!job) {
-    throw new Error("Vaga associada ao link não encontrada.");
-  }
+    if (employmentType) {
+      query.employmentType = employmentType;
+    }
 
-  const candidates = await candidatesCollection.find({ jobId: new ObjectId(link.resourceId) }).toArray() as PublicCandidate[];
+    if (experienceLevel) {
+      query.experienceLevel = experienceLevel;
+    }
 
-  return { jobTitle: job.title, candidates: JSON.parse(JSON.stringify(candidates)) };
-}
+    if (isPCDExclusive !== undefined) {
+      query.isPCDExclusive = isPCDExclusive;
+    }
 
-export const getPublicCandidateDetailsAction = async (hash: string) => {
-  const session = await getCurrentUser();
-  const logConfig: ActionLogConfig = {
-    userId: session.userId,
-    userName: session.userName,
-    actionType: "Visualizar Detalhes Públicos de Candidato",
-    resourceType: "PublicCandidate",
-    resourceId: hash,
-    successMessage: "Detalhes públicos do candidato obtidos com sucesso!",
-    errorMessage: "Erro ao obter detalhes públicos do candidato.",
-  };
-  return await withActionLogging(getPublicCandidateDetailsActionInternal, logConfig)(hash);
-};
+    const sortOptions: any = {};
+    if (sortBy) {
+      const [field, order] = sortBy.split(":");
+      sortOptions[field] = order === "desc" ? -1 : 1;
+    } else {
+      sortOptions.createdAt = -1; // Default sort by creation date
+    }
 
-async function getPublicJobDetailsActionInternal(hash: string, password?: string): Promise<{ job: IJob | null, error?: string }> {
-  const shareableLinksCollection = await getShareableLinksCollection();
-  const jobsCollection = await getJobsCollection();
+    const jobs = await jobsCollection
+      .find(query)
+      .sort(sortOptions)
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .toArray() as unknown as IJob[];
 
-  const link = await shareableLinksCollection.findOne({ hash });
+    const total = await jobsCollection.countDocuments(query);
 
-  if (!link || link.expiresAt < new Date()) {
-    throw new Error("Link inválido ou expirado.");
-  }
+    const serializedJobs = jobs.map(job => serializeJob(job));
 
-  if (link.password && link.password !== password) {
-    throw new Error("Senha incorreta.");
-  }
-
-  const job = await jobsCollection.findOne({ _id: new ObjectId(link.resourceId) }) as IJob;
-  if (!job) {
-    throw new Error("Vaga associada ao link não encontrada.");
-  }
-
-  return { job: JSON.parse(JSON.stringify(job)) };
-}
-
-export const getPublicJobDetailsAction = async (hash: string, password?: string) => {
-  const session = await getCurrentUser();
-  const logConfig: ActionLogConfig = {
-    userId: session.userId,
-    userName: session.userName,
-    actionType: "Visualizar Detalhes Públicos da Vaga",
-    resourceType: "PublicJob",
-    resourceId: hash,
-    successMessage: "Detalhes públicos da vaga obtidos com sucesso!",
-    errorMessage: "Erro ao obter detalhes públicos da vaga.",
-  };
-  return await withActionLogging(getPublicJobDetailsActionInternal, logConfig)(hash, password);
-};
-
-async function createShareableLinkActionInternal(resourceType: string, resourceId: string, resourceName: string, tenantSlug: string, isPasswordProtected: boolean, password?: string, expiryDays?: number): Promise<{ success: boolean, error?: string, hash?: string }> {
-  const shareableLinksCollection = await getShareableLinksCollection();
-
-  const newLink = {
-    resourceType,
-    resourceId: new ObjectId(resourceId),
-    resourceName,
-    tenantSlug,
-    isPasswordProtected,
-    password: isPasswordProtected ? password : undefined,
-    hash: Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15), // Simple hash for now
-    expiresAt: expiryDays ? new Date(Date.now() + expiryDays * 24 * 60 * 60 * 1000) : undefined,
-    createdAt: new Date(),
-  };
-
-  const result = await shareableLinksCollection.insertOne(newLink);
-
-  return { success: true, hash: newLink.hash };
-}
-
-export const createShareableLinkAction = async (resourceType: string, resourceId: string, resourceName: string, tenantSlug: string, isPasswordProtected: boolean, password?: string, expiryDays?: number) => {
-  const session = await getCurrentUser();
-  const logConfig: ActionLogConfig = {
-    userId: session.userId,
-    userName: session.userName,
-    actionType: "Criar Link Compartilhável",
-    resourceType: "ShareableLink",
-    resourceId: resourceId,
-    details: `Link compartilhável criado para ${resourceType} ${resourceName}.`,
-    successMessage: "Link compartilhável criado com sucesso!",
-    errorMessage: "Erro ao criar link compartilhável.",
-  };
-  return await withActionLogging(createShareableLinkActionInternal, logConfig)(resourceType, resourceId, resourceName, tenantSlug, isPasswordProtected, password, expiryDays);
-};
+    return {
+      data: serializedJobs as IJob[],
+      total,
+    };
+  },
+  {
+    userId: "public", // Special userId for public actions
+    userName: "Public User", // Special userName for public actions
+    actionType: "Listar Vagas Públicas",
+    resourceType: "Job",
+    resourceId: "",
+    success: false,
+  } as IActionLogConfig
+);

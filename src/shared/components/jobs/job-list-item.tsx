@@ -33,7 +33,7 @@ export function JobListItem({ job, tenantSlug, onStatusChange, onPublish }: IJob
 
   return (
     <Link
-      href={`/${tenantSlug}/jobs/${job.slug}/details`}
+      href={`/${tenantSlug}/jobs/${job._id}/details`}
       className="font-semibold text-lg hover:text-blue-600 transition-colors duration-200 cursor-pointer truncate"
     >
       <Card className="hover:shadow-md transition-all duration-300 border-l-4 border-l-transparent hover:border-l-blue-500">

@@ -2,11 +2,10 @@
 
 import { useState, useEffect, useTransition } from "react";
 import { useParams } from "next/navigation";
-import { getJobDetailsAction, getCandidatesForJobAction } from "@/infrastructure/actions/job-actions";
+import { getJobByIdAction } from "@/infrastructure/actions/job-actions";
 import { JobDetails } from "@/shared/components/jobs/job-details";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { toast } from "@/shared/hooks/use-toast";
-import { ICandidate } from "@/domain/models/Candidate";
 import { IJob } from "@/domain/models/Job";
 
 export default function JobDetailsPage() {
@@ -15,7 +14,6 @@ export default function JobDetailsPage() {
   const jobId = params.jobId as string;
 
   const [job, setJob] = useState<IJob | null>(null);
-  const [candidates, setCandidates] = useState<ICandidate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
 
@@ -24,7 +22,7 @@ export default function JobDetailsPage() {
       setIsLoading(true);
       startTransition(async () => {
         try {
-          const jobResult = await getJobDetailsAction(jobId);
+          const jobResult = await getJobByIdAction(jobId);
           if (jobResult.success && jobResult.data) {
             setJob(jobResult.data);
           } else {
@@ -35,26 +33,13 @@ export default function JobDetailsPage() {
             });
             setJob(null); // Ensure job is null on error
           }
-
-          const candidatesResult = await getCandidatesForJobAction(jobId);
-          if (candidatesResult.success && candidatesResult.data) {
-            setCandidates(candidatesResult.data);
-          } else {
-            toast({
-              title: "Erro",
-              description: candidatesResult.error || "Não foi possível carregar os candidatos.",
-              variant: "destructive",
-            });
-            setCandidates([]); // Ensure candidates is empty on error
-          }
         } catch (error) {
           toast({
             title: "Erro ao carregar dados",
-            description: "Não foi possível carregar os detalhes da vaga ou candidatos.",
+            description: "Não foi possível carregar os detalhes da vaga.",
             variant: "destructive",
           });
           setJob(null);
-          setCandidates([]);
         } finally {
           setIsLoading(false);
         }
@@ -63,23 +48,6 @@ export default function JobDetailsPage() {
 
     fetchData();
   }, [jobId]);
-
-  // Calculate radar data based on candidates (if any)
-  const defaultRadarData = [
-    { subject: "Experiência", A: 0, fullMark: 100 },
-    { subject: "Habilidades", A: 0, fullMark: 100 },
-    { subject: "Certificações", A: 0, fullMark: 100 },
-    { subject: "Comportamental", A: 0, fullMark: 100 },
-    { subject: "Liderança", A: 0, fullMark: 100 },
-  ];
-
-  const currentRadarData = candidates.length > 0 ? [
-    { subject: "Experiência", A: candidates.reduce((sum, c) => sum + (c.analysis?.experienceScore || 0), 0) / candidates.length, fullMark: 100 },
-    { subject: "Habilidades", A: candidates.reduce((sum, c) => sum + (c.analysis?.skillsScore || 0), 0) / candidates.length, fullMark: 100 },
-    { subject: "Certificações", A: candidates.reduce((sum, c) => sum + (c.analysis?.certificationsScore || 0), 0) / candidates.length, fullMark: 100 },
-    { subject: "Comportamental", A: candidates.reduce((sum, c) => sum + (c.analysis?.behavioralScore || 0), 0) / candidates.length, fullMark: 100 },
-    { subject: "Liderança", A: candidates.reduce((sum, c) => sum + (c.analysis?.leadershipScore || 0), 0) / candidates.length, fullMark: 100 },
-  ] : defaultRadarData;
 
   if (isLoading) {
     return (
@@ -101,5 +69,5 @@ export default function JobDetailsPage() {
     return <div className="text-center py-12">Vaga não encontrada.</div>;
   }
 
-  return <JobDetails job={job} candidates={candidates} tenantSlug={tenantSlug} radarData={currentRadarData} />;
+  return <JobDetails job={job} tenantSlug={tenantSlug} />;
 }

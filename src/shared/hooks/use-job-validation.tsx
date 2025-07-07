@@ -37,7 +37,9 @@ export function useJobValidation() {
         const newErrors: ValidationErrors = {};
         error.errors.forEach((err) => {
           const field = err.path[0] as keyof ValidationErrors;
-          newErrors[field] = err.message;
+          if (field) {
+            newErrors[field] = err.message;
+          }
         });
         setErrors(newErrors);
         return false;
@@ -93,7 +95,7 @@ export function useJobValidation() {
   };
 
   const hasFieldError = (field: keyof ValidationErrors): boolean => {
-    return errors?.[field];
+    return !!errors?.[field];
   };
 
   const clearFieldError = (field: keyof ValidationErrors): void => {

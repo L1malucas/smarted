@@ -8,6 +8,7 @@
 import { IUser } from '@/domain/models/User';
 import { INotification } from '@/domain/models/Notification';
 import { IJob } from '@/domain/models/Job'; // Import IJob
+import { IFileMetadata } from '@/domain/models/FileMetadata'; // Import IFileMetadata
 import { MongoClient, ServerApiVersion, Db, Collection } from 'mongodb';
 
 /**
@@ -145,4 +146,13 @@ export async function getSystemSettingsCollection(): Promise<Collection> {
 export async function getNotificationsCollection(): Promise<Collection<INotification>> {
   const db = await getDb();
   return db.collection('notifications');
+}
+
+/**
+ * Retorna a coleção 'files' do banco de dados MongoDB.
+ * @returns {Promise<Collection<IFileMetadata>>} Uma promessa que resolve para a coleção 'files'.
+ */
+export async function getFilesCollection(): Promise<Collection<IFileMetadata>> {
+  const db = await getDb();
+  return db.collection('files');
 }

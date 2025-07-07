@@ -8,14 +8,10 @@ import { Label } from "@/shared/components/ui/label";
 import { ICompetency } from "@/domain/models/Competency";
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { Tooltip } from "../ui/tooltip";
+import { ICompetencySectionProps } from "@/shared/types/types/component-props";
 
-interface CompetencySectionProps {
-  competencies: ICompetency[];
-  onChange: (competencies: ICompetency[]) => void;
-  error?: string;
-}
 
-export function CompetencySection({ competencies, onChange, error }: CompetencySectionProps) {
+export function CompetencySection({ competencies, onChange, error }: ICompetencySectionProps) {
   const [isOpen, setIsOpen] = useState(true);
   const handleCompetencyChange = <K extends keyof ICompetency>(index: number, field: K, value: ICompetency[K]) => {
     const updated = [...competencies];

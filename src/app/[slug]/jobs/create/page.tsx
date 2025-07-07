@@ -1,4 +1,5 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
@@ -10,7 +11,6 @@ import { QuestionSection } from "@/shared/components/jobs/question-section";
 import { useJobValidation } from "@/shared/hooks/use-job-validation";
 import { toast } from "@/shared/hooks/use-toast";
 import { withActionLogging } from "@/shared/lib/actions";
-
 import { createJobAction } from "@/infrastructure/actions/job-actions";
 import { ICompetency } from "@/domain/models/Competency";
 import { IJobStatus } from "@/domain/models/JobStatus";
@@ -115,16 +115,17 @@ export default function CreateJobPage() {
       const result = await createJobAction(jobData, isDraft);
       setHasUnsavedChanges(false);
 
+      if (result.success && result.data && result.data._id) {
+        logConfig.resourceId = result.data._id.toString();
+      }
+
       router.push(`/${tenantSlug}/jobs`);
-      return { success: true, data: result };
+      return result.data; // Return IJob directly
     };
 
     const wrappedSubmit = withActionLogging(handleSubmitInternal, logConfig);
-    const result = await wrappedSubmit(status);
-    if (result.success && result.data && result.data._id) {
-      logConfig.resourceId = result.data._id.toString();
-    }
-    return result;
+    const finalResult = await wrappedSubmit(status);
+    return finalResult;
   };
 
   const handleBack = async () => {

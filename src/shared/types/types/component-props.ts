@@ -90,6 +90,12 @@ export interface IJobStatsProps {
 export interface IJobSearchProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
+  employmentType?: string;
+  onEmploymentTypeChange?: (value: string | undefined) => void;
+  experienceLevel?: string;
+  onExperienceLevelChange?: (value: string | undefined) => void;
+  isPCDExclusive?: boolean;
+  onIsPCDExclusiveChange?: (value: boolean | undefined) => void;
 }
 
 export interface IJobListProps {
@@ -136,9 +142,7 @@ export interface IJobListItemProps {
 
 export interface IJobDetailsProps {
   job: IJob;
-  candidates: ICandidate[];
   tenantSlug: string;
-  radarData: Array<{ subject: string; A: number; fullMark: number }>;
 }
 
 export interface IJobCreateFormProps {

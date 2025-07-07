@@ -141,6 +141,95 @@ O projeto segue uma estrutura de pastas organizada em camadas, alinhada com os p
     *   Imagens otimizadas com `next/image`.
     *   Busca e filtros em diversas telas operacionais.
 
+## Ferramentas e Macros
+
+*   **`withActionLogging`** (`shared/lib/actions.ts`): Um wrapper para ações assíncronas que automatiza o logging de auditoria e a exibição de toasts de sucesso/erro.
+*   **Funções de Validação e Formatação (`shared/lib/validations.ts`):**
+    *   `validateRequiredFields`: Valida se campos obrigatórios estão preenchidos.
+    *   `validateCPF`: Validação de formato e dígitos de CPF.
+    *   `formatCPF`: Formatação de strings de CPF.
+    *   `sanitizeInput`: Sanitização de strings para prevenir XSS.
+*   **Hooks Reutilizáveis (`shared/hooks/`):**
+    *   `useAddressAutocomplete`: Hook para autocompletar endereços (usando Nominatim).
+    *   `useJobValidation`: Hook para validação de formulários de vaga.
+    *   `useToast`: Hook para exibir notificações toast.
+*   **Funções de Exportação (`shared/lib/export-utils.ts`):**
+    *   `exportToPDF`: Exporta dados para PDF.
+    *   `exportToExcel`: Exporta dados para Excel.
+## Configuração e Execução
+
+### 1. Gerenciamento de Vagas
+*   Criação de vagas com título, descrição detalhada.
+*   Definição de **competências** com pesos (1-5), marcando as principais como obrigatórias.
+*   Criação de **perguntas** abertas ou fechadas para os candidatos.
+*   Opção de marcar vaga como **exclusiva para PCD**.
+*   Opção de vaga por **indicação** (pula perguntas no processo de candidatura).
+*   Gerenciamento de **status da vaga**: `aberta`, `recrutamento`, `triagem`, `avaliação`, `contato`, `vaga fechada`, `draft`.
+*   Alteração manual do status da vaga com log de quem alterou.
+*   Visualização de quem criou a vaga.
+*   Filtros e buscas avançadas na listagem de vagas.
+
+### 2. Processo de Recrutamento por Etapas
+*   **Triagem (`/screening`)**:
+    *   Visualização de candidatos que aplicaram para vagas em status inicial.
+    *   Filtro por vaga.
+    *   Busca por nome, email.
+    *   Ordenação por nome, data de aplicação, match da IA.
+    *   Ações: Aprovar para avaliação, reprovar, ver detalhes, download CV.
+*   **Avaliação (`/evaluation`)**:
+    *   Candidatos aprovados na triagem.
+    *   Ordenação por nível de match (baixo, médio, alto).
+    *   Visualização detalhada do candidato (modal):
+        *   Anotações livres.
+        *   Status PCD.
+        *   Upload de testes e respostas (simulado).
+    *   Remoção de candidatos da etapa.
+    *   Paginação para controlar quantidade de candidatos visíveis.
+*   **Contato (`/contact`)**:
+    *   Candidatos aprovados na avaliação.
+    *   Envio de e-mails personalizados com dados de entrevista (simulado).
+    *   Botões para integração com plataformas de videoconferência (Google Meet, Zoom, Teams - simulado).
+    *   Botões para integração com agendas (Google Calendar, Outlook Calendar - simulado).
+
+### 3. Dashboard (`/dashboard`)
+*   Métricas chave:
+    *   Vagas criadas.
+    *   Candidatos cadastrados.
+    *   Contatos realizados.
+    *   Matches gerados.
+*   Gráficos de progresso mensal e atividade do usuário.
+*   Filtro por período.
+
+### 4. Painel Administrativo (`/admin`)
+*   Gerenciamento de usuários (CPFs permitidos) e suas permissões (admin/recruiter).
+*   Tela para gerenciar **vagas expiradas/inativas**.
+*   Visualizador de **logs de auditoria** com filtros por data, usuário e tipo de ação.
+*   Configurações gerais do sistema (placeholder).
+
+### 5. Candidatura (`/apply/[jobSlug]`)
+*   Processo de aplicação em formato stepper:
+    *   Passo 1: Upload de currículo (PDF obrigatório).
+    *   Passo 2: Resposta das perguntas da vaga (se não for indicação).
+
+### 6. Funcionalidades Adicionais
+*   **Compartilhamento de Links**:
+    *   Vagas, relatórios de triagem/avaliação, dashboard podem ser compartilhados.
+    *   Geração de links públicos com hash.
+    *   Controle de expiração (simulado no frontend) e senha de acesso (a ser implementado).
+*   **Notificações Internas**:
+    *   Alertas (toasts, badges) para ações pendentes, novas candidaturas, etc., acessíveis pelo ícone de sino na navbar.
+*   **Exportação de Relatórios**:
+    *   Opções para exportar dados em PDF/Excel (simulado) por vaga, etapa ou geral.
+*   **Segurança e Acesso**:
+    *   Login por CPF (agora implementado via Server Action, sem senha, com CPF pré-autorizado no banco de dados).
+    *   Controle de permissões por perfil de usuário (simulado, mas com `tenantId` no modelo `User` para multi-tenancy).
+    *   **Atenção**: O controle de limite de usuários por tenant será implementado em uma etapa futura.
+*   **Qualidade de Vida**:
+    *   Tema escuro por padrão.
+    *   Design responsivo.
+    *   Imagens otimizadas com `next/image`.
+    *   Busca e filtros em diversas telas operacionais.
+
 ## Configuração e Execução
 
 1.  **Clone o repositório:**

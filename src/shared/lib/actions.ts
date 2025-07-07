@@ -1,5 +1,4 @@
 import { saveAuditLogAction } from "@/infrastructure/actions/audit-actions";
-import { toast } from "@/shared/hooks/use-toast";
 import { IActionFunction, IActionLogConfig, IActionResult } from "../types/types/action-interface";
 
 export function withActionLogging<TArgs extends any[], TResult>(
@@ -25,7 +24,7 @@ export function withActionLogging<TArgs extends any[], TResult>(
       return { success: true, data: result };
     } catch (error: any) {
       if (error && typeof error.digest === 'string' && error.digest.startsWith('NEXT_REDIRECT')) {
-        throw error; // Re-throw the redirect error so Next.js can handle it
+        throw error; 
       }
 
       let errorMessage = "Ocorreu um erro desconhecido.";

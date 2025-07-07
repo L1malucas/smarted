@@ -9,7 +9,6 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Switch } from "@radix-ui/react-switch";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
-import { Label as RechartsLabel } from "recharts";
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { Textarea } from "../ui/textarea";
 import { useToast } from "../ui/use-toast";
@@ -79,8 +78,12 @@ export function JobBasicInfo({ formData, onChange, errors }: IJobBasicInfoProps)
   };
 
   const handleSalaryChange = (field: 'min' | 'max' | 'currency', value: number | string) => {
-    const newSalaryRange = { ...formData.salaryRange, [field]: value };
-    onChange("salaryRange", newSalaryRange);
+    const currentSalaryRange = formData.salaryRange || { min: 0, max: 0, currency: "BRL" };
+    const newSalaryRange = {
+      ...currentSalaryRange,
+      [field]: value,
+    };
+    onChange("salaryRange", newSalaryRange as IJob["salaryRange"]);
     validateField("salaryRange", newSalaryRange);
   };
 

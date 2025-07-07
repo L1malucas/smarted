@@ -1,20 +1,30 @@
 import { useState, useEffect } from 'react';
 import { toast } from '@/shared/hooks/use-toast';
 import { IJob } from '@/domain/models/Job';
+import { listPublicJobsAction } from "@/infrastructure/actions/public-actions";
 
-export function usePublicJobs(tenantSlug?: string) {
+export function usePublicJobs(tenantSlug?: string, employmentType?: string, experienceLevel?: string, isPCDExclusive?: boolean, page: number = 1, limit: number = 10) {
   const [jobs, setJobs] = useState<IJob[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
-  const jobService = new PublicJobService();
+  const [totalJobs, setTotalJobs] = useState(0);
 
   useEffect(() => {
     const fetchJobs = async () => {
       setLoading(true);
       try {
-        const result = await getPublicJobsAction(tenantSlug);
+        const result = await listPublicJobsAction({
+          tenantId: tenantSlug,
+          searchQuery: searchTerm,
+          employmentType: employmentType,
+          experienceLevel: experienceLevel,
+          isPCDExclusive: isPCDExclusive,
+          page,
+          limit,
+        });
         if (result.success) {
-          setJobs(result.data || []);
+          setJobs(result.data?.data || []);
+          setTotalJobs(result.data?.total || 0);
         } else {
           toast({
             title: "Erro ao carregar vagas",
@@ -28,32 +38,25 @@ export function usePublicJobs(tenantSlug?: string) {
     };
 
     fetchJobs();
-  }, [tenantSlug]);
-
-  const filteredJobs = jobs.filter(
-    job =>
-      job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.department?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.location?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  }, [tenantSlug, searchTerm, employmentType, experienceLevel, isPCDExclusive, page, limit]);
 
   const stats = {
-    totalJobs: jobs.length,
+    totalJobs: totalJobs,
     totalCandidates: jobs.reduce((acc, job) => acc + job.candidatesCount, 0),
     pcdJobs: jobs.filter(job => job.isPCDExclusive).length,
     models: {
-      presencial: 10,
-      hibrido: 10,
-      remoto: 10
+      presencial: jobs.filter(job => job.location?.toLowerCase().includes("presencial")).length,
+      hibrido: jobs.filter(job => job.location?.toLowerCase().includes("hibrido")).length,
+      remoto: jobs.filter(job => job.location?.toLowerCase().includes("remoto")).length,
     }
   };
 
   return {
-    jobs: filteredJobs,
+    jobs,
     searchTerm,
     setSearchTerm,
     loading,
     stats,
+    totalJobs,
   };
 }

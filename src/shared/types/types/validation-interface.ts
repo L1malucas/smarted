@@ -7,6 +7,6 @@ export interface ValidationErrors {
   department?: string;
   location?: string;
   salaryRange?: string;
-  competencies?: ICompetency[];
-  questions?: IJobQuestion[];
+  competencies?: string;
+  questions?: string;
 }

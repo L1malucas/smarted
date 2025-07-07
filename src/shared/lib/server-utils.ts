@@ -3,12 +3,12 @@ import { verifyToken } from "@/infrastructure/auth/auth";
 import { IJob } from "@/domain/models/Job";
 
 // Helper to get current user's info
-export async function getCurrentUser(): Promise<{ userId: string; tenantId: string; userName: string; isAdmin: boolean }> {
+export async function getCurrentUser(): Promise<{ userId: string; tenantId: string; userName: string; isAdmin: boolean } | null> {
   const accessToken = (await cookies()).get('accessToken')?.value;
-  if (!accessToken) throw new Error("Usuário não autenticado.");
+  if (!accessToken) return null; // Return null if no access token
 
   const decoded = await verifyToken(accessToken);
-  if (!decoded) throw new Error("Token inválido.");
+  if (!decoded) return null; // Return null if token is invalid
 
   return {
     userId: decoded.userId,
@@ -28,6 +28,7 @@ export function serializeJob(job: any): IJob {
     createdBy: job.createdBy.toString(),
     createdAt: job.createdAt instanceof Date ? job.createdAt.toISOString() : job.createdAt,
     updatedAt: job.updatedAt instanceof Date ? job.updatedAt.toISOString() : job.updatedAt,
+    criteriaWeights: job.criteriaWeights || { experience: 0, skills: 0, certifications: 0, behavioral: 0, leadership: 0 },
   };
 
   if (serializedJob.competencies) {

@@ -105,7 +105,7 @@ export function QuestionSection({ questions, onChange, error }: IQuestionSection
                   <Label htmlFor={`q-type-${qIndex}`}>Tipo</Label>
                   <Select
                     value={q.type}
-                    onValueChange={(val) => handleQuestionChange(qIndex, "type", val)}
+                    onValueChange={(val) => handleQuestionChange(qIndex, "type", val as IJobQuestion["type"])}
                   >
                     <SelectTrigger id={`q-type-${qIndex}`}>
                       <SelectValue />

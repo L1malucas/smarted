@@ -1,7 +1,7 @@
-import { IJob } from "@/domain/models/Job";
-import { Badge, Eye } from "lucide-react";
+import {  Eye } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { IJobPreviewProps } from "@/shared/types/types/component-props"
+import { Badge } from "../ui/badge";
 
 export function JobPreview({ formData }: IJobPreviewProps) {
   return (
