@@ -1,15 +1,18 @@
 "use client"
 
 import { useState, useEffect, useTransition } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { getJobByIdAction } from "@/infrastructure/actions/job-actions";
 import { JobDetails } from "@/shared/components/jobs/job-details";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { toast } from "@/shared/hooks/use-toast";
 import { IJob } from "@/domain/models/Job";
+import { Button } from "@/shared/components/ui/button";
+import { Edit, Users, CheckCircle } from "lucide-react";
 
 export default function JobDetailsPage() {
   const params = useParams();
+  const router = useRouter();
   const tenantSlug = params.slug as string;
   const jobId = params.jobId as string;
 
@@ -49,6 +52,14 @@ export default function JobDetailsPage() {
     fetchData();
   }, [jobId]);
 
+  const handleGoToScreening = () => {
+    router.push(`/${tenantSlug}/screening?jobId=${jobId}`);
+  };
+
+  const handleGoToEvaluation = () => {
+    router.push(`/${tenantSlug}/evaluation?jobId=${jobId}`);
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -69,5 +80,17 @@ export default function JobDetailsPage() {
     return <div className="text-center py-12">Vaga não encontrada.</div>;
   }
 
-  return <JobDetails job={job} tenantSlug={tenantSlug} />;
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-end gap-2 mb-4">
+        <Button onClick={handleGoToScreening}>
+          <Users className="mr-2 h-4 w-4" /> Ir para Triagem
+        </Button>
+        <Button onClick={handleGoToEvaluation}>
+          <CheckCircle className="mr-2 h-4 w-4" /> Ir para Avaliação
+        </Button>
+      </div>
+      <JobDetails job={job} tenantSlug={tenantSlug} />
+    </div>
+  );
 }

@@ -190,34 +190,6 @@ export function JobDetails({ job, tenantSlug }: IJobDetailsProps) {
           </CardContent>
         </Card>
       )}
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Triagem de Candidatos</CardTitle>
-          <CardDescription>Gerencie candidatos na fase de triagem</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex justify-center py-4">
-            <Button asChild>
-              <Link href={`/${tenantSlug}/screening?jobId=${job._id}`}>Ir para Triagem</Link>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Avaliação de Candidatos</CardTitle>
-          <CardDescription>Visualize e gerencie a avaliação dos candidatos</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex justify-center py-4">
-            <Button asChild>
-              <Link href={`/${tenantSlug}/evaluation?jobId=${job._id}`}>Ir para Avaliação</Link>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

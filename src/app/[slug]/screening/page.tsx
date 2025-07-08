@@ -3,22 +3,27 @@
 import { useState, useEffect } from "react"
 import { useSearchParams, useParams } from "next/navigation"
 import Link from "next/link"
-import { ArrowUpDown, Search, Filter, Eye, CheckCircle, XCircle, Download, Badge, Table } from "lucide-react"
+import { ArrowUpDown, Search, Filter, Eye, CheckCircle, XCircle, Download } from "lucide-react"
 import { ShareDialog } from "@/shared/components/share-dialog"
 import { Card, CardHeader, CardTitle, CardContent } from "@/shared/components/ui/card"
-import { TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/shared/components/ui/table"
+import { TableHeader, TableRow, TableHead, TableBody, TableCell, Table } from "@/shared/components/ui/table"
 import { toast } from "@/shared/hooks/use-toast"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@radix-ui/react-select"
-import { Input } from "postcss"
-import { Button } from "react-day-picker"
+import { Input } from "@/shared/components/ui/input"
+import { ICandidate } from "@/domain/models/Candidate"
+import { IJob } from "@/domain/models/Job"
+import { Button } from "@/shared/components/ui/button"
+import { Badge } from "@/shared/components/ui/badge"
+import { getCandidatesForJobAction } from "@/infrastructure/actions/candidate-actions"
+import { listJobsAction } from "@/infrastructure/actions/job-actions"
 
 export default function ScreeningPage() {
   const searchParams = useSearchParams()
   const [selectedJobId, setSelectedJobId] = useState<string | null>(searchParams.get("jobId"))
-  const [candidates, setCandidates] = useState<Candidate[]>([])
-  const [jobs, setJobs] = useState<Job[]>([])
+  const [candidates, setCandidates] = useState<ICandidate[]>([])
+  const [jobs, setJobs] = useState<IJob[]>([])
   const [searchTerm, setSearchTerm] = useState("")
-  const [sortBy, setSortBy] = useState<keyof Candidate | "finalScore">("createdAt")
+  const [sortBy, setSortBy] = useState<keyof ICandidate | "finalScore">("createdAt")
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc")
   const [isLoading, setIsLoading] = useState(true)
 
@@ -29,31 +34,39 @@ export default function ScreeningPage() {
     const fetchData = async () => {
       setIsLoading(true)
       try {
-        const fetchedCandidates = await candidatesService.getCandidatesForScreening(tenantSlug, selectedJobId)
-        setCandidates(fetchedCandidates)
-        const fetchedJobs = await JobService.getAllJobs(tenantSlug)
-        setJobs(fetchedJobs)
+        const candidatesResult = await getCandidatesForJobAction(selectedJobId || "");
+        if (candidatesResult.success && candidatesResult.data) {
+          setCandidates(candidatesResult.data as ICandidate[]);
+        } else {
+          toast({
+            title: "Erro ao carregar candidatos",
+            description: candidatesResult.error || "Não foi possível carregar os candidatos para triagem.",
+            variant: "destructive",
+          });
+        }
+
+        const jobsResult = await listJobsAction({}); // Fetch all jobs
+        if (jobsResult.success && jobsResult.data) {
+          setJobs(jobsResult.data.data as IJob[]); // Access .data.data for the array of jobs
+        } else {
+          toast({
+            title: "Erro ao carregar vagas",
+            description: jobsResult.error || "Não foi possível carregar as vagas.",
+            variant: "destructive",
+          });
+        }
       } catch (error) {
-        await auditService.saveLog({
-          userId: "", // User ID from session would be better here
-          userName: "Sistema",
-          actionType: "Carregamento de Dados",
-          resourceType: "Triagem",
-          resourceId: tenantSlug,
-          details: `Falha ao buscar dados para a página de triagem: ${error instanceof Error ? error.message : String(error)}`,
-          success: false,
-        });
         toast({
           title: "Erro ao carregar dados",
-          description: "Não foi possível carregar os candidatos ou vagas para triagem.",
+          description: "Ocorreu um erro inesperado ao carregar os dados.",
           variant: "destructive",
-        })
+        });
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
-    fetchData()
-  }, [tenantSlug, selectedJobId])
+    };
+    fetchData();
+  }, [selectedJobId]);
 
   const selectedJob = jobs.find((job) => job._id === selectedJobId)
 
@@ -192,7 +205,12 @@ export default function ScreeningPage() {
                     )}
                   </TableCell>
                   <TableCell>{new Date(candidate.createdAt).toLocaleDateString()}</TableCell>
-                  <TableCell className="space-x-2">
+                  <TableCell>
+                    <Button variant="ghost" size="icon" asChild title="Download CV">
+                      <a href={candidate.resumeUrl} download>
+                        <Download className="h-4 w-4" />
+                      </a>
+                    </Button>
                     <Button variant="ghost" size="icon" asChild title="Ver Detalhes">
                       <Link href={`/${tenantSlug}/candidate/${candidate._id}?jobId=${selectedJobId}`}>
                         <Eye className="h-4 w-4" />
@@ -203,11 +221,6 @@ export default function ScreeningPage() {
                     </Button>
                     <Button variant="ghost" size="icon" title="Reprovar Candidato">
                       <XCircle className="h-4 w-4 text-red-500" />
-                    </Button>
-                    <Button variant="ghost" size="icon" asChild title="Download CV">
-                      <a href={candidate.curriculumUrl} download={candidate.fileName}>
-                        <Download className="h-4 w-4" />
-                      </a>
                     </Button>
                   </TableCell>
                 </TableRow>

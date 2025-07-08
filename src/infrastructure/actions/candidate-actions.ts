@@ -4,47 +4,38 @@ import { getUsersCollection, getCandidatesCollection } from "@/infrastructure/pe
 import { ObjectId } from "mongodb";
 import { withActionLogging } from "@/shared/lib/actions";
 import { IUser } from "@/domain/models/User"; 
-import { IActionLogConfig, IActionResult } from "@/shared/types/types/action-interface";
+import { IActionResult } from "@/shared/types/types/action-interface";
 import { ICandidate } from "@/domain/models/Candidate";
 import { getJobsCollection } from "@/infrastructure/persistence/db";
 import { uploadResumeAction } from "./file-actions";
+import { getSessionUser } from "./auth-actions";
 
-async function getCurrentUser(): Promise<{ userId: string; tenantId: string; userName: string }> {
-  const usersCollection = await getUsersCollection();
-  const user = await usersCollection.findOne({ email: "admin@smarted.com" }) as IUser;
-  if (!user) throw new Error("Authenticated user not found.");
-  return {
-    userId: user._id!.toString(),
-    tenantId: user.tenantId!,
-    userName: user.name || "Unknown User",
-  };
+// Helper function to check if a string is a valid MongoDB ObjectId
+function isValidObjectId(id: string) {
+  return ObjectId.isValid(id) && new ObjectId(id).toString() === id;
 }
 
 async function getCandidateDetailsActionInternal(candidateId: string): Promise<IUser | null> {
-  const { tenantId } = await getCurrentUser();
+  const session = await getSessionUser();
+  if (!session) throw new Error("Unauthorized: No active session.");
   const usersCollection = await getUsersCollection();
-  const candidate = await usersCollection.findOne({ _id: new ObjectId(candidateId) as any, tenantId });
+  const candidate = await usersCollection.findOne({ _id: new ObjectId(candidateId) as any, tenantId: session.tenantId });
   return JSON.parse(JSON.stringify(candidate));
 }
 
-export const getCandidateDetailsAction = async (candidateId: string) => {
-  const session = await getCurrentUser();
-  const logConfig: IActionLogConfig = {
-    userId: session.userId,
-    userName: session.userName,
-    actionType: "Obter Detalhes do Candidato",
-    resourceType: "Candidate",
-    resourceId: candidateId,
-    success: false
-  };
-  return await withActionLogging(getCandidateDetailsActionInternal, logConfig)(candidateId);
-};
+export const getCandidateDetailsAction = withActionLogging(
+  getCandidateDetailsActionInternal,
+  "Obter Detalhes do Candidato",
+  "Candidate",
+  "",
+  ""
+);
 
 export const submitApplicationAction = withActionLogging(
   async (formData: FormData) => {
     const jobId = formData.get("jobId") as string;
     const candidateEmail = formData.get("candidateEmail") as string;
-    const resumeFile = formData.get("resumeFile") as File;
+    const resumeFile = formData.get("resume") as File;
     const answers = JSON.parse(formData.get("answers") as string);
 
     if (!jobId || !candidateEmail || !resumeFile) {
@@ -52,7 +43,15 @@ export const submitApplicationAction = withActionLogging(
     }
 
     const jobsCollection = await getJobsCollection();
-    const job = await jobsCollection.findOne({ _id: new ObjectId(jobId) as any });
+    let job;
+
+    if (isValidObjectId(jobId)) {
+      job = await jobsCollection.findOne({ _id: new ObjectId(jobId) });
+    } else {
+      // Assuming jobId might be a slug or another identifier if not an ObjectId
+      job = await jobsCollection.findOne({ slug: jobId }); 
+    }
+
     if (!job) {
       throw new Error("Vaga não encontrada.");
     }
@@ -81,35 +80,28 @@ export const submitApplicationAction = withActionLogging(
     const result = await candidatesCollection.insertOne(newCandidate as any);
 
     await jobsCollection.updateOne(
-      { _id: new ObjectId(jobId) as any },
+      { _id: job._id }, // Use job._id directly, which is already an ObjectId
       { $inc: { candidatesCount: 1 } }
     );
 
     return { success: true, data: newCandidate };
   },
-  {
-    userId: "public-candidate", 
-    userName: "Public Candidate",
-    actionType: "Submeter Candidatura",
-    resourceType: "Candidate",
-    resourceId: "", 
-    success: false,
-  } as IActionLogConfig
+  "Submeter Candidatura",
+  "Candidate",
+  "",
+  ""
 );
 
 export const getCandidatesForJobAction = withActionLogging(
   async (jobId: string) => {
-    const { tenantId } = await getCurrentUser();
+    const session = await getSessionUser();
+    if (!session) throw new Error("Unauthorized: No active session.");
     const candidatesCollection = await getCandidatesCollection();
-    const candidates = await candidatesCollection.find({ jobId, tenantId }).toArray() as unknown as ICandidate[];
+    const candidates = await candidatesCollection.find({ jobId, tenantId: session.tenantId }).toArray() as unknown as ICandidate[];
     return candidates;
   },
-  {
-    userId: "", // Will be populated by getCurrentUser
-    userName: "", // Will be populated by getCurrentUser
-    actionType: "Listar Candidatos por Vaga",
-    resourceType: "Candidate",
-    resourceId: "", // Will be populated by jobId
-    success: false,
-  } as IActionLogConfig
+  "Listar Candidatos por Vaga",
+  "Candidate",
+  "",
+  ""
 );

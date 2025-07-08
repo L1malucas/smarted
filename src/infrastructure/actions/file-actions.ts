@@ -22,7 +22,7 @@ function getAbsoluteFilePath(relativePath: string): string {
 
 export const uploadResumeAction = withActionLogging(
   async (formData: FormData): Promise<string> => {
-    const file = formData.get("resumeFile") as File;
+    const file = formData.get("resume") as File;
 
     if (!file) {
       throw new Error("Nenhum arquivo de currículo fornecido.");

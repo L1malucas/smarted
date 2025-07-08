@@ -10,7 +10,7 @@ export function withActionLogging<TArgs extends any[], TResult>(
   details?: IActionLogConfig['details']
 ): IActionFunction<TArgs, IActionResult<TResult>> {
   return async (...args: TArgs): Promise<IActionResult<TResult>> => {
-    const session = await getSessionUser(); // Get session here
+    const session = await getSessionUser(); // Get session her.
 
     let logConfig: IActionLogConfig = {
       userId: session?.userId ?? "anonymous",
