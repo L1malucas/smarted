@@ -11,7 +11,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/shared/components/ui/
 import { LayoutDashboard, Briefcase, Shield, LogOut, Menu, X, Bell } from "lucide-react"
 import { cn } from "@/shared/lib/utils"
 import { ThemeSelector } from "@/shared/components/theme-selector"
-import { withActionLogging } from "@/shared/lib/actions"
 import { logoutAction } from "@/infrastructure/actions/auth-actions";
 import { listNotificationsAction } from "@/infrastructure/actions/notification-actions";
 import { INotification } from "@/domain/models/Notification";
@@ -91,25 +90,12 @@ export function Navbar({ tenantSlug, user }: INavbarProps) {
   const handleLogout = async () => {
     if (!user) return;
 
-    const wrappedLogout = withActionLogging(
-      async () => {
-        await logoutAction(); // Call the server action directly
-      },
-      {
-        userId: user.slug,
-        userName: user.name,
-        actionType: "logout",
-        resourceType: "user",
-        details: `User ${user.name} logged out.`,
-        success: true,
-      }
-    );
-
     try {
-      await wrappedLogout();
+      await logoutAction();
       router.push('/login');
     } catch (error) {
-      // Error already handled by withActionLogging
+      // logoutAction já lida com o logging e tratamento de erros
+      console.error("Erro ao fazer logout:", error);
     }
   };
 
@@ -195,7 +181,7 @@ export function Navbar({ tenantSlug, user }: INavbarProps) {
                 {latestNotifications.length > 0 && (
                   <div className="max-h-60 overflow-y-auto">
                     {latestNotifications.map((notif) => (
-                      <Link key={notif._id} href={`/dashboard/notifications?id=${notif._id}`} className="block px-4 py-2 text-sm hover:bg-accent">
+                      <Link key={notif._id?.toString()} href={`/dashboard/notifications?id=${notif._id}`} className="block px-4 py-2 text-sm hover:bg-accent">
                         <p className="font-medium">{notif.message}</p>
                         <p className="text-xs text-muted-foreground">{new Date(notif.createdAt).toLocaleDateString()}</p>
                       </Link>

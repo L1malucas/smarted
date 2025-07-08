@@ -10,7 +10,6 @@ import { JobPreview } from "@/shared/components/jobs/job-preview";
 import { QuestionSection } from "@/shared/components/jobs/question-section";
 import { useJobValidation } from "@/shared/hooks/use-job-validation";
 import { toast } from "@/shared/hooks/use-toast";
-import { withActionLogging } from "@/shared/lib/actions";
 import { createJobAction } from "@/infrastructure/actions/job-actions";
 import { ICompetency } from "@/domain/models/Competency";
 import { IJobStatus } from "@/domain/models/JobStatus";
@@ -62,16 +61,8 @@ export default function CreateJobPage() {
 
   const handleSubmit = async (status: IJobStatus) => {
     const isDraft = status === "draft";
-    const logConfig = {
-      userId: "current-user-slug", // Replace with actual user ID
-      userName: "Usuário Atual", // Replace with actual user name
-      actionType: isDraft ? "Salvar Rascunho de Vaga" : "Publicar Vaga",
-      resourceType: "Vaga",
-      resourceId: formData._id?.toString() || "", // Will be populated after creation
-      success: false, // Required by IActionLogConfig
-    };
 
-    const handleSubmitInternal = async (status: IJobStatus) => {
+    try {
       const isValid = validateJob(formData, isDraft);
 
       if (!isValid) {
@@ -80,7 +71,7 @@ export default function CreateJobPage() {
           description: "Por favor, corrija os erros no formulário antes de salvar.",
           variant: "destructive",
         });
-        throw new Error("Erro de validação no formulário.");
+        return; // Retorna para não prosseguir com a submissão
       }
 
       const jobData: Omit<IJob, '_id' | 'createdAt' | 'updatedAt' | 'candidatesCount'> = {
@@ -99,8 +90,8 @@ export default function CreateJobPage() {
           .replace(/[^a-z0-9\s-]/g, '')
           .replace(/\s+/g, '-')
           .trim() || crypto.randomUUID(),
-        createdBy: "current-user-slug",
-        createdByName: "Usuário Atual",
+        createdBy: "current-user-slug", // TODO: Substituir pelo ID do usuário real
+        createdByName: "Usuário Atual", // TODO: Substituir pelo nome do usuário real
         status,
         isDraft,
         competencies: formData.competencies || [],
@@ -115,17 +106,27 @@ export default function CreateJobPage() {
       const result = await createJobAction(jobData, isDraft);
       setHasUnsavedChanges(false);
 
-      if (result.success && result.data && result.data._id) {
-        logConfig.resourceId = result.data._id.toString();
+      if (result.success) {
+        toast({
+          title: "Sucesso!",
+          description: `Vaga ${isDraft ? "salva como rascunho" : "publicada"} com sucesso!`, 
+          variant: "default",
+        });
+        router.push(`/${tenantSlug}/jobs`);
+      } else {
+        toast({
+          title: "Erro",
+          description: result.error || "Ocorreu um erro ao salvar a vaga. Tente novamente.",
+          variant: "destructive",
+        });
       }
-
-      router.push(`/${tenantSlug}/jobs`);
-      return result.data; // Return IJob directly
-    };
-
-    const wrappedSubmit = withActionLogging(handleSubmitInternal, logConfig);
-    const finalResult = await wrappedSubmit(status);
-    return finalResult;
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: error.message || "Ocorreu um erro inesperado ao processar a vaga.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleBack = async () => {

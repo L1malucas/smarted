@@ -1,29 +1,34 @@
 "use server";
-import { z } from "zod";
-import { withActionLogging } from "@/shared/lib/actions";
+
+import { ObjectId } from "mongodb";
 import { getJobsCollection } from "../persistence/db";
 import { IJob } from "@/domain/models/Job";
-import { ObjectId } from "mongodb";
 import { IJobStatus } from "@/domain/models/JobStatus";
 import { jobSchema, draftJobSchema, updateJobSchema } from "@/application/schemas/job.schema";
 import { serializeJob } from "@/shared/lib/server-utils";
-import { getSessionUser } from "./auth-actions";
-import { IActionLogConfig } from "@/shared/types/types/action-interface";
-export const createJobAction = withActionLogging(
-  async (jobData: Partial<IJob>, isDraft: boolean = false) => {
-    const session = await getSessionUser();
-    if (!session) throw new Error("Usuário não autenticado.");
+import { createLoggedAction } from "@/shared/lib/action-builder";
+
+/**
+ * Cria uma nova vaga (ou rascunho).
+ */
+export const createJobAction = createLoggedAction<
+  [Partial<IJob>, boolean?],
+  IJob
+>({
+  actionName: "Criar Vaga",
+  resourceType: "Job",
+  requireAuth: true,
+  action: async ({ session, args: [jobData, isDraft = false] }) => {
     const jobsCollection = await getJobsCollection();
     const schema = isDraft ? draftJobSchema : jobSchema;
     const validatedData = schema.parse(jobData);
-    let slug = "";
-    if (validatedData.title) {
-      slug = validatedData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-*|-*$/g, '');
-    }
+    
+    const slug = (validatedData.title ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-*|-*$/g, '');
+
     const newJobForDb = {
       ...validatedData,
-      _id: new ObjectId(), 
-      slug: slug,
+      _id: new ObjectId(),
+      slug,
       createdBy: session.userId,
       createdByName: session.name,
       tenantId: session.tenantId,
@@ -31,32 +36,34 @@ export const createJobAction = withActionLogging(
       createdAt: new Date(),
       updatedAt: new Date(),
       status: isDraft ? "draft" : "aberta",
-      isDraft: isDraft,
+      isDraft,
       statusChangeLog: [{
         status: isDraft ? "draft" : "aberta",
         changedAt: new Date(),
         changedBy: session.userId,
         changedByName: session.name,
       }],
-      criteriaWeights: validatedData.criteriaWeights,
-      candidatesCount: validatedData.candidatesCount || 0,
+      candidatesCount: 0,
     };
+
     const result = await jobsCollection.insertOne(newJobForDb as any);
-    const createdJob = serializeJob({ ...newJobForDb, _id: result.insertedId });
-    return createdJob;
+    return serializeJob({ ...newJobForDb, _id: result.insertedId });
   },
-  "Criar Vaga",
-  "Job",
-  "",
-  ""
-);
-export const updateJobAction = withActionLogging(
-  async (jobId: string, jobData: Partial<IJob>) => {
-    const session = await getSessionUser();
-    if (!session) throw new Error("Usuário não autenticado.");
+  getResourceId: (result) => result._id?.toString(),
+});
+
+/**
+ * Atualiza uma vaga existente.
+ */
+export const updateJobAction = createLoggedAction<
+  [string, Partial<IJob>],
+  IJob
+>({
+  actionName: "Atualizar Vaga",
+  resourceType: "Job",
+  requireAuth: true,
+  action: async ({ session, args: [jobId, jobData] }) => {
     const jobsCollection = await getJobsCollection();
-    const existingJob = await jobsCollection.findOne({ _id: new ObjectId(jobId) as any, tenantId: session.tenantId }) as unknown as IJob;
-    if (!existingJob) throw new Error("Vaga não encontrada ou não pertence ao tenant.");
     const validatedData = updateJobSchema.parse(jobData);
     const updateFields: Partial<IJob> = {
       updatedAt: new Date(),
@@ -74,139 +81,151 @@ export const updateJobAction = withActionLogging(
       { _id: new ObjectId(jobId) as any, tenantId: session.tenantId },
       { $set: updateFields }
     );
+
     if (result.modifiedCount === 0) {
       throw new Error("Nenhuma alteração realizada ou vaga não encontrada.");
     }
-    const updatedJob = await jobsCollection.findOne({ _id: new ObjectId(jobId) as any }) as unknown as IJob;
+    const updatedJob = await jobsCollection.findOne({ _id: new ObjectId(jobId) }) as IJob;
     return serializeJob(updatedJob);
   },
-  "Atualizar Vaga",
-  "Job",
-  "",
-  ""
-);
-export const deleteJobAction = withActionLogging(
-  async (jobId: string) => {
-    const session = await getSessionUser();
-    if (!session) throw new Error("Usuário não autenticado.");
+  getResourceId: (_, args) => args[0],
+});
+
+/**
+ * Deleta uma vaga.
+ */
+export const deleteJobAction = createLoggedAction<
+  [string],
+  { success: boolean }
+>({
+  actionName: "Deletar Vaga",
+  resourceType: "Job",
+  requireAuth: true,
+  action: async ({ session, args: [jobId] }) => {
     const jobsCollection = await getJobsCollection();
-    const jobToDelete = await jobsCollection.findOne({ _id: new ObjectId(jobId) as any, tenantId: session.tenantId }) as unknown as IJob;
+    const jobToDelete = await jobsCollection.findOne({ _id: new ObjectId(jobId), tenantId: session.tenantId }) as IJob;
+
     if (!jobToDelete) throw new Error("Vaga não encontrada ou não pertence ao tenant.");
     if (jobToDelete.createdBy !== session.userId && !session.isAdmin) {
       throw new Error("Você não tem permissão para deletar esta vaga.");
     }
-    const result = await jobsCollection.deleteOne({ _id: new ObjectId(jobId) as any, tenantId: session.tenantId });
-    if (result.deletedCount === 0) {
-      throw new Error("Nenhuma vaga encontrada para exclusão.");
-    }
+
+    const result = await jobsCollection.deleteOne({ _id: new ObjectId(jobId), tenantId: session.tenantId });
+    if (result.deletedCount === 0) throw new Error("Nenhuma vaga encontrada para exclusão.");
+    
     return { success: true };
   },
-  "Deletar Vaga",
-  "Job",
-  "",
-  ""
-);
-export const getJobByIdAction = withActionLogging(
-  async (jobId: string) => {
-    const session = await getSessionUser();
+  getResourceId: (_, args) => args[0],
+});
+
+/**
+ * Obtém uma vaga pelo seu ID.
+ * Pode ser acessada por usuários não autenticados se a vaga for pública.
+ */
+export const getJobByIdAction = createLoggedAction<
+  [string],
+  IJob
+>({
+  actionName: "Obter Vaga por ID",
+  resourceType: "Job",
+  requireAuth: false, // Permite acesso público
+  action: async ({ session, args: [jobId] }) => {
     const jobsCollection = await getJobsCollection();
-    const query: any = { _id: new ObjectId(jobId) as any };
+    const query: any = { _id: new ObjectId(jobId) };
+
+    // Se houver sessão, restringe ao tenant do usuário
     if (session) {
       query.tenantId = session.tenantId;
     }
-    const job = await jobsCollection.findOne(query) as unknown as IJob;
-    if (!job) {
-      throw new Error("Vaga não encontrada.");
-    }
+
+    const job = await jobsCollection.findOne(query) as IJob;
+    if (!job) throw new Error("Vaga não encontrada.");
+
+    // Se não houver sessão, só permite ver vagas abertas
     if (!session && job.status !== "aberta") {
-      throw new Error("Vaga não encontrada ou não está aberta para visualização pública.");
+      throw new Error("Vaga não disponível para visualização pública.");
     }
+
     return serializeJob(job);
   },
-  "Obter Vaga por ID",
-  "Job",
-  "",
-  ""
-);
-export const getJobBySlugAction = withActionLogging(
-  async (slug: string) => {
+  getResourceId: (_, args) => args[0],
+});
+
+/**
+ * Obtém uma vaga pelo seu slug.
+ * Ação pública.
+ */
+export const getJobBySlugAction = createLoggedAction<
+  [string],
+  IJob | null
+>({
+  actionName: "Obter Vaga por Slug",
+  resourceType: "Job",
+  requireAuth: false,
+  action: async ({ args: [slug] }) => {
     const jobsCollection = await getJobsCollection();
-    const job = await jobsCollection.findOne({ slug }) as unknown as IJob;
-    return serializeJob(job);
+    const job = await jobsCollection.findOne({ slug }) as IJob;
+    return job ? serializeJob(job) : null;
   },
-  "Obter Vaga por Slug",
-  "Job",
-  "",
-  ""
-);
-export const listJobsAction = withActionLogging(
-  async (filters: {
-    status?: string;
-    searchQuery?: string;
-    page?: number;
-    limit?: number;
-    sortBy?: string;
-    tenantId?: string; 
-  }) => {
-    const session = await getSessionUser();
+  getResourceId: (_, args) => args[0],
+});
+
+/**
+ * Lista vagas com base em filtros.
+ * Acessível publicamente para vagas abertas, ou com filtros de tenant para usuários logados.
+ */
+export const listJobsAction = createLoggedAction<
+  [{ status?: string; searchQuery?: string; page?: number; limit?: number; sortBy?: string; tenantId?: string; }],
+  { data: IJob[]; total: number; }
+>({
+  actionName: "Listar Vagas",
+  resourceType: "Job",
+  requireAuth: false,
+  action: async ({ session, args: [filters] }) => {
+    const { status, searchQuery, page = 1, limit = 10, sortBy, tenantId } = filters;
     const jobsCollection = await getJobsCollection();
-    const { status, searchQuery, page = 1, limit = 10, sortBy } = filters;
     const query: any = {};
 
-    let effectiveTenantId: string | undefined;
-    if (session) {
-      effectiveTenantId = session.tenantId;
-    } else if (filters.tenantId) {
-      effectiveTenantId = filters.tenantId;
-    }
+    const effectiveTenantId = session?.tenantId ?? tenantId;
 
     if (effectiveTenantId) {
       query.tenantId = effectiveTenantId;
-      if (status) {
-        query.status = status;
-      }
+      if (status) query.status = status;
     } else {
-      query.status = "aberta";
+      query.status = "aberta"; // Apenas vagas abertas para buscas públicas
     }
 
     if (searchQuery) {
       query.title = { $regex: searchQuery, $options: "i" };
     }
-    const sortOptions: any = {};
-    if (sortBy) {
-      const [field, order] = sortBy.split(":");
-      sortOptions[field] = order === "desc" ? -1 : 1;
-    } else {
-      sortOptions.createdAt = -1;
-    }
-    const jobs = await jobsCollection
-      .find(query)
-      .sort(sortOptions)
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .toArray() as unknown as IJob[];
+
+    const sortOptions: any = sortBy ? { [sortBy.split(":")[0]]: sortBy.split(":")[1] === 'desc' ? -1 : 1 } : { createdAt: -1 };
+
+    const jobs = await jobsCollection.find(query).sort(sortOptions).skip((page - 1) * limit).limit(limit).toArray() as IJob[];
     const total = await jobsCollection.countDocuments(query);
-    const serializedJobs = jobs.map(job => serializeJob(job));
+
     return {
-      data: serializedJobs as IJob[],
+      data: jobs.map(serializeJob),
       total,
     };
   },
-  "Listar Vagas",
-  "Job",
-  "",
-  ""
-);
-export const updateJobStatusAction = withActionLogging(
-  async (jobId: string, newStatus: IJobStatus) => {
-    const session = await getSessionUser();
-    if (!session) throw new Error("Usuário não autenticado.");
+});
+
+/**
+ * Atualiza o status de uma vaga.
+ */
+export const updateJobStatusAction = createLoggedAction<
+  [string, IJobStatus],
+  IJob
+>({
+  actionName: "Atualizar Status da Vaga",
+  resourceType: "Job",
+  requireAuth: true,
+  action: async ({ session, args: [jobId, newStatus] }) => {
     const jobsCollection = await getJobsCollection();
-    const existingJob = await jobsCollection.findOne({ _id: new ObjectId(jobId) as any, tenantId: session.tenantId }) as unknown as IJob;
-    if (!existingJob) throw new Error("Vaga não encontrada ou não pertence ao tenant.");
     const result = await jobsCollection.updateOne(
-      { _id: new ObjectId(jobId) as any, tenantId: session.tenantId },
-      { 
+      { _id: new ObjectId(jobId), tenantId: session.tenantId },
+      {
         $set: { 
           status: newStatus, 
           updatedAt: new Date(), 
@@ -214,23 +233,15 @@ export const updateJobStatusAction = withActionLogging(
           lastStatusUpdateByName: session.name 
         },
         $push: {
-          statusChangeLog: {
-            status: newStatus,
-            changedAt: new Date(),
-            changedBy: session.userId,
-            changedByName: session.name,
-          },
+          statusChangeLog: { status: newStatus, changedAt: new Date(), changedBy: session.userId, changedByName: session.name },
         },
       }
     );
-    if (result.modifiedCount === 0) {
-      throw new Error("Nenhuma alteração de status realizada.");
-    }
-    const updatedJob = await jobsCollection.findOne({ _id: new ObjectId(jobId) as any }) as unknown as IJob;
+
+    if (result.modifiedCount === 0) throw new Error("Nenhuma alteração de status realizada.");
+
+    const updatedJob = await jobsCollection.findOne({ _id: new ObjectId(jobId) }) as IJob;
     return serializeJob(updatedJob);
   },
-  "Atualizar Status da Vaga",
-  "Job",
-  "",
-  ""
-);
+  getResourceId: (_, args) => args[0],
+});

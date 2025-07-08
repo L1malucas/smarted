@@ -1,138 +1,92 @@
 "use server";
 
-import { cookies } from "next/headers";
 import { ObjectId } from "mongodb";
 import { revalidatePath } from "next/cache";
-
-import { getNotificationsCollection, getUsersCollection } from "@/infrastructure/persistence/db";
+import { getNotificationsCollection } from "@/infrastructure/persistence/db";
 import { INotification } from "@/domain/models/Notification";
-import { IUser } from "@/domain/models/User";
-import { withActionLogging } from "@/shared/lib/actions";
-import { IActionLogConfig, IActionResult } from "@/shared/types/types/action-interface";
-import { verifyToken } from "@/infrastructure/auth/auth";
+import { createLoggedAction } from "@/shared/lib/action-builder";
 
-// Helper to get current user's info
-async function getCurrentUser(): Promise<{ userId: string; tenantId: string; userName: string; isAdmin: boolean }> {
-  const accessToken = (await cookies()).get('accessToken')?.value;
-  if (!accessToken) throw new Error("Usuário não autenticado.");
-
-  const decoded = await verifyToken(accessToken);
-  if (!decoded) throw new Error("Token inválido.");
-
-  return {
-    userId: decoded.userId,
-    tenantId: decoded.tenantId,
-    userName: decoded.name || "Unknown User",
-    isAdmin: decoded.isAdmin || false,
-  };
-}
-
-export async function createNotificationAction(
-  notificationData: Omit<INotification, "_id" | "createdAt" | "updatedAt" | "readAt" | "isRead" | "tenantId">
-): Promise<IActionResult<INotification>> {
-  const session = await getCurrentUser();
-  const logConfig: IActionLogConfig = {
-    userId: session.userId,
-    userName: session.userName,
-    actionType: "Criar Notificação",
-    resourceType: "Notification",
-    resourceId: "", // Will be populated after creation
-    success: false,
-  };
-
-  const createNotificationInternal = async () => {
+/**
+ * Cria uma nova notificação.
+ */
+export const createNotificationAction = createLoggedAction<
+  [Omit<INotification, "_id" | "createdAt" | "updatedAt" | "readAt" | "isRead" | "tenantId">],
+  INotification
+>({
+  actionName: "Criar Notificação",
+  resourceType: "Notification",
+  requireAuth: true,
+  action: async ({ session, args: [notificationData] }) => {
     const notificationsCollection = await getNotificationsCollection();
     const newNotification: INotification = {
       ...notificationData,
-      tenantId: session.tenantId,
+      tenantId: session.tenantId!,
       isRead: false,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
 
-    const result = await notificationsCollection.insertOne(newNotification);
-    const createdNotification = { ...newNotification, _id: result.insertedId.toString() };
+    const result = await notificationsCollection.insertOne(newNotification as any);
+    const createdNotification = { ...newNotification, _id: result.insertedId };
 
-    logConfig.resourceId = createdNotification._id;
-    revalidatePath("/dashboard/notifications");
-    return { success: true, data: createdNotification };
-  };
+    revalidatePath("/[slug]/dashboard/notifications", "layout");
+    return createdNotification;
+  },
+  getResourceId: (result) => result._id?.toString(),
+});
 
-  return await withActionLogging(createNotificationInternal, logConfig)();
-}
-
-export async function listNotificationsAction(
-  options?: { isRead?: boolean; type?: string; page?: number; limit?: number; sortBy?: keyof INotification; sortOrder?: 1 | -1 }
-): Promise<IActionResult<{ notifications: INotification[]; totalPages: number; currentPage: number; totalUnread: number }>> {
-  const session = await getCurrentUser();
-  const logConfig: IActionLogConfig = {
-    userId: session.userId,
-    userName: session.userName,
-    actionType: "Listar Notificações",
-    resourceType: "Notification",
-    resourceId: session.userId,
-    success: false,
-  };
-
-  const listNotificationsInternal = async () => {
+/**
+ * Lista as notificações do usuário logado.
+ */
+export const listNotificationsAction = createLoggedAction<
+  [({ isRead?: boolean; type?: string; page?: number; limit?: number; sortBy?: keyof INotification; sortOrder?: 1 | -1 })?],
+  { notifications: INotification[]; totalPages: number; currentPage: number; totalUnread: number }
+>({
+  actionName: "Listar Notificações",
+  resourceType: "Notification",
+  requireAuth: true,
+  action: async ({ session, args: [options] }) => {
     const notificationsCollection = await getNotificationsCollection();
     const query: any = { recipientId: session.userId, tenantId: session.tenantId };
 
-    if (options?.isRead !== undefined) {
-      query.isRead = options.isRead;
-    }
-    if (options?.type) {
-      query.type = options.type;
-    }
+    if (options?.isRead !== undefined) query.isRead = options.isRead;
+    if (options?.type) query.type = options.type;
 
     const page = options?.page || 1;
     const limit = options?.limit || 10;
     const skip = (page - 1) * limit;
-
     const sortBy = options?.sortBy || "createdAt";
-    const sortOrder = options?.sortOrder || -1; // Newest first
+    const sortOrder = options?.sortOrder || -1;
 
     const totalNotifications = await notificationsCollection.countDocuments(query);
     const totalUnread = await notificationsCollection.countDocuments({ recipientId: session.userId, tenantId: session.tenantId, isRead: false });
     const totalPages = Math.ceil(totalNotifications / limit);
 
-    const notifications = await notificationsCollection.find(query)
-      .sort({ [sortBy]: sortOrder })
-      .skip(skip)
-      .limit(limit)
-      .toArray() as INotification[];
+    const notifications = await notificationsCollection.find(query).sort({ [sortBy]: sortOrder }).skip(skip).limit(limit).toArray() as INotification[];
 
-    // Convert ObjectId to string for client-side serialization
     const serializableNotifications = notifications.map(notif => ({
       ...notif,
-      _id: notif._id.toString(),
-      createdAt: notif.createdAt.toISOString(),
-      updatedAt: notif.updatedAt.toISOString(),
-      ...(notif.readAt && { readAt: notif.readAt.toISOString() }),
+      _id: notif._id?.toString(),
     }));
 
-    return { success: true, data: { notifications: serializableNotifications, totalPages, currentPage: page, totalUnread } };
-  };
+    return { notifications: JSON.parse(JSON.stringify(serializableNotifications)), totalPages, currentPage: page, totalUnread };
+  },
+  getResourceId: (result, args) => args[0]?.type, // Log by type if available
+});
 
-  return await withActionLogging(listNotificationsInternal, logConfig)();
-}
-
-export async function markNotificationAsReadAction(
-  notificationIds: string | string[]
-): Promise<IActionResult<void>> {
-  const session = await getCurrentUser();
-  const logConfig: IActionLogConfig = {
-    userId: session.userId,
-    userName: session.userName,
-    actionType: "Marcar Notificação como Lida",
-    resourceType: "Notification",
-    resourceId: Array.isArray(notificationIds) ? notificationIds.join(",") : notificationIds,
-    success: false,
-  };
-
-  const markAsReadInternal = async () => {
+/**
+ * Marca uma ou mais notificações como lidas.
+ */
+export const markNotificationAsReadAction = createLoggedAction<
+  [string | string[]],
+  { modifiedCount: number }
+>({
+  actionName: "Marcar Notificação como Lida",
+  resourceType: "Notification",
+  requireAuth: true,
+  action: async ({ session, args: [notificationIds] }) => {
     const notificationsCollection = await getNotificationsCollection();
-    const idsToUpdate = Array.isArray(notificationIds) ? notificationIds.map(id => new ObjectId(id)) : [new ObjectId(notificationIds)];
+    const idsToUpdate = (Array.isArray(notificationIds) ? notificationIds : [notificationIds]).map(id => new ObjectId(id));
 
     const result = await notificationsCollection.updateMany(
       { _id: { $in: idsToUpdate }, recipientId: session.userId, tenantId: session.tenantId, isRead: false },
@@ -140,44 +94,40 @@ export async function markNotificationAsReadAction(
     );
 
     if (result.modifiedCount === 0) {
-      throw new Error("Nenhuma notificação encontrada ou atualizada.");
+      // Not throwing an error, as it's not critical if they were already read.
+      console.log("Nenhuma notificação nova marcada como lida.");
     }
 
-    revalidatePath("/dashboard/notifications");
-    return { success: true };
-  };
+    revalidatePath("/[slug]/dashboard/notifications", "layout");
+    return { modifiedCount: result.modifiedCount };
+  },
+  getResourceId: (_, args) => Array.isArray(args[0]) ? args[0].join(",") : args[0],
+});
 
-  return await withActionLogging(markAsReadInternal, logConfig)();
-}
-
-export async function deleteNotificationAction(
-  notificationIds: string | string[]
-): Promise<IActionResult<void>> {
-  const session = await getCurrentUser();
-  const logConfig: IActionLogConfig = {
-    userId: session.userId,
-    userName: session.userName,
-    actionType: "Excluir Notificação",
-    resourceType: "Notification",
-    resourceId: Array.isArray(notificationIds) ? notificationIds.join(",") : notificationIds,
-    success: false,
-  };
-
-  const deleteInternal = async () => {
+/**
+ * Exclui uma ou mais notificações.
+ */
+export const deleteNotificationAction = createLoggedAction<
+  [string | string[]],
+  { deletedCount: number }
+>({
+  actionName: "Excluir Notificação",
+  resourceType: "Notification",
+  requireAuth: true,
+  action: async ({ session, args: [notificationIds] }) => {
     const notificationsCollection = await getNotificationsCollection();
-    const idsToDelete = Array.isArray(notificationIds) ? notificationIds.map(id => new ObjectId(id)) : [new ObjectId(notificationIds)];
+    const idsToDelete = (Array.isArray(notificationIds) ? notificationIds : [notificationIds]).map(id => new ObjectId(id));
 
     const result = await notificationsCollection.deleteMany(
       { _id: { $in: idsToDelete }, recipientId: session.userId, tenantId: session.tenantId },
     );
 
     if (result.deletedCount === 0) {
-      throw new Error("Nenhuma notificação encontrada ou excluída.");
+      throw new Error("Nenhuma notificação encontrada para exclusão.");
     }
 
-    revalidatePath("/dashboard/notifications");
-    return { success: true };
-  };
-
-  return await withActionLogging(deleteInternal, logConfig)();
-}
+    revalidatePath("/[slug]/dashboard/notifications", "layout");
+    return { deletedCount: result.deletedCount };
+  },
+  getResourceId: (_, args) => Array.isArray(args[0]) ? args[0].join(",") : args[0],
+});

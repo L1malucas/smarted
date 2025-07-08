@@ -55,7 +55,7 @@ export function PublicJobDetails({ job }: IPublicJobDetailsProps) {
       }
 
       const formData = new FormData();
-      formData.append("jobId", job._id!);
+      formData.append("jobId", job._id!.toString());
       formData.append("candidateEmail", candidateEmail);
       formData.append("resume", resumeFile);
 
@@ -83,9 +83,11 @@ export function PublicJobDetails({ job }: IPublicJobDetailsProps) {
         } else {
           toast({
             title: "Erro ao Enviar",
-            description: result.error || "Não foi possível enviar sua candidatura. Tente novamente.",
+            description: result.error,
             variant: "destructive",
           });
+          console.log("Erro ao enviar candidatura:", result);
+
         }
       } catch (error) {
         toast({
@@ -154,7 +156,7 @@ export function PublicJobDetails({ job }: IPublicJobDetailsProps) {
             </div>
             <div className="flex items-center gap-2">
               <Briefcase className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm">ID: {job._id}</span>
+              <span className="text-sm">ID: {job._id?.toString()}</span>
             </div>
             {job.department && (
               <div className="flex items-center gap-2">
@@ -222,7 +224,7 @@ export function PublicJobDetails({ job }: IPublicJobDetailsProps) {
                           name={`question-${q.id}`}
                           value={option}
                           onChange={(e) => handleAnswerChange(q.id, e.target.value, q.type)}
-                                                    checked={q.type === "single_choice" ? answers[q.id] === option : (Array.isArray(answers[q.id]) && (answers[q.id] as string[]).includes(option))}
+                          checked={q.type === "single_choice" ? answers[q.id] === option : (Array.isArray(answers[q.id]) && (answers[q.id] as string[]).includes(option))}
                         />
                         <Label htmlFor={`option-${q.id}-${index}`}>{option}</Label>
                       </div>

@@ -8,7 +8,10 @@
 import { IUser } from '@/domain/models/User';
 import { INotification } from '@/domain/models/Notification';
 import { IJob } from '@/domain/models/Job'; // Import IJob
+import { ICandidate } from '@/domain/models/Candidate';
+import { IShareableLink } from '@/domain/models/ShareableLink';
 import { IFileMetadata } from '@/domain/models/FileMetadata'; // Import IFileMetadata
+import { ISystemSettings } from '@/domain/models/SystemSettings';
 import { MongoClient, ServerApiVersion, Db, Collection } from 'mongodb';
 import { ITenant } from '@/domain/models/Tenant';
 
@@ -106,20 +109,20 @@ export async function getJobsCollection(): Promise<Collection<IJob>> {
 
 /**
  * Retorna a coleção 'candidates' do banco de dados MongoDB.
- * @returns {Promise<Collection>} Uma promessa que resolve para a coleção 'candidates'.
+ * @returns {Promise<Collection<ICandidate>>} Uma promessa que resolve para a coleção 'candidates'.
  */
-export async function getCandidatesCollection(): Promise<Collection> {
+export async function getCandidatesCollection(): Promise<Collection<ICandidate>> {
   const db = await getDb();
-  return db.collection('candidates');
+  return db.collection<ICandidate>('candidates');
 }
 
 /**
  * Retorna a coleção 'shareablelinks' do banco de dados MongoDB.
- * @returns {Promise<Collection>} Uma promessa que resolve para a coleção 'shareablelinks'.
+ * @returns {Promise<Collection<IShareableLink>>} Uma promessa que resolve para a coleção 'shareablelinks'.
  */
-export async function getShareableLinksCollection(): Promise<Collection> {
+export async function getShareableLinksCollection(): Promise<Collection<IShareableLink>> {
   const db = await getDb();
-  return db.collection('shareablelinks');
+  return db.collection<IShareableLink>('shareablelinks');
 }
 
 /**
@@ -133,11 +136,11 @@ export async function getLogsCollection(): Promise<Collection> {
 
 /**
  * Retorna a coleção 'systemsettings' do banco de dados MongoDB.
- * @returns {Promise<Collection>} Uma promessa que resolve para a coleção 'systemsettings'.
+ * @returns {Promise<Collection<ISystemSettings>>} Uma promessa que resolve para a coleção 'systemsettings'.
  */
-export async function getSystemSettingsCollection(): Promise<Collection> {
+export async function getSystemSettingsCollection(): Promise<Collection<ISystemSettings>> {
   const db = await getDb();
-  return db.collection('systemsettings');
+  return db.collection<ISystemSettings>('systemsettings');
 }
 
 /**

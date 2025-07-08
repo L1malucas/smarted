@@ -10,4 +10,6 @@ export interface ITenant extends IBaseEntity {
   officialWebsite?: string;
   brazilianState?: string;
   responsibleName?: string;
+  createdBy: ObjectId;
+  createdByName: string;
 }

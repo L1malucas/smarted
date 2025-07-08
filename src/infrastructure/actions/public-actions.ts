@@ -1,14 +1,18 @@
+
 "use server";
 
-import { withActionLogging } from "@/shared/lib/actions";
-import { getJobsCollection, getCandidatesCollection } from "../persistence/db";
+import { getCandidatesCollection, getJobsCollection } from "../persistence/db";
+import { ObjectId } from "mongodb";
 import { IJob } from "@/domain/models/Job";
 import { ICandidate } from "@/domain/models/Candidate";
 import { serializeJob } from "@/shared/lib/server-utils";
-import { IActionLogConfig } from "@/shared/types/types/action-interface";
+import { createLoggedAction } from "@/shared/lib/action-builder";
 
-export const listPublicJobsAction = withActionLogging(
-  async (filters: {
+/**
+ * Lista vagas públicas com base em filtros.
+ */
+export const listPublicJobsAction = createLoggedAction<
+  [{
     tenantId?: string;
     searchQuery?: string;
     employmentType?: string;
@@ -17,86 +21,64 @@ export const listPublicJobsAction = withActionLogging(
     page?: number;
     limit?: number;
     sortBy?: string;
-  }) => {
-    const jobsCollection = await getJobsCollection();
+  }],
+  { data: IJob[]; total: number; }
+>({
+  actionName: "Listar Vagas Públicas",
+  resourceType: "Job",
+  requireAuth: false,
+  action: async ({ args: [filters] }) => {
     const { tenantId, searchQuery, employmentType, experienceLevel, isPCDExclusive, page = 1, limit = 10, sortBy } = filters;
-
-    const query: any = { status: "aberta" }; // Always filter by open jobs
-
-    if (tenantId) {
-      query.tenantId = tenantId;
-    }
-
+    const jobsCollection = await getJobsCollection();
+    
+    const query: any = { status: "aberta" };
+    if (tenantId) query.tenantId = tenantId;
     if (searchQuery) {
       query.$or = [
         { title: { $regex: searchQuery, $options: "i" } },
         { description: { $regex: searchQuery, $options: "i" } },
-        { department: { $regex: searchQuery, $options: "i" } },
         { location: { $regex: searchQuery, $options: "i" } },
       ];
     }
+    if (employmentType) query.employmentType = employmentType;
+    if (experienceLevel) query.experienceLevel = experienceLevel;
+    if (isPCDExclusive !== undefined) query.isPCDExclusive = isPCDExclusive;
 
-    if (employmentType) {
-      query.employmentType = employmentType;
-    }
+    const sortOptions: any = sortBy ? { [sortBy.split(":")[0]]: sortBy.split(":")[1] === 'desc' ? -1 : 1 } : { createdAt: -1 };
 
-    if (experienceLevel) {
-      query.experienceLevel = experienceLevel;
-    }
-
-    if (isPCDExclusive !== undefined) {
-      query.isPCDExclusive = isPCDExclusive;
-    }
-
-    const sortOptions: any = {};
-    if (sortBy) {
-      const [field, order] = sortBy.split(":");
-      sortOptions[field] = order === "desc" ? -1 : 1;
-    } else {
-      sortOptions.createdAt = -1; // Default sort by creation date
-    }
-
-    const jobs = await jobsCollection
-      .find(query)
-      .sort(sortOptions)
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .toArray() as unknown as IJob[];
-
+    const jobs = await jobsCollection.find(query).sort(sortOptions).skip((page - 1) * limit).limit(limit).toArray() as IJob[];
     const total = await jobsCollection.countDocuments(query);
 
-    const serializedJobs = jobs.map(job => serializeJob(job));
-
     return {
-      data: serializedJobs as IJob[],
+      data: jobs.map(serializeJob),
       total,
     };
   },
-  {
-    userId: "public", // Special userId for public actions
-    userName: "Public User", // Special userName for public actions
-    actionType: "Listar Vagas Públicas",
-    resourceType: "Job",
-    resourceId: "",
-    success: false,
-  } as IActionLogConfig
-);
+  getDetails: (_, error) => error ? `Erro: ${error.message}` : `Busca pública de vagas realizada.`
+});
 
-export const getPublicCandidateDetailsAction = withActionLogging(
-  async (hash: string) => {
+/**
+ * Obtém detalhes públicos de um candidato a partir de um hash.
+ * (Implementação de exemplo, pode precisar de ajustes de segurança)
+ */
+export const getPublicCandidateDetailsAction = createLoggedAction<
+  [string], // hash
+  ICandidate | null
+>({
+  actionName: "Obter Detalhes de Candidato Público",
+  resourceType: "Candidate",
+  requireAuth: false,
+  action: async ({ args: [hash] }) => {
+    if (!ObjectId.isValid(hash)) {
+      throw new Error("Hash de candidato inválido.");
+    }
     const candidatesCollection = await getCandidatesCollection();
-    const candidate = await candidatesCollection.findOne({ _id: hash }) as unknown as ICandidate;
+    const candidate = await candidatesCollection.findOne({ _id: new ObjectId(hash) });
     if (!candidate) {
       throw new Error("Candidato não encontrado.");
     }
+    // Potencialmente remover dados sensíveis antes de retornar
     return candidate;
   },
-  {
-    userId: "public",
-    userName: "Public User",
-    actionType: "Obter Detalhes de Candidato Público",
-    resourceType: "Candidate",
-    resourceId: "",
-    success: false,
-  } as IActionLogConfig
-);
+  getResourceId: (_, args) => args[0],
+});

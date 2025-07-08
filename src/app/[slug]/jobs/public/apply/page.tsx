@@ -9,17 +9,16 @@ import { ApplicationStepper } from "@/shared/components/application-stepper"
 import { Card } from "@/shared/components/ui/card"
 import { Textarea } from "@/shared/components/ui/textarea"
 import { toast } from "@/shared/hooks/use-toast"
-import { withActionLogging } from "@/shared/lib/actions"
-import { Checkbox } from "@radix-ui/react-checkbox"
-import { Input } from "postcss"
-import { Label } from "recharts"
+import { Checkbox } from "@/shared/components/ui/checkbox"
+import { Input } from "@/shared/components/ui/input"
+import { Label } from "@/shared/components/ui/label"
 import { Button } from "@/shared/components/ui/button"
 import { IJob } from "@/domain/models/Job"
+import { submitApplicationAction } from "@/infrastructure/actions/candidate-actions";
 
-
-// Mock job data
+// Mock job data (REMOVER QUANDO INTEGRAR COM A API REAL)
 const mockJobData: IJob = {
-  _id: "1",
+  _id: new ObjectId().toHexString(),
   slug: "desenvolvedor-frontend-senior",
   title: "Desenvolvedor Frontend Sênior",
   description: "Buscamos um desenvolvedor frontend experiente...",
@@ -33,12 +32,7 @@ const mockJobData: IJob = {
       options: ["Sim, bastante", "Sim, pouca", "Não, mas tenho interesse", "Não"],
     },
     { id: "q3", text: "Qual sua pretensão salarial?", type: "open" },
-    {
-      id: "q4",
-      text: "Você está disponível para trabalho remoto?",
-      type: "closed",
-      options: ["Sim, totalmente remoto", "Sim, híbrido", "Prefiro presencial"],
-    },
+    { id: "q4", text: "Você está disponível para trabalho remoto?", type: "closed", options: ["Sim, totalmente remoto", "Sim, híbrido", "Prefiro presencial"] },
   ],
   isPCDExclusive: false,
   isReferralJob: false,
@@ -48,6 +42,11 @@ const mockJobData: IJob = {
   updatedAt: new Date(),
   createdBy: "system",
   criteriaWeights: { experience: 0, skills: 0, certifications: 0, behavioral: 0, leadership: 0 },
+}
+
+interface CandidateAnswer {
+  questionId: string;
+  answer: string | string[];
 }
 
 export default function ApplyPage() {
@@ -71,6 +70,7 @@ export default function ApplyPage() {
     const fetchJob = async () => {
       setIsLoading(true)
       try {
+        // Simular busca da vaga
         await new Promise((resolve) => setTimeout(resolve, 500))
         if (jobSlug === mockJobData.slug) {
           setJob(mockJobData)
@@ -86,8 +86,8 @@ export default function ApplyPage() {
           toast({ title: "Erro", description: "Vaga não encontrada.", variant: "destructive" })
           router.push(`/public/${tenantSlug}/jobs`)
         }
-      } catch (error) {
-        // Error already handled by withActionLogging
+      } catch (error: any) {
+        toast({ title: "Erro", description: error.message || "Erro ao carregar a vaga.", variant: "destructive" });
       } finally {
         setIsLoading(false)
       }
@@ -138,30 +138,39 @@ export default function ApplyPage() {
 
   const handleSubmitApplication = async () => {
     setIsSubmitting(true)
-    const submitApplicationAction = withActionLogging(
-      async () => {
-        // Simular envio da candidatura
-        await new Promise((resolve) => setTimeout(resolve, 2000))
-
-        // In a real app, you would send jobSlug, resumeFile, answers, and personalInfo to your backend
-      },
-      {
-        userId: personalInfo.email, // Use email as user ID for logging
-        userName: personalInfo.name, // Use name as user name for logging
-        actionType: "submit_application",
-        resourceType: "job_application",
-        resourceId: jobSlug,
-        details: `Application submitted for job ${jobSlug} by ${personalInfo.name} (${personalInfo.email}).`,
-        successMessage: "Sua candidatura foi enviada com sucesso!",
-        errorMessage: "Ocorreu um erro ao enviar sua candidatura. Tente novamente.",
-      }
-    );
-
     try {
-      await submitApplicationAction();
-      router.push(`/public/${tenantSlug}/jobs/${jobSlug}/success`);
-    } catch (error) {
-      // Error already handled by withActionLogging
+      if (!job || !resumeFile) {
+        throw new Error("Dados de candidatura incompletos. Vaga ou currículo ausente.");
+      }
+
+      const formData = new FormData();
+      formData.append("jobId", job._id.toHexString());
+      formData.append("candidateEmail", personalInfo.email);
+      formData.append("resume", resumeFile);
+      formData.append("answers", JSON.stringify(answers));
+
+      const result = await submitApplicationAction(formData);
+
+      if (result.success) {
+        toast({
+          title: "Sucesso!",
+          description: "Sua candidatura foi enviada com sucesso!",
+          variant: "default",
+        });
+        router.push(`/public/${tenantSlug}/jobs/${jobSlug}/success`);
+      } else {
+        toast({
+          title: "Erro",
+          description: result.error || "Ocorreu um erro ao enviar sua candidatura. Tente novamente.",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: error.message || "Ocorreu um erro inesperado ao processar sua candidatura.",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }

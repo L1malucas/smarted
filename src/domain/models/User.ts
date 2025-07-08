@@ -31,10 +31,12 @@ export interface IUserPayload {
   cpf: string;
   email: string;
   name: string;
+  slug: string;
   roles: string[];
   permissions: string[];
   isAdmin: boolean;
   tenantId: string;
+  tenantName?: string;
 }
 
 /**

@@ -5,7 +5,7 @@ import { TenantProvider } from "@/shared/components/contexts/tenant-context"
 import { LoadingProvider } from "@/shared/components/contexts/loading-context"
 import { cookies } from 'next/headers';
 import { verifyToken } from '@/infrastructure/auth/auth';
-import { saveAuditLogAction } from "@/infrastructure/actions/audit-actions"
+
 import { IUserSession } from "@/domain/models/User"
 async function getTenantData(slug: string, currentUser: IUserSession | null) {
   if (currentUser && currentUser.tenantId === slug) {
@@ -30,15 +30,7 @@ export default async function TenantAppLayout({
         currentUser = decoded;
       }
     } catch (error) {
-      await saveAuditLogAction({
-        userId: currentUser?.userId || "",
-        userName: currentUser?.name || "Sistema",
-        actionType: "Verificação de Token",
-        resourceType: "Autenticação",
-        resourceId: currentUser?.userId || "",
-        details: `Erro ao verificar token no TenantAppLayout: ${error instanceof Error ? error.message : String(error)}`,
-        success: false,
-      });
+      // Erros de verificação de token são logados pelas actions de autenticação.
     }
   }
   const tenant = await getTenantData(params.slug, currentUser);

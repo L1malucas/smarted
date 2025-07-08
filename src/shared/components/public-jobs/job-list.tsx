@@ -44,7 +44,7 @@ export function JobList({ jobs, loading, tenantSlug }: IJobListProps) {
   return (
     <div className="space-y-6">
       {jobs.map((job) => (
-        <React.Fragment key={job._id}>
+        <React.Fragment key={job._id?.toString()}>
           <Link href={`/public/job/${job._id}`} className="block">
             <Card className="hover:shadow-lg transition-all duration-200 border-l-4 border-l-blue-500">
               <CardHeader>

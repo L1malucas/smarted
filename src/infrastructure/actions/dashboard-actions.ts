@@ -1,57 +1,51 @@
+
 "use server";
 
-import { withActionLogging } from "@/shared/lib/actions";
-import { IActionLogConfig, IActionResult } from "@/shared/types/types/action-interface";
+import { createLoggedAction } from "@/shared/lib/action-builder";
 import { ISystemMetrics, IUserActivityData } from "@/shared/types/types/dashboard-interface";
 
-export async function getPublicDashboardMetricsAction(
-  tenantId: string,
-  period: string
-): Promise<IActionResult<ISystemMetrics>> {
-  const logConfig: IActionLogConfig = {
-    userId: "public-access",
-    userName: "Public Access",
-    actionType: "Obter Métricas do Dashboard Público",
-    resourceType: "Dashboard",
-    resourceId: tenantId,
-    success: false,
-  };
-
-  const getMetricsInternal = async () => {
-    // In a real application, you would fetch actual dashboard metrics here
-    // For now, return a default empty structure if no real data is available
+/**
+ * Obtém as métricas públicas do dashboard para um tenant específico.
+ */
+export const getPublicDashboardMetricsAction = createLoggedAction<
+  [string, string],
+  ISystemMetrics
+>({
+  actionName: "Obter Métricas do Dashboard Público",
+  resourceType: "Dashboard",
+  requireAuth: false, // Ação pública
+  action: async ({ args: [tenantId, period] }) => {
+    // Lógica para buscar métricas reais do banco de dados iria aqui.
+    // Por enquanto, retornamos dados mockados/padrão.
     const defaultMetrics: ISystemMetrics = {
-      totalUsers: 0,
-      activeUsers: 0,
-      totalJobs: 0,
-      totalCandidates: 0,
-      systemUptime: "N/A",
-      avgResponseTime: "N/A",
-      jobsCreated: [],
-      candidatesApplied: [],
-      hires: [],
+      totalUsers: 150, // Mock
+      activeUsers: 120, // Mock
+      totalJobs: 25, // Mock
+      totalCandidates: 500, // Mock
+      systemUptime: "99.9%", // Mock
+      avgResponseTime: "120ms", // Mock
+      jobsCreated: [], // Mock
+      candidatesApplied: [], // Mock
+      hires: [], // Mock
     };
     return defaultMetrics;
-  };
+  },
+  getResourceId: (_, args) => args[0], // tenantId
+});
 
-  return await withActionLogging(getMetricsInternal, logConfig)();
-}
-
-export async function getUserActivityChartDataAction(
-  tenantId: string,
-  period: string
-): Promise<IActionResult<IUserActivityData[]>> {
-  const logConfig: IActionLogConfig = {
-    userId: "system",
-    userName: "System",
-    actionType: "Obter Dados de Atividade do Usuário",
-    resourceType: "Dashboard",
-    resourceId: tenantId,
-    success: false,
-  };
-
-  const getChartDataInternal = async () => {
-    // TODO: Replace with real data aggregation from AuditLog collection
+/**
+ * Obtém os dados para o gráfico de atividade do usuário.
+ */
+export const getUserActivityChartDataAction = createLoggedAction<
+  [string, string],
+  IUserActivityData[]
+>({
+  actionName: "Obter Dados de Atividade do Usuário",
+  resourceType: "Dashboard",
+  requireAuth: true, // Requer autenticação para ver dados de atividade
+  action: async ({ session, args: [tenantId, period] }) => {
+    // TODO: Substituir por agregação de dados reais da coleção AuditLog
+    // A consulta usaria o `session.tenantId` para segurança.
     const mockData: IUserActivityData[] = [
       { name: 'Seg', logins: 4, acoes: 24 },
       { name: 'Ter', logins: 3, acoes: 13 },
@@ -62,7 +56,6 @@ export async function getUserActivityChartDataAction(
       { name: 'Dom', logins: 1, acoes: 5 },
     ];
     return mockData;
-  };
-
-  return await withActionLogging(getChartDataInternal, logConfig)();
-}
+  },
+  getResourceId: (_, args) => args[0], // tenantId
+});

@@ -42,7 +42,7 @@ export interface IShareDialogProps {
 
 export interface INavbarProps {
   tenantSlug: string;
-  user: IUser | null;
+  user: IUserPayload | null;
 }
 
 export interface ICandidateRankingProps {

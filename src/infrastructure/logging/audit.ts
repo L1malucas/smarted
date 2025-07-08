@@ -1,49 +1,24 @@
-import { ILog } from '@/domain/models/Log';
-import { getLogsCollection } from '@/infrastructure/persistence/db';
-import { IAuditLog } from '@/domain/models/AuditLog';
+"use server";
 
-export async function saveAuditLog(log: Omit<IAuditLog, '_id' | 'timestamp'> & { tenantId: string; tenantName?: string }): Promise<IAuditLog> {
+import { getLogsCollection } from "../persistence/db";
+import { IActionLogConfig } from "@/shared/types/types/action-interface";
+import { ObjectId } from "mongodb";
+
+/**
+ * Salva um registro de log de auditoria no banco de dados.
+ * @param logData - Os dados do log a serem salvos.
+ */
+export async function saveAuditLog(logData: IActionLogConfig) {
   try {
     const logsCollection = await getLogsCollection();
-    const newLog: ILog = {
-      userId: log.userId,
-      userName: log.userName,
-      actionType: log.actionType,
-      resourceType: log.resourceType,
-      resourceId: log.resourceId,
-      details: log.details,
-      success: log.success,
+    const logEntry = {
+      ...logData,
+      _id: new ObjectId(),
       timestamp: new Date(),
-      tenantId: log.tenantId,
-      tenantName: log.tenantName || 'Unknown Tenant',
     };
-    const result = await logsCollection.insertOne(newLog);
-    return { ...newLog, _id: result.insertedId };
+    await logsCollection.insertOne(logEntry as any);
   } catch (error) {
-    throw new Error('Falha ao salvar log de auditoria.');
-  }
-}
-
-export async function getAuditLogsByResource(resourceType: string, tenantId: string, resourceId?: string): Promise<IAuditLog[]> {
-  try {
-    const logsCollection = await getLogsCollection();
-    const query: any = { resourceType, tenantId };
-    if (resourceId) {
-      query.resourceId = resourceId;
-    }
-    const logs = await logsCollection.find(query).sort({ timestamp: -1 }).toArray() as ILog[];
-    return logs;
-  } catch (error) {
-    throw new Error('Falha ao buscar logs de auditoria.');
-  }
-}
-
-export async function getAllAuditLogs(tenantId: string): Promise<IAuditLog[]> {
-  try {
-    const logsCollection = await getLogsCollection();
-    const logs = await logsCollection.find({ tenantId }).sort({ timestamp: -1 }).toArray() as ILog[];
-    return logs;
-  } catch (error) {
-    throw new Error('Falha ao buscar todos os logs de auditoria.');
+    console.error("Falha ao salvar o log de auditoria:", error);
+    // Em um cenário de produção, considere um logger mais robusto ou um fallback.
   }
 }

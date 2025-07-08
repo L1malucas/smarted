@@ -37,3 +37,19 @@ export function serializeJob(job: any): IJob {
 
   return serializedJob;
 }
+
+import { ICandidate } from "@/domain/models/Candidate";
+
+export function serializeCandidate(candidate: any): ICandidate {
+  if (!candidate) return candidate;
+
+  const serializedCandidate = {
+    ...candidate,
+    _id: candidate._id.toString(),
+    jobId: candidate.jobId.toString(),
+    createdAt: candidate.createdAt instanceof Date ? candidate.createdAt.toISOString() : candidate.createdAt,
+    updatedAt: candidate.updatedAt instanceof Date ? candidate.updatedAt.toISOString() : candidate.updatedAt,
+  };
+
+  return serializedCandidate;
+}

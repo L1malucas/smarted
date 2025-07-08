@@ -2,17 +2,21 @@
 import type React from "react"
 import { useState } from "react"
 import { Loader2 } from "lucide-react"
-import { withActionLogging } from "@/shared/lib/actions";
 import { Input } from "@/shared/components/ui/input";
 import { Button } from "../ui/button";
-import { Label } from "recharts";
+import { Label } from "@/shared/components/ui/label"; // Corrected import
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../ui/card";
 import { Textarea } from "../ui/textarea";
+import { useToast } from "@/shared/hooks/use-toast"; // Import useToast
 
 // Mock service for support requests
 const supportService = {
   submitRequest: async (subject: string, message: string): Promise<void> => {
     await new Promise(resolve => setTimeout(resolve, 1500));
+    // Simulate a potential error for testing purposes
+    // if (Math.random() > 0.5) {
+    //   throw new Error("Simulated network error");
+    // }
   },
 };
 
@@ -20,31 +24,27 @@ export default function Support() {
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast(); // Initialize useToast
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    const submitAction = withActionLogging(
-      async () => {
-        await supportService.submitRequest(subject, message);
-      },
-      {
-        userId: "admin-user", // Placeholder: replace with actual user ID
-        userName: "Admin User", // Placeholder: replace with actual user name
-        actionType: "submit_support_request",
-        resourceType: "support",
-        details: `Support request submitted: ${subject}`,
-        successMessage: "Sua solicitação de suporte foi enviada com sucesso. Em breve entraremos em contato.",
-        errorMessage: "Não foi possível enviar sua solicitação de suporte. Por favor, tente novamente.",
-      }
-    );
 
     try {
-      await submitAction();
+      await supportService.submitRequest(subject, message);
       setSubject("");
       setMessage("");
-    } catch (error) {
-      // Error already handled by withActionLogging
+      toast({
+        title: "Sucesso!",
+        description: "Sua solicitação de suporte foi enviada com sucesso. Em breve entraremos em contato.",
+        variant: "default",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: error.message || "Não foi possível enviar sua solicitação de suporte. Por favor, tente novamente.",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
