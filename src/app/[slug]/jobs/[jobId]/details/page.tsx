@@ -82,7 +82,7 @@ export default function JobDetailsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end gap-2 mb-4">
+      <div className="flex flex-wrap justify-end gap-2 mb-4">
         <Button onClick={handleGoToScreening}>
           <Users className="mr-2 h-4 w-4" /> Ir para Triagem
         </Button>

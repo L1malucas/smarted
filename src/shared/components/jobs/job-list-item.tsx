@@ -34,13 +34,13 @@ export function JobListItem({ job, tenantSlug, onStatusChange, onPublish }: IJob
   return (
     <Link
       href={`/${tenantSlug}/jobs/${job._id}/details`}
-      className="font-semibold text-lg hover:text-blue-600 transition-colors duration-200 cursor-pointer truncate"
+      className="font-semibold text-lg hover:text-blue-600 transition-colors duration-200 cursor-pointer"
     >
       <Card className="hover:shadow-md transition-all duration-300 border-l-4 border-l-transparent hover:border-l-blue-500">
         <CardContent className="p-6">
           <div className="flex justify-between items-start gap-4">
             <div className="flex-1 min-w-0 space-y-3">
-              <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex items-center gap-3 flex-wrap line-clamp-2 whitespace-normal">
                 {job.title}
                 {getStatusBadge(job.status)}
                 <JobActionsMenu

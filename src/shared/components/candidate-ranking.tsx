@@ -84,7 +84,7 @@ export function CandidateRanking({ candidates, jobTitle, jobId, tenantSlug, rada
       <div className="space-y-4">
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-semibold">Candidatos Ranqueados</h2>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <ShareDialog
               title="Compartilhar Ranking de Candidatos"
               resourceType="candidates"
@@ -129,7 +129,7 @@ export function CandidateRanking({ candidates, jobTitle, jobId, tenantSlug, rada
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-4">
                 <div className="text-center">
                   <div className={`text-lg font-semibold ${getScoreColor(candidate.analysis?.experienceScore || 0)}`}>
                     {candidate.analysis?.experienceScore || 0}

@@ -187,7 +187,7 @@ export function JobBasicInfo({ formData, onChange, errors }: IJobBasicInfoProps)
             )}
             {errors.location && <p className="text-sm text-red-500">{errors.location}</p>}
           </div>
-          <div className="grid grid-cols-3 gap-2 relative">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 relative">
             <div>
               <Label htmlFor="salaryMin">Salário Mínimo</Label>
               <Input

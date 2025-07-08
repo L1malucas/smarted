@@ -61,7 +61,8 @@ export default function TenantManagement() {
         <CardDescription>Crie e gerencie tenants para sua aplicação.</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 max-w-2xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="tenantName">Nome do Tenant</Label>
             <Input
@@ -133,6 +134,7 @@ export default function TenantManagement() {
               value={responsibleName}
               onChange={(e) => setResponsibleName(e.target.value)}
             />
+          </div>
           </div>
           <Button type="submit" disabled={isPending}>
             {isPending ? "Criando..." : "Criar Novo Tenant"}

@@ -12,6 +12,12 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Input } from "@/shared/components/ui/input"
 import { ICandidate } from "@/domain/models/Candidate"
 import { IJob } from "@/domain/models/Job"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/shared/components/ui/dropdown-menu"
 import { Button } from "@/shared/components/ui/button"
 import { Badge } from "@/shared/components/ui/badge"
 import { getCandidatesForJobAction } from "@/infrastructure/actions/candidate-actions"
@@ -140,7 +146,7 @@ export default function ScreeningPage() {
           <CardTitle>Filtros e Seleção de Vaga</CardTitle>
           <div className="flex flex-col sm:flex-row gap-4 mt-4">
             <Select value={selectedJobId || ""} onValueChange={setSelectedJobId}>
-              <SelectTrigger className="w-full sm:w-[300px]">
+              <SelectTrigger className="w-full sm:max-w-[300px]">
                 <SelectValue placeholder="Selecione uma vaga para triagem" />
               </SelectTrigger>
               <SelectContent>
@@ -170,7 +176,8 @@ export default function ScreeningPage() {
         </CardHeader>
         <CardContent>
           {selectedJob && <p className="mb-4 text-lg font-semibold">Exibindo candidatos para: {selectedJob.title}</p>}
-          <Table>
+          <div className="overflow-x-auto">
+            <Table>
             <TableHeader>
               <TableRow>
                 <TableHead onClick={() => handleSort("name")} className="cursor-pointer">
@@ -206,22 +213,32 @@ export default function ScreeningPage() {
                   </TableCell>
                   <TableCell>{new Date(candidate.createdAt).toLocaleDateString()}</TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="icon" asChild title="Download CV">
-                      <a href={candidate.resumeUrl} download>
-                        <Download className="h-4 w-4" />
-                      </a>
-                    </Button>
-                    <Button variant="ghost" size="icon" asChild title="Ver Detalhes">
-                      <Link href={`/${tenantSlug}/candidate/${candidate._id}?jobId=${selectedJobId}`}>
-                        <Eye className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                    <Button variant="ghost" size="icon" title="Aprovar para Avaliação">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                    </Button>
-                    <Button variant="ghost" size="icon" title="Reprovar Candidato">
-                      <XCircle className="h-4 w-4 text-red-500" />
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
+                          <span className="sr-only">Abrir menu</span>
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem asChild>
+                          <a href={candidate.resumeUrl} download>
+                            <Download className="h-4 w-4 mr-2" /> Download CV
+                          </a>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href={`/${tenantSlug}/candidate/${candidate._id}?jobId=${selectedJobId}`}>
+                            <Eye className="h-4 w-4 mr-2" /> Ver Detalhes
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <CheckCircle className="h-4 w-4 mr-2 text-green-500" /> Aprovar para Avaliação
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <XCircle className="h-4 w-4 mr-2 text-red-500" /> Reprovar Candidato
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))}

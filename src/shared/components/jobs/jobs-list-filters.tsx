@@ -35,7 +35,7 @@ export function JobFilter({
         />
       </div>
       <Select value={statusFilter} onValueChange={onStatusChange}>
-        <SelectTrigger className="w-full sm:w-48">
+        <SelectTrigger className="w-full sm:max-w-xs">
           <SelectValue placeholder="Filtrar por status" />
         </SelectTrigger>
         <SelectContent>

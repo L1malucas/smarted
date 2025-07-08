@@ -86,13 +86,13 @@ export default function CandidateDetailsPage() {
           <CardTitle>Informações Pessoais</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          <p><Label>Nome:</Label> {candidate.name}</p>
-          <p><Label>Email:</Label> {candidate.email}</p>
-          <p><Label>CPF:</Label> {candidate.cpf}</p>
-          <p><Label>Status:</Label> {candidate.status === 'active' ? 'Ativo' : 'Inativo'}</p>
-          <p><Label>Cargos:</Label> {candidate.roles.join(", ")}</p>
-          <p><Label>Criado em:</Label> {new Date(candidate.createdAt).toLocaleDateString()}</p>
-          <p><Label>Última Atualização:</Label> {new Date(candidate.updatedAt).toLocaleDateString()}</p>
+          <p className="break-words"><Label>Nome:</Label> {candidate.name}</p>
+          <p className="break-words"><Label>Email:</Label> {candidate.email}</p>
+          <p className="break-words"><Label>CPF:</Label> {candidate.cpf}</p>
+          <p className="break-words"><Label>Status:</Label> {candidate.status === 'active' ? 'Ativo' : 'Inativo'}</p>
+          <p className="break-words"><Label>Cargos:</Label> {candidate.roles.join(", ")}</p>
+          <p className="break-words"><Label>Criado em:</Label> {new Date(candidate.createdAt).toLocaleDateString()}</p>
+          <p className="break-words"><Label>Última Atualização:</Label> {new Date(candidate.updatedAt).toLocaleDateString()}</p>
         </CardContent>
       </Card>
 
