@@ -251,6 +251,7 @@ export default function ScreeningPage() {
                 : "Nenhum candidato em triagem no momento."}
             </p>
           )}
+          </div>
         </CardContent>
       </Card>
     </div>

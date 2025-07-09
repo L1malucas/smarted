@@ -64,20 +64,20 @@ export function Navbar({ tenantSlug, user }: INavbarProps) {
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
   const [latestNotifications, setLatestNotifications] = useState<INotification[]>([]);
 
-  const fetchNotifications = async () => {
-    if (!user) return;
-    const result = await listNotificationsAction({ isRead: false, limit: 5 });
-    if (result.success && result.data) {
-      setUnreadNotificationsCount(result.data.totalUnread);
-      setLatestNotifications(result.data.notifications || []);
-    }
-  };
-
   useEffect(() => {
+    const fetchNotifications = async () => {
+      if (!user) return;
+      const result = await listNotificationsAction({ isRead: false, limit: 5 });
+      if (result.success && result.data) {
+        setUnreadNotificationsCount(result.data.totalUnread);
+        setLatestNotifications(result.data.notifications || []);
+      }
+    };
+
     fetchNotifications();
     const interval = setInterval(fetchNotifications, 60000); // Refresh every minute
     return () => clearInterval(interval);
-  }, [user]);
+  }, [user, setUnreadNotificationsCount, setLatestNotifications]);
 
   const navigation = [
     { name: "Dashboard", href: `/${tenantSlug}/dashboard`, icon: LayoutDashboard },

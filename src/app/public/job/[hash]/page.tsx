@@ -16,35 +16,34 @@ export default function PublicJobByHashPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
 
-  const fetchJobDetails = async () => {
-    setIsLoading(true);
-    startTransition(async () => {
-      try {
-        const result = await getJobByIdAction(jobId);
-        if (result.success && result.data) {
-          setJob(result.data);
-        } else {
+  useEffect(() => {
+    const fetchJobDetails = async () => {
+      setIsLoading(true);
+      startTransition(async () => {
+        try {
+          const result = await getJobByIdAction(jobId);
+          if (result.success && result.data) {
+            setJob(result.data);
+          } else {
+            toast({
+              title: "Erro",
+              description: result.error || "Vaga não encontrada.",
+              variant: "destructive",
+            });
+            setJob(null); 
+          }
+        } catch (err) {
           toast({
-            title: "Erro",
-            description: result.error || "Vaga não encontrada.",
+            title: "Erro ao carregar dados",
+            description: "Ocorreu um erro inesperado ao carregar a vaga.",
             variant: "destructive",
           });
-          setJob(null); 
+          setJob(null);
+        } finally {
+          setIsLoading(false);
         }
-      } catch (err) {
-        toast({
-          title: "Erro ao carregar dados",
-          description: "Ocorreu um erro inesperado ao carregar a vaga.",
-          variant: "destructive",
-        });
-        setJob(null);
-      } finally {
-        setIsLoading(false);
-      }
-    });
-  };
-
-  useEffect(() => {
+      });
+    };
     fetchJobDetails();
   }, [jobId]);
 

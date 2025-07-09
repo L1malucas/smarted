@@ -2,6 +2,7 @@
 import type React from "react"
 import { useState } from "react"
 import { Loader2 } from "lucide-react"
+import Link from "next/link"
 import { Input } from "@/shared/components/ui/input";
 import { Button } from "../ui/button";
 import { Label } from "@/shared/components/ui/label"; // Corrected import
@@ -94,9 +95,9 @@ export default function Support() {
         </p>
         <p className="text-muted-foreground">
           Você também pode consultar nossa{" "}
-          <a href="#" className="text-blue-500 hover:underline">
+          <Link href="/faq" className="text-blue-500 hover:underline">
             FAQ e Documentação
-          </a>
+          </Link>
           .
         </p>
       </CardContent>

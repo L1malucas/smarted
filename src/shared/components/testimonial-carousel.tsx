@@ -93,7 +93,7 @@ export function TestimonialCarousel() {
           
           {/* Testimonial content */}
           <blockquote className="text-xl leading-relaxed mb-8 text-slate-100 flex-1 flex items-center">
-            <span>"{currentTestimonial.content}"</span>
+            <span>&ldquo;{currentTestimonial.content}&rdquo;</span>
           </blockquote>
           
           {/* Author info */}

@@ -10,7 +10,7 @@ import { toast } from "@/shared/components/ui/use-toast";
 import { listShareableLinksAction, updateShareableLinkAction, deactivateShareableLinkAction, deleteShareableLinkAction } from "@/infrastructure/actions/share-actions";
 import { IShareableLink } from "@/domain/models/ShareableLink";
 import { ShareDialog } from "@/shared/components/share-dialog";
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/shared/components/ui/dialog";
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/shared/components/ui/dialog";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Switch } from "@/shared/components/ui/switch";

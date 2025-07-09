@@ -21,29 +21,29 @@ export default function SharePage() {
   const [password, setPassword] = useState("");
   const [showPasswordInput, setShowPasswordInput] = useState(false);
 
-  const fetchLinkDetails = async (pw?: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await getShareableLinkDetailsAction(hash, pw);
-      if (result.success && result.data) {
-        setLinkDetails(result.data);
-        setShowPasswordInput(false);
-      } else {
-        if (result.error === "Este link requer uma senha.") {
-          setShowPasswordInput(true);
-        } else {
-          setError(result.error || "Erro ao carregar o link.");
-        }
-      }
-    } catch (err: any) {
-      setError(err.message || "Ocorreu um erro inesperado.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    const fetchLinkDetails = async (pw?: string) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const result = await getShareableLinkDetailsAction(hash, pw);
+        if (result.success && result.data) {
+          setLinkDetails(result.data);
+          setShowPasswordInput(false);
+        } else {
+          if (result.error === "Este link requer uma senha.") {
+            setShowPasswordInput(true);
+          } else {
+            setError(result.error || "Erro ao carregar o link.");
+          }
+        }
+      } catch (err: any) {
+        setError(err.message || "Ocorreu um erro inesperado.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
     if (hash) {
       fetchLinkDetails();
     }

@@ -29,7 +29,6 @@
         "depth": 3
       }
     ],
-    "jsx-a11y/no-access-keys": "warn",
     "jsx-a11y/no-redundant-roles": "warn",
     "jsx-a11y/role-has-required-aria-props": "warn",
     "jsx-a11y/role-supports-aria-props": "warn",

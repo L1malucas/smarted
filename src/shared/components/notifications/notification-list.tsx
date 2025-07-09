@@ -19,21 +19,20 @@ export function NotificationList() {
   const [filterRead, setFilterRead] = useState<boolean | undefined>(undefined);
 
   useEffect(() => {
+    const fetchNotifications = () => {
+      setIsLoading(true);
+      startTransition(async () => {
+        const result = await listNotificationsAction({ isRead: filterRead });
+        if (result.success && result.data) {
+          setNotifications(result.data.notifications);
+        } else {
+          toast({ title: "Erro", description: result.error || "Não foi possível carregar as notificações.", variant: "destructive" });
+        }
+        setIsLoading(false);
+      });
+    };
     fetchNotifications();
-  }, [filterRead]);
-
-  const fetchNotifications = () => {
-    setIsLoading(true);
-    startTransition(async () => {
-      const result = await listNotificationsAction({ isRead: filterRead });
-      if (result.success && result.data) {
-        setNotifications(result.data.notifications);
-      } else {
-        toast({ title: "Erro", description: result.error || "Não foi possível carregar as notificações.", variant: "destructive" });
-      }
-      setIsLoading(false);
-    });
-  };
+  }, [filterRead, setIsLoading, startTransition, setNotifications]);
 
   const handleMarkAsRead = async (id: string) => {
     startTransition(async () => {

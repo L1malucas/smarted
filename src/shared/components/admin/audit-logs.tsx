@@ -38,34 +38,33 @@ export default function AuditLogs() {
 
   const { toast } = useToast();
 
-  const fetchLogs = (page: number = currentPage) => {
-    setIsFetching(true);
-    startTransition(async () => {
-      try {
-        // Ensure dates are converted to UTC for the query
-        const queryStartDate = startDate ? getUTCStartOfDay(startDate) : getUTCStartOfDay(subDays(new Date(), 7));
-        const queryEndDate = endDate ? getUTCEndOfDay(endDate) : getUTCEndOfDay(new Date());
-
-        const result = await getAccessLogs(queryStartDate, queryEndDate, page, itemsPerPage);
-        setLogs(result.logs);
-        setTotalPages(result.totalPages);
-        setCurrentPage(result.currentPage);
-      } catch (error) {
-        // console.error("Failed to fetch audit logs:", error);
-        toast({
-          title: "Erro",
-          description: "Não foi possível carregar os logs de auditoria.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsFetching(false);
-      }
-    });
-  };
-
   useEffect(() => {
+    const fetchLogs = (page: number = currentPage) => {
+      setIsFetching(true);
+      startTransition(async () => {
+        try {
+          // Ensure dates are converted to UTC for the query
+          const queryStartDate = startDate ? getUTCStartOfDay(startDate) : getUTCStartOfDay(subDays(new Date(), 7));
+          const queryEndDate = endDate ? getUTCEndOfDay(endDate) : getUTCEndOfDay(new Date());
+
+          const result = await getAccessLogs(queryStartDate, queryEndDate, page, itemsPerPage);
+          setLogs(result.logs);
+          setTotalPages(result.totalPages);
+          setCurrentPage(result.currentPage);
+        } catch (error) {
+          // console.error("Failed to fetch audit logs:", error);
+          toast({
+            title: "Erro",
+            description: "Não foi possível carregar os logs de auditoria.",
+            variant: "destructive",
+          });
+        } finally {
+          setIsFetching(false);
+        }
+      });
+    };
     fetchLogs();
-  }, [startDate, endDate, itemsPerPage]);
+  }, [startDate, endDate, itemsPerPage, currentPage, toast, startTransition]);
 
   const handlePageChange = (newPage: number) => {
     if (newPage > 0 && newPage <= totalPages) {
