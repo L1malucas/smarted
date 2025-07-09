@@ -1,18 +1,15 @@
 "use client"
 
-import type React from "react"
-import { useState, useEffect, useTransition } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import { Button } from "@/shared/components/ui/button"
-import { Input } from "@/shared/components/ui/input"
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { signIn } from "next-auth/react";
+import { Button } from "@/shared/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import Image from "next/image";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/shared/components/ui/card";
-import { Label } from "@/shared/components/ui/label"
-import { Building2, TrendingUp, Users, BarChart3, Star, CheckCircle, UserPlus, Target } from "lucide-react"
-import { loginAction } from "@/infrastructure/actions/auth-actions"
-import { CandidateButton } from "@/shared/components/candidate-button"
-import { useAuth } from "@/shared/hooks/use-auth"; // Import useAuth hook
 import { toast } from "@/shared/hooks/use-toast";
+import { Building2, TrendingUp, Users, BarChart3, Star, CheckCircle, UserPlus, Target } from "lucide-react";
+import { FcGoogle } from "react-icons/fc";
 
 const testimonials = [
   {
@@ -42,46 +39,40 @@ const testimonials = [
     avatar: "/avatars/marina.jpg",
     rating: 5
   }
-]
+];
 
 export default function LoginPage() {
-  const [cpf, setCpf] = useState("")
-  const [isPending, startTransition] = useTransition()
-  const [currentTestimonial, setCurrentTestimonial] = useState(0)
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const error = searchParams.get("error");
+  const [currentTestimonial, setCurrentTestimonial] = useState(0);
 
-  const formatCPF = (value: string) => {
-    const numbers = value.replace(/\D/g, "")
-    return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")
-  }
-
-  const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatCPF(e.target.value)
-    if (formatted.length <= 14) {
-      setCpf(formatted)
-    }
-  }
-
-  const handleLogin = (formData: FormData) => {
-    startTransition(async () => {
-      const result = await loginAction(formData.get('cpf') as string);
-      if (!result.success) {
-        toast({
-          title: "Erro de Login",
-          description: result.error || "Ocorreu um erro desconhecido.",
-          variant: "destructive",
-        });
-        console.log("Login failed:", result);
-
+  useEffect(() => {
+    if (error) {
+      let errorMessage = "Ocorreu um erro ao fazer login.";
+      if (error === "AccessDenied") {
+        errorMessage = "Seu e-mail não está autorizado. Por favor, entre em contato com o administrador.";
+      } else if (error === "OAuthAccountNotLinked") {
+        errorMessage = "Este e-mail já está registrado com outro método de login. Por favor, use o método original.";
       }
-    });
-  };
+      toast({
+        title: "Erro de Login",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
+  }, [error]);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentTestimonial((prev) => (prev + 1) % testimonials.length)
-    }, 4000)
-    return () => clearInterval(interval)
-  }, [])
+      setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleGoogleSignIn = () => {
+    signIn("google", { callbackUrl: "/dashboard" }); // Redireciona para o dashboard após login
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-orange-50 p-4 sm:p-6 md:p-8">
@@ -146,27 +137,18 @@ export default function LoginPage() {
                 className="h-16 sm:h-24 md:h-28 mx-auto mb-4 opacity-80 object-contain"
               />
               <CardTitle className="text-lg sm:text-xl md:text-2xl font-bold">Acesso ao Sistema</CardTitle>
-              <CardDescription className="text-xs sm:text-sm">Entre com seu CPF para acessar o sistema</CardDescription>
+              <CardDescription className="text-xs sm:text-sm">Entre com sua conta Google para acessar o sistema</CardDescription>
             </CardHeader>
             <CardContent className="px-4 sm:px-6">
-              <form action={handleLogin} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="cpf">CPF</Label>
-                  <Input
-                    id="cpf"
-                    name="cpf"
-                    type="text"
-                    placeholder="000.000.000-00"
-                    value={cpf}
-                    onChange={handleCPFChange}
-                    required
-                    className="h-10 sm:h-12 text-sm sm:text-base"
-                  />
-                </div>
-                <Button type="submit" className="w-full h-10 sm:h-12 text-sm sm:text-base" disabled={isPending}>
-                  {isPending ? "Entrando..." : "Entrar no Sistema"}
+              <div className="mt-8 space-y-6">
+                <Button
+                  onClick={handleGoogleSignIn}
+                  className="w-full flex items-center justify-center gap-2 h-10 sm:h-12 text-sm sm:text-base"
+                >
+                  <FcGoogle className="h-5 w-5" />
+                  Entrar com Google
                 </Button>
-              </form>
+              </div>
             </CardContent>
           </Card>
 
@@ -187,7 +169,7 @@ export default function LoginPage() {
 
           <Card className="col-span-1 sm:col-span-1 md:col-start-4 md:row-start-3 md:row-span-1">
             <CardContent className="p-4 h-full flex flex-col justify-center items-center text-center">
-              <CandidateButton />
+              {/* CandidateButton removed as it's related to CPF login */}
             </CardContent>
           </Card>
 
@@ -246,5 +228,5 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

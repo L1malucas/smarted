@@ -12,6 +12,7 @@ export interface IUser extends IBaseEntity {
   slug: string;
   name: string;
   email: string;
+  googleId?: string; // Novo campo
   tenantId: string;
   roles: string[];
   permissions: string[];

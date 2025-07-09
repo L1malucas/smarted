@@ -95,7 +95,9 @@ export async function getDb(): Promise<Db> {
  */
 export async function getUsersCollection(): Promise<Collection<IUser>> {
   const db = await getDb();
-  return db.collection('users');
+  const usersCollection = db.collection('users');
+  await usersCollection.createIndex({ email: 1 }, { unique: true }); // Ensure unique index on email
+  return usersCollection;
 }
 
 /**
