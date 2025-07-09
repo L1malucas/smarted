@@ -32,9 +32,11 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           <CustomThemeProvider>
-            <Suspense fallback={<CustomLoading />}>
-              {children}
-            </Suspense>
+            <SessionProvider> {/* Added SessionProvider */}
+              <Suspense fallback={<CustomLoading />}>
+                {children}
+              </Suspense>
+            </SessionProvider> {/* Closed SessionProvider */}
             <Toaster />
           </CustomThemeProvider>
         </ThemeProvider>

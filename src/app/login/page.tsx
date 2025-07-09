@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { Button } from "@/shared/components/ui/button";
+import { Button } from "@/shared/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import Image from "next/image";
 import { toast } from "@/shared/hooks/use-toast";
