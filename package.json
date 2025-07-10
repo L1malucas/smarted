@@ -6,7 +6,9 @@
     "dev": "NODE_OPTIONS='--inspect' next dev -p 3004",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "populate-db": "ts-node --compiler-options \"{\"module\":\"CommonJS\"}\" scripts/populate-db.ts",
+    "docs": "npx docsify-cli serve ./documentation"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
